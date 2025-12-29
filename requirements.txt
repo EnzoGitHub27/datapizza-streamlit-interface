@@ -1,0 +1,14 @@
+# Streamlit per l'interfaccia web
+streamlit>=1.28.0
+
+# Datapizza AI - Core framework
+datapizza-ai>=0.1.0
+
+# Datapizza AI - Client specifici per provider cloud
+datapizza-ai-clients-openai>=0.1.0
+datapizza-ai-clients-anthropic>=0.1.0
+datapizza-ai-clients-google>=0.1.0
+datapizza-ai-clients-openai-like
+
+# Gestione variabili d'ambiente
+python-dotenv>=1.0.0
