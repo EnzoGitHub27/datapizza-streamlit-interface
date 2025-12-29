@@ -37,7 +37,7 @@ cd datapizza-streamlit-interface
 
 ### 2. Crea un ambiente virtuale (consigliato)
 ```bash
-python -m venv deepaiug-interface
+python3 -m venv deepaiug-interface
 source deepaiug-interface/bin/activate  # Su Linux/Mac
 # oppure
 deepaiug-interface\Scripts\activate  # Su Windows
@@ -48,6 +48,9 @@ deepaiug-interface\Scripts\activate  # Su Windows
 #### Opzione A: Installazione Completa (consigliata)
 ```bash
 pip install -r requirements.txt
+
+# NOTA BENE: se non funziona con "requirements.txt" installa uno ad uno i pachetti facendo riferimento
+# alla documentazione Datapizza AI e Streamlit oppure tutti i comandi specifici indicati di seguito nella Opzione B
 ```
 
 Questo installerà:
