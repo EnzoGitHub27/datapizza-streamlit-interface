@@ -304,25 +304,39 @@ def render_chat_message(message: Dict[str, Any], index: int):
         bg_color = ASSISTANT_MESSAGE_COLOR
         bg_color_dark = ASSISTANT_MESSAGE_COLOR_DARK
     
-    # HTML per chat bubble
+    # HTML per chat bubble con colori testo corretti
     chat_html = f"""
     <div style="display: flex; justify-content: {align}; margin-bottom: 1rem;">
-        <div style="max-width: 70%; padding: 0.75rem 1rem; border-radius: 1rem; 
-                    background-color: {bg_color}; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+        <div class="chat-bubble chat-bubble-{index}" style="max-width: 70%; padding: 0.75rem 1rem; 
+                    border-radius: 1rem; background-color: {bg_color}; 
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
             <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.25rem; 
-                        opacity: 0.7;">
+                        opacity: 0.8; color: #333;">
                 {avatar} {label} {f'<span style="font-size: 0.75rem;">• {time_str}</span>' if time_str else ''}
             </div>
-            <div style="white-space: pre-wrap; word-wrap: break-word;">
+            <div style="white-space: pre-wrap; word-wrap: break-word; color: #000; 
+                        line-height: 1.5;">
                 {content}
             </div>
         </div>
     </div>
     
     <style>
+    /* Light mode - testo scuro */
+    .chat-bubble {{
+        color: #000 !important;
+    }}
+    
+    /* Dark mode - testo chiaro e background scuro */
     @media (prefers-color-scheme: dark) {{
         .chat-bubble-{index} {{
             background-color: {bg_color_dark} !important;
+        }}
+        .chat-bubble-{index} div {{
+            color: #E0E0E0 !important;
+        }}
+        .chat-bubble {{
+            color: #E0E0E0 !important;
         }}
     }}
     </style>
@@ -728,6 +742,59 @@ with col_footer3:
 # STILE CSS PERSONALIZZATO
 # ============================================================================
 
+# Stili globali per chat bubbles e dark mode
+st.markdown("""
+<style>
+/* Stili globali per messaggi chat */
+.chat-msg-user, .chat-msg-assistant {
+    color: #1a1a1a !important;
+}
+
+.chat-header {
+    color: #1a1a1a !important;
+}
+
+.chat-content {
+    color: #1a1a1a !important;
+}
+
+/* Dark mode - colori adattivi */
+@media (prefers-color-scheme: dark) {
+    /* Background scuri per messaggi in dark mode */
+    [class*="chat-msg-user"] {
+        background-color: #1E3A5F !important;
+    }
+    
+    [class*="chat-msg-assistant"] {
+        background-color: #2D2D2D !important;
+    }
+    
+    /* Testo chiaro in dark mode */
+    .chat-msg-user, .chat-msg-assistant,
+    .chat-header, .chat-content {
+        color: #E8E8E8 !important;
+    }
+    
+    /* Header leggermente più trasparente */
+    .chat-header {
+        opacity: 0.9 !important;
+    }
+}
+
+/* Migliora spacing messaggi chat */
+.element-container:has(div[class*="chat-msg"]) {
+    margin-bottom: 0.5rem !important;
+}
+
+/* Form submit con Enter */
+.stTextArea textarea {
+    font-family: inherit;
+}
+
+/* Stile aggiuntivo per modalità cloud */
+</style>
+""", unsafe_allow_html=True)
+
 if connection_type == "Cloud provider":
     st.markdown("""
     <style>
@@ -744,18 +811,3 @@ if connection_type == "Cloud provider":
     }
     </style>
     """, unsafe_allow_html=True)
-
-# Stile per migliorare readability chat
-st.markdown("""
-<style>
-/* Migliora spacing messaggi chat */
-.element-container:has(div[style*="chat-bubble"]) {
-    margin-bottom: 0.5rem !important;
-}
-
-/* Form submit con Enter */
-.stTextArea textarea {
-    font-family: inherit;
-}
-</style>
-""", unsafe_allow_html=True)

@@ -224,22 +224,35 @@ L'applicazione si aprirà automaticamente nel browser su `http://localhost:8501`
 
 ---
 
-## 📁 Struttura del Progetto
+## 📚 Documentazione
 
+- [CHANGELOG](CHANGELOG.md) - Storia delle versioni e modifiche
+- [ROADMAP](ROADMAP.md) - Piano di sviluppo futuro
+- [CONTRIBUTING](CONTRIBUTING.md) - Guida per contribuire al progetto
+```
+
+## 🎯 **Struttura Finale Repository**
 ```
 datapizza-streamlit-interface/
-├── 00_interfaccia_dinamica_datapizza_Streamlit.py  # App principale
-├── README.md                                        # Questa documentazione
-├── requirements.txt                                 # Dipendenze Python
-├── install.sh                                       # Script installazione Linux/Mac
-├── install.bat                                      # Script installazione Windows
-├── LICENSE                                          # Licenza MIT
-├── .gitignore                                       # File da ignorare in git
-├── secrets/                                         # Cartella per API keys
-│   └── .gitkeep                                     # Placeholder
-└── examples/                                        # Esempi di codice
+├── README.md                               ← Documentazione principale
+├── CHANGELOG.md                            ← ✨ NUOVO: Storia versioni
+├── ROADMAP.md                              ← ✨ NUOVO: Piano sviluppo
+├── CONTRIBUTING.md                         ← ✨ NUOVO: Guida contributor
+├── LICENSE                                 
+├── .gitignore                              
+├── requirements.txt                        
+├── install.sh                              
+├── install.bat                             
+│
+├── 00_interfaccia_dinamica_datapizza_Streamlit.py  ← v1.0.0 (STABILE su main)
+│
+├── secrets/
+│   └── .gitkeep
+│
+└── examples/
     ├── client_factory_tutorial_datapizza-ai.py
     └── secrets_tutorial.py
+
 ```
 
 ---
