@@ -239,7 +239,7 @@ datapizza-streamlit-interface/
 │   └── .gitkeep                                     # Placeholder
 └── examples/                                        # Esempi di codice
     ├── client_factory_tutorial_datapizza-ai.py
-    └── rizzo_001.py
+    └── secrets_tutorial.py
 ```
 
 ---
