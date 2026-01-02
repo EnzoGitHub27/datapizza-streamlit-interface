@@ -1,14 +1,31 @@
+# =============================================================================
+# requirements.txt - Datapizza Streamlit LLM Interface
+# =============================================================================
+# 
+# NOTA: Se riscontri problemi con l'installazione automatica, 
+# installa i pacchetti manualmente nell'ordine seguente:
+# 
+# pip install streamlit python-dotenv
+# pip install datapizza-ai
+# pip install datapizza-ai-clients-openai-like
+# pip install datapizza-ai-clients-openai
+# pip install datapizza-ai-clients-anthropic
+# pip install datapizza-ai-clients-google
+#
+# =============================================================================
+
 # Streamlit per l'interfaccia web
 streamlit>=1.28.0
 
-# Datapizza AI - Core framework
-datapizza-ai>=0.1.0
-
-# Datapizza AI - Client specifici per provider cloud
-datapizza-ai-clients-openai>=0.1.0
-datapizza-ai-clients-anthropic>=0.1.0
-datapizza-ai-clients-google>=0.1.0
-datapizza-ai-clients-openai-like
-
 # Gestione variabili d'ambiente
 python-dotenv>=1.0.0
+
+# Datapizza AI - Core framework (installare PRIMA dei client)
+datapizza-ai
+
+# Datapizza AI - Client specifici per provider cloud
+# (installare DOPO datapizza-ai)
+datapizza-ai-clients-openai-like
+datapizza-ai-clients-openai
+datapizza-ai-clients-anthropic
+datapizza-ai-clients-google
