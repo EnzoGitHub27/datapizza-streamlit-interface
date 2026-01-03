@@ -101,6 +101,34 @@ Nessuna feature attualmente in sviluppo. Controlla [ROADMAP.md](ROADMAP.md) per 
 - 🎈 Streamlit 1.28+
 - 🦙 Ollama (opzionale, per locale)
 
+## [1.1.0] - 2025-01-03
+
+### Aggiunto
+- ✨ Conversazioni multi-turno con memoria completa
+- 💬 Interfaccia chat-style con bolle messaggi (user a destra, AI a sinistra)
+- 📊 Statistiche conversazione in tempo reale (messaggi, token stimati)
+- 🔄 Pulsante reset conversazione con conferma
+- 🧠 Configurazione memoria (max messaggi, cronologia completa)
+- ⏰ Timestamp per ogni messaggio
+- 🏷️ Badge modello per risposte AI
+- 🎨 Supporto dark mode con colori adattivi
+
+### Modificato
+- ♻️ Refactoring completo rendering messaggi
+- 🎨 Migliorato layout con sistema colonne Streamlit
+- 📝 Semplificato system prompt di default
+
+### Corretto
+- 🐛 Risolto bug CSS styles che apparivano nei messaggi
+- 🐛 Eliminata funzione render_chat_message() duplicata
+- 🐛 Fix colori testo in dark mode
+
+### Tecnico
+- Session state per persistenza cronologia
+- Prompt costruito con cronologia conversazione
+- Stima token approssimativa (4 caratteri = 1 token)
+- ID univoco per ogni sessione conversazione
+
 ---
 
 ## Come Leggere Questo Changelog
