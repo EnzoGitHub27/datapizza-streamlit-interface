@@ -34,7 +34,7 @@ Interfaccia web completa per interagire con Large Language Models (LLM) locali, 
 
 Questo metodo gestisce automaticamente l'ordine di installazione dei pacchetti.
 
-#### Linux/Mac:
+#### Linux/Mac (se non funziona usare il punto 3. Installa le dipendenze nell'ordine corretto ):
 ```bash
 git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
 cd datapizza-streamlit-interface
@@ -42,7 +42,7 @@ chmod +x install.sh
 ./install.sh
 ```
 
-#### Windows:
+#### Windows (da testare!!!):
 ```bash
 git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
 cd datapizza-streamlit-interface
@@ -84,6 +84,9 @@ pip install datapizza-ai
 
 # 3.3 - Client provider cloud (DOPO datapizza-ai)
 # Installa solo quelli che ti servono:
+
+# Per Ollama in Locale
+pip install datapizza-ai-clients-openai-like
 
 # Per OpenAI (GPT-4, GPT-3.5, ecc.)
 pip install datapizza-ai-clients-openai
