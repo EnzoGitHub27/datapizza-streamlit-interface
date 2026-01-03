@@ -17,9 +17,13 @@ Interfaccia web completa per interagire con Large Language Models (LLM) locali, 
 - 🎨 **Interfaccia Intuitiva**: UI Streamlit moderna e responsive
 - ⚙️ **Parametri Configurabili**: Temperature, system prompt, modelli
 
-## 🎥 Demo
+## 🎥 Demo 00_interfaccia_dinamica_datapizza_Streamlit.py
 
 ![Demo Screenshot](screenshot.png)
+
+## 🎥 Demo 01_interfaccia_con_memoria.py
+
+![Demo Screenshot](screenshot1_1.png)
 
 ## 📋 Prerequisiti
 
@@ -157,12 +161,18 @@ Puoi anche inserire e salvare le API keys direttamente dall'interfaccia Streamli
 
 ---
 
-## 🎯 Utilizzo
+## 🎯 Utilizzo 
 
-### Avvia l'applicazione
+### Avvia l'applicazione 00_interfaccia_dinamica_datapizza_Streamlit.py
 
 ```bash
 streamlit run 00_interfaccia_dinamica_datapizza_Streamlit.py
+```
+
+### Oppure Avvia l'applicazione 01_interfaccia_con_memoria.py
+
+```bash
+streamlit run 01_interfaccia_con_memoria.py
 ```
 
 L'applicazione si aprirà automaticamente nel browser su `http://localhost:8501`
@@ -248,6 +258,7 @@ datapizza-streamlit-interface/
 ├── install.bat                             
 │
 ├── 00_interfaccia_dinamica_datapizza_Streamlit.py  ← v1.0.0 (STABILE su main)
+├── 01_interfaccia_con_memoria.py                   ← v1.1.0 (STABILE su main)
 │
 ├── secrets/
 │   └── .gitkeep
