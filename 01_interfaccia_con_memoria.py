@@ -1,14 +1,13 @@
-# Streamlit UI per LLM con Conversazioni Multi-Turno e Memoria
-# Versione 1.1.0 - Interfaccia con Memoria Conversazionale
+# Streamlit UI per LLM con Conversazioni Multi-Turno e Memoria Persistente
+# Versione 1.1.1 - Persistenza Conversazioni
 # Gilles DeepAiUG - Gennaio 2025
 # 
-# Novità v1.1.0:
-# - Conversazioni multi-turno con memoria completa
-# - Interfaccia chat-style con bolle messaggi
-# - Session state persistente
-# - Gestione cronologia conversazioni
-# - Pulsante reset conversazione
-# - Statistiche conversazione (messaggi, token stimati)
+# Novità v1.1.1:
+# - 💾 Salvataggio automatico conversazioni in JSON locale
+# - 📂 Caricamento conversazioni precedenti
+# - 🗂️ Lista conversazioni salvate in sidebar
+# - 🔍 Preview conversazioni prima del caricamento
+# - 🗑️ Eliminazione conversazioni salvate
 
 import os
 import subprocess
@@ -17,6 +16,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from datetime import datetime
 from typing import List, Dict, Any
+import json
 
 # Import datapizza clients
 from datapizza.clients import ClientFactory
@@ -34,6 +34,9 @@ USER_MESSAGE_COLOR = "#E3F2FD"
 ASSISTANT_MESSAGE_COLOR = "#F5F5F5"
 USER_MESSAGE_COLOR_DARK = "#1E3A5F"
 ASSISTANT_MESSAGE_COLOR_DARK = "#2D2D2D"
+
+# Directory per conversazioni salvate
+CONVERSATIONS_DIR = Path(__file__).parent / "conversations"
 
 # ============================================================================
 # FUNZIONI API KEYS
@@ -157,6 +160,143 @@ def create_client(connection_type: str, provider: str, api_key: str,
         )
 
 # ============================================================================
+# FUNZIONI PERSISTENZA CONVERSAZIONI
+# ============================================================================
+
+def ensure_conversations_dir():
+    """Crea directory conversations se non esiste."""
+    CONVERSATIONS_DIR.mkdir(exist_ok=True)
+
+
+def get_conversation_filename(conversation_id: str) -> Path:
+    """Genera path file per conversazione."""
+    return CONVERSATIONS_DIR / f"conv_{conversation_id}.json"
+
+
+def save_conversation_to_file():
+    """Salva conversazione corrente su file JSON."""
+    try:
+        ensure_conversations_dir()
+        
+        conversation_data = {
+            "conversation_id": st.session_state.get("conversation_id", "unknown"),
+            "created_at": st.session_state.get("conversation_created_at", datetime.now().isoformat()),
+            "last_updated": datetime.now().isoformat(),
+            "model": st.session_state.get("current_model", "unknown"),
+            "provider": st.session_state.get("connection_type", "unknown"),
+            "messages": st.session_state.get("messages", []),
+            "stats": {
+                "total_messages": len(st.session_state.get("messages", [])),
+                "tokens_estimate": st.session_state.get("total_tokens_estimate", 0)
+            }
+        }
+        
+        filename = get_conversation_filename(conversation_data["conversation_id"])
+        
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(conversation_data, f, indent=2, ensure_ascii=False)
+        
+        return True
+    except Exception as e:
+        st.error(f"Errore salvataggio conversazione: {e}")
+        return False
+
+
+def load_conversation_from_file(conversation_id: str) -> bool:
+    """Carica conversazione da file JSON."""
+    try:
+        filename = get_conversation_filename(conversation_id)
+        
+        if not filename.exists():
+            st.error(f"File conversazione non trovato: {filename}")
+            return False
+        
+        with open(filename, "r", encoding="utf-8") as f:
+            conversation_data = json.load(f)
+        
+        # Ripristina stato
+        st.session_state["conversation_id"] = conversation_data.get("conversation_id")
+        st.session_state["conversation_created_at"] = conversation_data.get("created_at")
+        st.session_state["messages"] = conversation_data.get("messages", [])
+        st.session_state["total_tokens_estimate"] = conversation_data.get("stats", {}).get("tokens_estimate", 0)
+        
+        return True
+    except Exception as e:
+        st.error(f"Errore caricamento conversazione: {e}")
+        return False
+
+
+def list_saved_conversations() -> List[Dict[str, Any]]:
+    """Lista tutte le conversazioni salvate."""
+    try:
+        ensure_conversations_dir()
+        
+        conversations = []
+        for file_path in CONVERSATIONS_DIR.glob("conv_*.json"):
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                
+                conversations.append({
+                    "id": data.get("conversation_id"),
+                    "created_at": data.get("created_at"),
+                    "last_updated": data.get("last_updated"),
+                    "model": data.get("model"),
+                    "provider": data.get("provider"),
+                    "message_count": data.get("stats", {}).get("total_messages", 0),
+                    "filename": file_path.name
+                })
+            except Exception as e:
+                st.warning(f"Errore lettura {file_path.name}: {e}")
+                continue
+        
+        # Ordina per last_updated (più recente prima)
+        conversations.sort(key=lambda x: x.get("last_updated", ""), reverse=True)
+        
+        return conversations
+    except Exception as e:
+        st.warning(f"Errore lista conversazioni: {e}")
+        return []
+
+
+def delete_conversation_file(conversation_id: str) -> bool:
+    """Elimina file conversazione."""
+    try:
+        filename = get_conversation_filename(conversation_id)
+        if filename.exists():
+            filename.unlink()
+            return True
+        return False
+    except Exception as e:
+        st.error(f"Errore eliminazione: {e}")
+        return False
+
+
+def get_conversation_preview(conversation_id: str) -> str:
+    """Genera preview testuale conversazione."""
+    try:
+        filename = get_conversation_filename(conversation_id)
+        with open(filename, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        
+        messages = data.get("messages", [])
+        if not messages:
+            return "Conversazione vuota"
+        
+        preview_lines = []
+        for msg in messages[:3]:  # Prime 3 messaggi
+            role = "👤 Tu" if msg["role"] == "user" else "🤖 AI"
+            content = msg["content"][:50] + "..." if len(msg["content"]) > 50 else msg["content"]
+            preview_lines.append(f"{role}: {content}")
+        
+        if len(messages) > 3:
+            preview_lines.append(f"... (+{len(messages) - 3} messaggi)")
+        
+        return "\n".join(preview_lines)
+    except:
+        return "Errore caricamento preview"
+
+# ============================================================================
 # FUNZIONI CONVERSAZIONE
 # ============================================================================
 
@@ -166,8 +306,12 @@ def initialize_conversation():
         st.session_state["messages"] = []
     if "conversation_id" not in st.session_state:
         st.session_state["conversation_id"] = datetime.now().strftime("%Y%m%d_%H%M%S")
+    if "conversation_created_at" not in st.session_state:
+        st.session_state["conversation_created_at"] = datetime.now().isoformat()
     if "total_tokens_estimate" not in st.session_state:
         st.session_state["total_tokens_estimate"] = 0
+    if "auto_save_enabled" not in st.session_state:
+        st.session_state["auto_save_enabled"] = True
 
 
 def add_message(role: str, content: str, model: str = None):
@@ -183,6 +327,10 @@ def add_message(role: str, content: str, model: str = None):
     
     st.session_state["messages"].append(message)
     st.session_state["total_tokens_estimate"] += len(content) // 4
+    
+    # Auto-save se abilitato
+    if st.session_state.get("auto_save_enabled", True):
+        save_conversation_to_file()
 
 
 def get_conversation_history(max_messages: int = None) -> List[Dict[str, str]]:
@@ -199,6 +347,7 @@ def reset_conversation():
     """Resetta conversazione."""
     st.session_state["messages"] = []
     st.session_state["conversation_id"] = datetime.now().strftime("%Y%m%d_%H%M%S")
+    st.session_state["conversation_created_at"] = datetime.now().isoformat()
     st.session_state["total_tokens_estimate"] = 0
 
 
@@ -207,7 +356,7 @@ def estimate_tokens_in_conversation() -> int:
     return st.session_state.get("total_tokens_estimate", 0)
 
 # ============================================================================
-# RENDERING MESSAGGI - VERSIONE PULITA
+# RENDERING MESSAGGI
 # ============================================================================
 
 def render_chat_message(message: Dict[str, Any], index: int):
@@ -217,7 +366,6 @@ def render_chat_message(message: Dict[str, Any], index: int):
     timestamp = message.get("timestamp", "")
     model_used = message.get("model", "")
     
-    # Formatta timestamp
     time_str = ""
     if timestamp:
         try:
@@ -226,7 +374,6 @@ def render_chat_message(message: Dict[str, Any], index: int):
         except:
             pass
     
-    # Configurazione visiva
     if role == "user":
         avatar = "👤"
         label = "Tu"
@@ -238,16 +385,13 @@ def render_chat_message(message: Dict[str, Any], index: int):
         col_config = [0.5, 7, 3]
         bubble_class = "assistant-bubble"
     
-    # Layout
     cols = st.columns(col_config)
     
     with cols[1]:
         st.caption(f"{avatar} **{label}** • {time_str}")
-        
         st.markdown(f'<div class="{bubble_class}">', unsafe_allow_html=True)
         st.write(content)
         st.markdown('</div>', unsafe_allow_html=True)
-        
         st.write("")
 
 # ============================================================================
@@ -255,7 +399,7 @@ def render_chat_message(message: Dict[str, Any], index: int):
 # ============================================================================
 
 st.set_page_config(
-    page_title="Datapizza → LLM Chat v1.1.0", 
+    page_title="Datapizza → LLM Chat v1.1.1", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -263,7 +407,7 @@ st.set_page_config(
 initialize_conversation()
 
 # ============================================================================
-# STILI CSS - UNA SOLA VOLTA
+# STILI CSS
 # ============================================================================
 
 st.markdown("""
@@ -310,6 +454,9 @@ connection_type = st.sidebar.selectbox(
     ["Local (Ollama)", "Remote host", "Cloud provider"],
     index=0
 )
+
+# Salva in session state per persistenza
+st.session_state["connection_type"] = connection_type
 
 base_url = "http://localhost:11434/v1"
 api_key = ""
@@ -392,6 +539,9 @@ else:
         model = st.sidebar.text_input("Modello")
         base_url = st.sidebar.text_input("Base URL")
 
+# Salva modello corrente
+st.session_state["current_model"] = model
+
 # PARAMETRI
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎛️ Parametri")
@@ -411,10 +561,94 @@ max_messages = st.sidebar.slider("Max messaggi", 10, 100, 50, 10)
 include_full_history = st.sidebar.checkbox("Cronologia completa", value=True)
 
 # ============================================================================
+# GESTIONE CONVERSAZIONI SALVATE
+# ============================================================================
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 💾 Conversazioni Salvate")
+
+# Auto-save toggle
+auto_save = st.sidebar.checkbox(
+    "Salvataggio automatico",
+    value=st.session_state.get("auto_save_enabled", True),
+    help="Salva automaticamente ad ogni messaggio"
+)
+st.session_state["auto_save_enabled"] = auto_save
+
+# Pulsante salvataggio manuale
+if st.sidebar.button("💾 Salva Ora", use_container_width=True):
+    if save_conversation_to_file():
+        st.sidebar.success("✅ Salvata!")
+
+# Lista conversazioni salvate
+saved_conversations = list_saved_conversations()
+
+if saved_conversations:
+    st.sidebar.write(f"📂 {len(saved_conversations)} conversazioni salvate")
+    
+    # Dropdown per selezione
+    conv_options = []
+    for conv in saved_conversations:
+        try:
+            dt = datetime.fromisoformat(conv["last_updated"])
+            date_str = dt.strftime("%d/%m %H:%M")
+        except:
+            date_str = "N/A"
+        
+        label = f"{date_str} - {conv['model'][:15]} ({conv['message_count']} msg)"
+        conv_options.append((label, conv["id"]))
+    
+    selected_conv = st.sidebar.selectbox(
+        "Seleziona conversazione",
+        options=[None] + [c[0] for c in conv_options],
+        format_func=lambda x: "-- Seleziona --" if x is None else x
+    )
+    
+    if selected_conv:
+        # Trova ID conversazione selezionata
+        selected_id = next((c[1] for c in conv_options if c[0] == selected_conv), None)
+        
+        if selected_id:
+            # Preview
+            with st.sidebar.expander("👁️ Anteprima"):
+                preview = get_conversation_preview(selected_id)
+                st.text(preview)
+            
+            # Pulsanti azione
+            col_load, col_del = st.sidebar.columns(2)
+            
+            with col_load:
+                if st.button("📂 Carica", use_container_width=True):
+                    if load_conversation_from_file(selected_id):
+                        st.sidebar.success("✅ Caricata!")
+                        st.rerun()
+            
+            with col_del:
+                if st.button("🗑️ Elimina", use_container_width=True):
+                    st.session_state["confirm_delete"] = selected_id
+
+# Conferma eliminazione
+if st.session_state.get("confirm_delete"):
+    st.sidebar.warning("⚠️ Confermi eliminazione?")
+    col_yes, col_no = st.sidebar.columns(2)
+    with col_yes:
+        if st.button("✅ Sì", key="del_yes"):
+            if delete_conversation_file(st.session_state["confirm_delete"]):
+                st.sidebar.success("🗑️ Eliminata!")
+                st.session_state["confirm_delete"] = None
+                st.rerun()
+    with col_no:
+        if st.button("❌ No", key="del_no"):
+            st.session_state["confirm_delete"] = None
+            st.rerun()
+else:
+    st.sidebar.info("💡 Le conversazioni vengono salvate in `conversations/`")
+
+# ============================================================================
 # MAIN
 # ============================================================================
 
-version = "v1.1.0"
+version = "v1.1.1"
 if connection_type == "Cloud provider":
     st.title(f"🍕 Datapizza Chat → {provider} `{version}`")
 elif connection_type == "Remote host":
@@ -422,7 +656,7 @@ elif connection_type == "Remote host":
 else:
     st.title(f"🍕 Datapizza Chat → Ollama `{version}`")
 
-st.info("✨ **Novità v1.1.0**: Conversazioni con memoria!")
+st.info("✨ **Novità v1.1.1**: Salvataggio e caricamento conversazioni!")
 
 if connection_type == "Local (Ollama)":
     st.success("💻 **Locale** - Privacy totale")
@@ -452,7 +686,7 @@ chat_container = st.container()
 with chat_container:
     messages = st.session_state.get("messages", [])
     if not messages:
-        st.info("👋 Inizia una conversazione!")
+        st.info("👋 Inizia una conversazione o carica una precedente dalla sidebar!")
     else:
         for idx, msg in enumerate(messages):
             render_chat_message(msg, idx)
@@ -483,13 +717,13 @@ with c2:
             st.session_state["confirm_reset"] = True
 
 if st.session_state.get("confirm_reset"):
-    st.warning("⚠️ Confermi reset?")
+    st.warning("⚠️ Confermi reset? (La conversazione corrente è già salvata)")
     c1, c2, _ = st.columns([1, 1, 8])
     with c1:
         if st.button("✅ Sì", type="primary"):
             reset_conversation()
             st.session_state["confirm_reset"] = False
-            st.success("✨ Reset!")
+            st.success("✨ Nuova conversazione!")
             st.rerun()
     with c2:
         if st.button("❌ No"):
@@ -517,7 +751,6 @@ if submit and user_input.strip():
             )
             
             with st.spinner(f"🤖 {model} pensa..."):
-                # Costruisci prompt con cronologia
                 context = ""
                 for msg in history[:-1]:
                     role_label = "Utente" if msg["role"] == "user" else "AI"
@@ -538,7 +771,7 @@ if submit and user_input.strip():
 st.markdown("---")
 c1, c2, c3 = st.columns([2, 6, 2])
 c1.caption("🍕 Datapizza AI")
-c2.caption("v1.1.0 - Multi-turn | Gilles DeepAiUG © 2025")
+c2.caption("v1.1.1 - Conversation Persistence | Gilles DeepAiUG © 2025")
 
 if connection_type == "Cloud provider":
     st.markdown("""
