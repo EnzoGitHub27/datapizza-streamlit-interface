@@ -129,6 +129,31 @@ Nessuna feature attualmente in sviluppo. Controlla [ROADMAP.md](ROADMAP.md) per 
 - Stima token approssimativa (4 caratteri = 1 token)
 - ID univoco per ogni sessione conversazione
 
+## [1.1.1] - 2025-01-03
+
+### Aggiunto
+- 💾 **Salvataggio automatico conversazioni** in file JSON locale
+- 📂 **Caricamento conversazioni precedenti** dalla sidebar
+- 🗂️ **Lista conversazioni salvate** con data, modello e numero messaggi
+- 👁️ **Preview conversazioni** prima del caricamento (primi 3 messaggi)
+- 🗑️ **Eliminazione conversazioni** con conferma di sicurezza
+- 🔘 **Toggle auto-save** per controllare salvataggio automatico
+- 💾 **Pulsante salvataggio manuale** per salvare on-demand
+- 📊 **Metadata completi** in JSON (created_at, last_updated, model, provider, stats)
+
+### Modificato
+- 📁 Le conversazioni vengono salvate in directory `conversations/`
+- 🔄 Reset conversazione ora avvisa che la conversazione corrente è già salvata
+- 🆔 ID conversazione persiste attraverso il caricamento
+
+### Tecnico
+- Formato JSON strutturato per persistenza
+- Funzioni: `save_conversation_to_file()`, `load_conversation_from_file()`
+- Funzioni: `list_saved_conversations()`, `delete_conversation_file()`
+- Auto-save trigger su ogni `add_message()`
+- Directory `conversations/` creata automaticamente
+
+
 ---
 
 ## Come Leggere Questo Changelog
