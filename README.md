@@ -258,7 +258,10 @@ datapizza-streamlit-interface/
 ├── install.bat                             
 │
 ├── 00_interfaccia_dinamica_datapizza_Streamlit.py  ← v1.0.0 (STABILE su main)
-├── 01_interfaccia_con_memoria.py                   ← v1.1.0 (STABILE su main)
+├── 01_interfaccia_con_memoria.py                   ← v1.1.1 (STABILE su main)
+│
+├── conversations/
+│   └── .gitkeep
 │
 ├── secrets/
 │   └── .gitkeep
@@ -268,6 +271,32 @@ datapizza-streamlit-interface/
     └── secrets_tutorial.py
 
 ```
+## 📂 Versioni Disponibili
+
+### File Principali
+
+| File | Versione | Stato | Descrizione |
+|------|----------|-------|-------------|
+| `01_interfaccia_con_memoria.py` | **v1.1.1** | ⭐ **Latest** | Multi-turno + Persistenza conversazioni |
+| `00_interfaccia_dinamica_datapizza_Streamlit.py` | v1.0.0 | ✅ Stable | Interfaccia base |
+
+### Quick Start
+```bash
+# CONSIGLIATA: Versione con memoria E persistenza
+streamlit run 01_interfaccia_con_memoria.py
+
+# Base: Interfaccia semplice senza memoria
+streamlit run 00_interfaccia_dinamica_datapizza_Streamlit.py
+```
+
+### Novità v1.1.1 💾
+
+- 💾 Salvataggio automatico conversazioni
+- 📂 Caricamento conversazioni precedenti
+- 🗂️ Gestione conversazioni multiple
+- 👁️ Preview prima del caricamento
+
+Vedi [CHANGELOG.md](CHANGELOG.md) per dettagli completi.
 
 ---
 
