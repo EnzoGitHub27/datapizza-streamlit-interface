@@ -303,6 +303,10 @@ downloads/
 temp_*.png
 !screenshot.png
 
+# Conversazioni salvate (dati utente)
+conversations/*.json
+!conversations/.gitkeep
+
 #### **📄 LICENSE** (MIT License suggerita)
 ```
 MIT License
