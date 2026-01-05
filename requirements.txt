@@ -29,3 +29,6 @@ datapizza-ai-clients-openai-like
 datapizza-ai-clients-openai
 datapizza-ai-clients-anthropic
 datapizza-ai-clients-google
+
+# Opzionale: per export PDF
+reportlab>=4.0.0
