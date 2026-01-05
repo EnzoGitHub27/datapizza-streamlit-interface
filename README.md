@@ -116,6 +116,30 @@ Se riscontri errori, il file `requirements.txt` contiene istruzioni per l'instal
 
 ---
 
+### Metodo 4: Usando Poetry 
+Installa poetry [qui](https://python-poetry.org/docs/#installing-with-the-official-installer)
+
+Crea un virtual environment con python 3.12 o 3.13 
+
+```bash
+poetry env use python3.12
+```
+
+Installa le dipendenze dal file pyproject.toml
+
+```bash
+poetry install
+```
+
+attiva l'ambiente virtuale
+
+```bash
+poetry shell
+```
+
+
+
+
 ## 🔧 Configurazione API Keys
 
 ### Opzione A: File .env (Consigliata per sviluppo)
