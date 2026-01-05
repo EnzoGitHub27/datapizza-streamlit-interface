@@ -259,6 +259,7 @@ datapizza-streamlit-interface/
 │
 ├── 00_interfaccia_dinamica_datapizza_Streamlit.py  ← v1.0.0 (STABILE su main)
 ├── 01_interfaccia_con_memoria.py                   ← v1.1.1 (STABILE su main)
+├── 02_interfaccia_con_export.py                    ← v1.2.0 (STABILE su main)
 │
 ├── conversations/
 │   └── .gitkeep
@@ -270,25 +271,26 @@ datapizza-streamlit-interface/
     ├── client_factory_tutorial_datapizza-ai.py
     └── secrets_tutorial.py
 
-```
-## 📂 Versioni Disponibili
 
-### File Principali
+## 📂 Versioni Disponibili
 
 | File | Versione | Stato | Descrizione |
 |------|----------|-------|-------------|
-| `01_interfaccia_con_memoria.py` | **v1.1.1** | ⭐ **Latest** | Multi-turno + Persistenza conversazioni |
-| `00_interfaccia_dinamica_datapizza_Streamlit.py` | v1.0.0 | ✅ Stable | Interfaccia base |
+| `02_interfaccia_con_export.py` | **v1.2.0** | ⭐ **Latest** | Multi-turno + Persistenza + Export |
+| `01_interfaccia_con_memoria.py` | v1.1.1 | ✅ Stable | Multi-turno + Persistenza |
+| `00_interfaccia_dinamica_datapizza_Streamlit.py` | v1.0.0 | ✅ Stable | Base interface |
 
-### Quick Start
+### 🚀 Quick Start
 ```bash
-# CONSIGLIATA: Versione con memoria E persistenza
+# CONSIGLIATA: Ultima versione con tutte le funzionalità
+streamlit run 02_interfaccia_con_export.py
+
+# Versione con memoria (senza export)
 streamlit run 01_interfaccia_con_memoria.py
 
-# Base: Interfaccia semplice senza memoria
+# Versione base (senza memoria)
 streamlit run 00_interfaccia_dinamica_datapizza_Streamlit.py
 ```
-
 ### Novità v1.1.1 💾
 
 - 💾 Salvataggio automatico conversazioni
@@ -296,7 +298,15 @@ streamlit run 00_interfaccia_dinamica_datapizza_Streamlit.py
 - 🗂️ Gestione conversazioni multiple
 - 👁️ Preview prima del caricamento
 
-Vedi [CHANGELOG.md](CHANGELOG.md) per dettagli completi.
+
+### ✨ Novità v1.2.0
+
+- 📥 Export conversazioni in **Markdown, JSON, TXT, PDF**
+- 👁️ Anteprima export prima del download
+- 🗂️ Batch export (tutte le conversazioni in ZIP)
+- 📝 Nome file personalizzabile
+
+Vedi [CHANGELOG.md](CHANGELOG.md) per dettagli completi su tutte le versioni.
 
 ---
 
