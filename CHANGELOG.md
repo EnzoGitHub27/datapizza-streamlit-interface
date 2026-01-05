@@ -154,6 +154,33 @@ Nessuna feature attualmente in sviluppo. Controlla [ROADMAP.md](ROADMAP.md) per 
 - Directory `conversations/` creata automaticamente
 
 
+## [1.2.0] - 2025-01-04
+
+### Aggiunto
+- 📥 **Export Markdown** (.md) - formattato per blog, Obsidian, Notion
+- 📥 **Export JSON** (.json) - strutturato per elaborazione programmata
+- 📥 **Export TXT** (.txt) - backup semplice e leggibile
+- 📥 **Export PDF** (.pdf) - documenti stampabili (richiede `reportlab`)
+- 👁️ **Preview export** - anteprima contenuto prima del download
+- 📝 **Nome file personalizzabile** - modifica nome prima di salvare
+- 📊 **Selezione contenuto** - esporta tutto o ultimi N messaggi
+- 🗂️ **Batch export** - esporta tutte le conversazioni in ZIP
+- 🎨 **Nuova sezione sidebar** "📤 Export Conversazione"
+
+### Modificato
+- 📁 Nuovo file `02_interfaccia_con_export.py` per v1.2.0
+- 🔧 Metadata completi inclusi in tutti i formati export
+- 📊 Statistiche (messaggi, token) incluse nell'export
+
+### Corretto
+- 🐛 Fix AttributeError nel preview export (st.sidebar.session_state)
+
+### Tecnico
+- Funzioni: `export_to_markdown()`, `export_to_json()`, `export_to_txt()`, `export_to_pdf()`
+- Funzione: `create_batch_export_zip()` per export multiplo
+- Dipendenza opzionale: `reportlab` per generazione PDF
+- Preview salva opzioni in session_state prima di mostrare
+
 ---
 
 ## Come Leggere Questo Changelog
