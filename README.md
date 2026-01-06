@@ -3,7 +3,7 @@
 > Interfaccia Streamlit per interagire con LLM locali (Ollama), remoti e cloud.
 > Progetto Open Source della community **DeepAiUG**.
 
-[![Version](https://img.shields.io/badge/version-1.3.1-blue.svg)](https://github.com/DeepAiUG/datapizza-streamlit-interface)
+[![Version](https://img.shields.io/badge/version-1.3.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -46,26 +46,144 @@ ollama --version
 ollama list  # verifica modelli installati
 ```
 
-### Installazione
+---
 
+## 🚀 Installazione
+
+### Metodo 1: Script Automatico (Consigliato) ⭐
+
+Questo metodo gestisce automaticamente l'ordine di installazione dei pacchetti.
+
+#### Linux/Mac
 ```bash
-# 1. Clona il repository
-git clone https://github.com/DeepAiUG/datapizza-streamlit-interface.git
+git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
 cd datapizza-streamlit-interface
-
-# 2. Crea ambiente virtuale (consigliato)
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# oppure: venv\Scripts\activate  # Windows
-
-# 3. Installa dipendenze
-pip install -r requirements.txt
-
-# 4. Avvia l'interfaccia
-streamlit run 03_interfaccia_con_wiki_rag.py
+chmod +x install.sh
+./install.sh
 ```
 
-### Avvio Rapido
+> ⚠️ Se lo script non funziona, usa il **Metodo 2** (installazione manuale).
+
+#### Windows (da testare)
+```bash
+git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
+cd datapizza-streamlit-interface
+install.bat
+```
+
+Lo script ti chiederà quali provider cloud installare.
+
+---
+
+### Metodo 2: Installazione Manuale Passo-Passo
+
+Se lo script automatico non funziona o preferisci installare manualmente:
+
+#### 1. Clona il repository
+```bash
+git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
+cd datapizza-streamlit-interface
+```
+
+#### 2. Crea un ambiente virtuale (FORTEMENTE consigliato)
+```bash
+python3 -m venv deepaiug-interface
+source deepaiug-interface/bin/activate  # Su Linux/Mac
+# oppure
+deepaiug-interface\Scripts\activate  # Su Windows
+```
+
+#### 3. Installa le dipendenze nell'ordine corretto
+
+**⚠️ IMPORTANTE: L'ordine di installazione è cruciale!**
+
+```bash
+# 3.1 - Dipendenze base
+pip install streamlit python-dotenv reportlab
+
+# 3.2 - Datapizza AI core (PRIMA dei client!)
+pip install datapizza-ai
+
+# 3.3 - Client provider cloud (DOPO datapizza-ai)
+# Installa solo quelli che ti servono:
+
+# Per Ollama in Locale
+pip install datapizza-ai-clients-openai-like
+
+# Per OpenAI (GPT-4, GPT-3.5, ecc.)
+pip install datapizza-ai-clients-openai
+
+# Per Anthropic Claude
+pip install datapizza-ai-clients-anthropic
+
+# Per Google Gemini
+pip install datapizza-ai-clients-google
+```
+
+#### 4. Dipendenze per Wiki RAG (v1.3.0+)
+```bash
+pip install chromadb beautifulsoup4 PyPDF2
+```
+
+---
+
+### Metodo 3: Usando requirements.txt
+
+⚠️ **Nota**: Alcuni utenti hanno riscontrato problemi con questo metodo. Se fallisce, usa il **Metodo 2**.
+
+```bash
+pip install -r requirements.txt
+```
+
+Se riscontri errori, segui le istruzioni nel Metodo 2.
+
+---
+
+## 🔧 Configurazione API Keys
+
+### Opzione A: File .env (Consigliata per sviluppo)
+
+Crea un file `.env` nella root del progetto:
+
+```env
+OPENAI_API_KEY=sk-your-openai-key-here
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-key-here
+GOOGLE_API_KEY=your-google-gemini-key-here
+```
+
+### Opzione B: File secrets (Consigliata per produzione)
+
+```bash
+# Crea la cartella secrets se non esiste
+mkdir -p secrets
+
+# Crea i file per ogni provider
+echo "sk-your-openai-key" > secrets/openai_key.txt
+echo "sk-ant-your-anthropic-key" > secrets/anthropic_key.txt
+echo "your-gemini-key" > secrets/google_key.txt
+```
+
+### Opzione C: Variabili d'ambiente di sistema
+
+```bash
+# Linux/Mac
+export OPENAI_API_KEY="sk-your-key-here"
+export ANTHROPIC_API_KEY="sk-ant-your-key-here"
+export GOOGLE_API_KEY="your-key-here"
+
+# Windows PowerShell
+$env:OPENAI_API_KEY="sk-your-key-here"
+$env:ANTHROPIC_API_KEY="sk-ant-your-key-here"
+$env:GOOGLE_API_KEY="your-key-here"
+```
+
+### Opzione D: Interfaccia Web
+
+Puoi anche inserire e salvare le API keys direttamente dall'interfaccia Streamlit!
+
+---
+
+## ▶️ Avvio
 
 ```bash
 # CONSIGLIATA: Ultima versione con tutte le funzionalità
@@ -150,7 +268,7 @@ Quando la Knowledge Base è attiva:
 # Core
 streamlit>=1.28.0
 python-dotenv>=1.0.0
-datapizza>=0.1.0
+datapizza-ai
 
 # Export (v1.2.0+)
 reportlab>=4.0.0
@@ -161,34 +279,9 @@ beautifulsoup4>=4.12.0
 PyPDF2>=3.0.0
 ```
 
-Installa tutto con:
-```bash
-pip install -r requirements.txt
-```
-
 ---
 
-## 🔧 Configurazione
-
-### API Keys (per Cloud Provider)
-
-Crea una cartella `secrets/` e aggiungi i file:
-
-```
-secrets/
-├── openai_key.txt
-├── anthropic_key.txt
-└── google_key.txt
-```
-
-Oppure usa variabili d'ambiente:
-```bash
-export OPENAI_API_KEY="sk-..."
-export ANTHROPIC_API_KEY="sk-ant-..."
-export GOOGLE_API_KEY="..."
-```
-
-### Modelli Ollama Consigliati
+## 🔧 Modelli Ollama Consigliati
 
 ```bash
 # Modelli generali
@@ -218,13 +311,15 @@ datapizza-streamlit-interface/
 ├── 02_interfaccia_con_export.py                     # v1.2.0
 ├── 03_interfaccia_con_wiki_rag.py                   # v1.3.1 ⭐
 ├── requirements.txt
+├── install.sh                  # Script installazione Linux/Mac
+├── install.bat                 # Script installazione Windows
 ├── README.md
 ├── CHANGELOG.md
 ├── ROADMAP.md
 ├── LICENSE
-├── conversations/          # Conversazioni salvate (auto-generato)
-├── knowledge_base/         # Vector store ChromaDB (auto-generato)
-└── secrets/                # API keys (opzionale)
+├── conversations/              # Conversazioni salvate (auto-generato)
+├── knowledge_base/             # Vector store ChromaDB (auto-generato)
+└── secrets/                    # API keys (opzionale)
 ```
 
 ---
