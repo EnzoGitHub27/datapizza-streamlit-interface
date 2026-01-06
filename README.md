@@ -1,444 +1,281 @@
 # 🍕 Datapizza Streamlit LLM Interface
 
-Interfaccia web completa per interagire con Large Language Models (LLM) locali, remoti e cloud tramite il framework [Datapizza AI](https://github.com/datapizza).
-[DeepAiUG](https://deepaiug.vercel.app/) - Progetto DeepAiUG
+> Interfaccia Streamlit per interagire con LLM locali (Ollama), remoti e cloud.
+> Progetto Open Source della community **DeepAiUG**.
 
-![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
-![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-
-## ✨ Caratteristiche
-
-- 🖥️ **Modelli Locali**: Supporto completo per Ollama con rilevamento automatico
-- 🌐 **Host Remoti**: Connessione a server LLM sulla tua rete
-- ☁️ **Provider Cloud**: OpenAI, Anthropic (Claude), Google Gemini
-- 🔐 **Gestione Sicura API Keys**: Variabili d'ambiente o file secrets
-- 📎 **Upload File**: Carica e processa documenti (solo modalità locale/remota)
-- 🎨 **Interfaccia Intuitiva**: UI Streamlit moderna e responsive
-- ⚙️ **Parametri Configurabili**: Temperature, system prompt, modelli
-
-## 🎥 Demo 00_interfaccia_dinamica_datapizza_Streamlit.py
-
-![Demo Screenshot](screenshot.png)
-
-## 🎥 Demo 01_interfaccia_con_memoria.py
-
-![Demo Screenshot](screenshot1_1.png)
-
-## 📋 Prerequisiti
-
-- Python 3.8 o superiore
-- pip (gestore pacchetti Python)
-- [Ollama](https://ollama.ai/) (opzionale, per modelli locali)
-- API Keys per provider cloud (opzionale)
-
-## 🚀 Installazione
-
-### Metodo 1: Script Automatico (Consigliato) ⭐
-
-Questo metodo gestisce automaticamente l'ordine di installazione dei pacchetti.
-
-#### Linux/Mac (se non funziona usare il punto 3. Installa le dipendenze nell'ordine corretto ):
-```bash
-git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
-cd datapizza-streamlit-interface
-chmod +x install.sh
-./install.sh
-```
-
-#### Windows (da testare!!!):
-```bash
-git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
-cd datapizza-streamlit-interface
-install.bat
-```
-
-Lo script ti chiederà quali provider cloud installare.
+[![Version](https://img.shields.io/badge/version-1.3.1-blue.svg)](https://github.com/DeepAiUG/datapizza-streamlit-interface)
+[![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
+[![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 ---
 
-### Metodo 2: Installazione Manuale Passo-Passo
+## ✨ Features
 
-Se lo script automatico non funziona o preferisci installare manualmente:
-
-#### 1. Clona il repository
-```bash
-git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
-cd datapizza-streamlit-interface
-```
-
-#### 2. Crea un ambiente virtuale (FORTEMENTE consigliato)
-```bash
-python -m venv deepaiug-interface
-source deepaiug-interface/bin/activate  # Su Linux/Mac
-# oppure
-deepaiug-interface\Scripts\activate  # Su Windows
-```
-
-#### 3. Installa le dipendenze nell'ordine corretto
-
-**⚠️ IMPORTANTE: L'ordine di installazione è cruciale!**
-
-```bash
-# 3.1 - Dipendenze base
-pip install streamlit python-dotenv
-
-# 3.2 - Datapizza AI core (PRIMA dei client!)
-pip install datapizza-ai
-
-# 3.3 - Client provider cloud (DOPO datapizza-ai)
-# Installa solo quelli che ti servono:
-
-# Per Ollama in Locale
-pip install datapizza-ai-clients-openai-like
-
-# Per OpenAI (GPT-4, GPT-3.5, ecc.)
-pip install datapizza-ai-clients-openai
-
-# Per Anthropic Claude
-pip install datapizza-ai-clients-anthropic
-
-# Per Google Gemini
-pip install datapizza-ai-clients-google
-```
+- 🤖 **Multi-provider**: Ollama (locale), Remote host, Cloud (OpenAI, Anthropic, Google)
+- 💬 **Conversazioni multi-turno** con memoria del contesto
+- 💾 **Persistenza** delle conversazioni su file JSON
+- 📥 **Export** in Markdown, JSON, TXT, PDF
+- 📚 **Knowledge Base RAG** - Interroga i tuoi documenti locali! ⭐ NEW
+- 🔒 **Privacy-first** - Blocco automatico cloud quando usi documenti sensibili
+- 🎨 **UI moderna** con temi chiaro/scuro
 
 ---
-
-### Metodo 3: Usando requirements.txt
-
-⚠️ **Nota**: Alcuni utenti hanno riscontrato problemi con questo metodo. Se fallisce, usa il Metodo 2.
-
-```bash
-pip install -r requirements.txt
-```
-
-Se riscontri errori, il file `requirements.txt` contiene istruzioni per l'installazione manuale.
-
----
-
-## 🔧 Configurazione API Keys
-
-### Opzione A: File .env (Consigliata per sviluppo)
-
-Crea un file `.env` nella root del progetto:
-
-```bash
-# .env
-OPENAI_API_KEY=sk-your-openai-key-here
-ANTHROPIC_API_KEY=sk-ant-your-anthropic-key-here
-GOOGLE_API_KEY=your-google-gemini-key-here
-```
-
-### Opzione B: File secrets (Consigliata per produzione)
-
-```bash
-# Crea la cartella secrets se non esiste
-mkdir -p secrets
-
-# Crea i file per ogni provider
-echo "sk-your-openai-key" > secrets/openai_key.txt
-echo "sk-ant-your-anthropic-key" > secrets/anthropic_key.txt
-echo "your-gemini-key" > secrets/google_key.txt
-```
-
-### Opzione C: Variabili d'ambiente di sistema
-
-```bash
-# Linux/Mac
-export OPENAI_API_KEY="sk-your-key-here"
-export ANTHROPIC_API_KEY="sk-ant-your-key-here"
-export GOOGLE_API_KEY="your-key-here"
-
-# Windows PowerShell
-$env:OPENAI_API_KEY="sk-your-key-here"
-$env:ANTHROPIC_API_KEY="sk-ant-your-key-here"
-$env:GOOGLE_API_KEY="your-key-here"
-```
-
-### Opzione D: Interfaccia Web
-
-Puoi anche inserire e salvare le API keys direttamente dall'interfaccia Streamlit!
-
----
-
-## 🎯 Utilizzo 
-
-### Avvia l'applicazione 00_interfaccia_dinamica_datapizza_Streamlit.py
-
-```bash
-streamlit run 00_interfaccia_dinamica_datapizza_Streamlit.py
-```
-
-### Oppure Avvia l'applicazione 01_interfaccia_con_memoria.py
-
-```bash
-streamlit run 01_interfaccia_con_memoria.py
-```
-
-L'applicazione si aprirà automaticamente nel browser su `http://localhost:8501`
-
----
-
-### Modalità d'uso
-
-#### 🖥️ Locale (Ollama)
-
-**Prerequisiti**: 
-- Ollama installato e in esecuzione
-- Almeno un modello scaricato (es: `ollama pull llama3.2`)
-
-**Passi**:
-1. Seleziona "Local (Ollama)" dalla sidebar
-2. Clicca "🔄 Aggiorna Modelli" per rilevare i modelli disponibili
-3. Seleziona un modello dalla lista
-4. Inserisci il tuo prompt e clicca "🚀 Invia"
-
-**Pro**: 
-- ✅ Privacy totale (nessun dato inviato online)
-- ✅ Gratuito
-- ✅ Nessuna API key necessaria
-
----
-
-#### 🌐 Remote Host
-
-**Quando usarlo**: Hai un server con Ollama o altro LLM sulla tua rete locale
-
-**Passi**:
-1. Seleziona "Remote host" dalla sidebar
-2. Inserisci l'indirizzo del server (es: `http://192.168.1.100:11434/v1`)
-3. Configura il modello disponibile sul server
-4. Invia il tuo prompt
-
-**Pro**:
-- ✅ Utilizza hardware più potente in rete
-- ✅ Privacy (rete locale)
-
----
-
-#### ☁️ Cloud Provider
-
-**Quando usarlo**: Vuoi usare modelli cloud come GPT-4, Claude, Gemini
-
-**Passi**:
-1. Seleziona "Cloud provider" dalla sidebar
-2. Scegli il provider:
-   - **OpenAI**: GPT-4, GPT-3.5-turbo, ecc.
-   - **Anthropic**: Claude Sonnet, Claude Opus
-   - **Google**: Gemini Pro, Gemini Ultra
-3. Inserisci la tua API key (o verrà caricata automaticamente se configurata)
-4. Seleziona il modello
-5. Invia il prompt
-
-**⚠️ Attenzione**:
-- I dati vengono inviati a server esterni
-- Costi API applicabili
-- Upload file disabilitato per privacy
-
----
-
-## 📚 Documentazione
-
-- [CHANGELOG](CHANGELOG.md) - Storia delle versioni e modifiche
-- [ROADMAP](ROADMAP.md) - Piano di sviluppo futuro
-- [CONTRIBUTING](CONTRIBUTING.md) - Guida per contribuire al progetto
-```
-
-## 🎯 **Struttura Finale Repository**
-```
-datapizza-streamlit-interface/
-├── README.md                               ← Documentazione principale
-├── CHANGELOG.md                            ← ✨ NUOVO: Storia versioni
-├── ROADMAP.md                              ← ✨ NUOVO: Piano sviluppo
-├── CONTRIBUTING.md                         ← ✨ NUOVO: Guida contributor
-├── LICENSE                                 
-├── .gitignore                              
-├── requirements.txt                        
-├── install.sh                              
-├── install.bat                             
-│
-├── 00_interfaccia_dinamica_datapizza_Streamlit.py  ← v1.0.0 (STABILE su main)
-├── 01_interfaccia_con_memoria.py                   ← v1.1.1 (STABILE su main)
-├── 02_interfaccia_con_export.py                    ← v1.2.0 (STABILE su main)
-│
-├── conversations/
-│   └── .gitkeep
-│
-├── secrets/
-│   └── .gitkeep
-│
-└── examples/
-    ├── client_factory_tutorial_datapizza-ai.py
-    └── secrets_tutorial.py
-
 
 ## 📂 Versioni Disponibili
 
 | File | Versione | Stato | Descrizione |
 |------|----------|-------|-------------|
-| `02_interfaccia_con_export.py` | **v1.2.0** | ⭐ **Latest** | Multi-turno + Persistenza + Export |
+| `03_interfaccia_con_wiki_rag.py` | **v1.3.1** | ⭐ **Latest** | Multi-turno + Persistenza + Export + **Wiki RAG** |
+| `02_interfaccia_con_export.py` | v1.2.0 | ✅ Stable | Multi-turno + Persistenza + Export |
 | `01_interfaccia_con_memoria.py` | v1.1.1 | ✅ Stable | Multi-turno + Persistenza |
-| `00_interfaccia_dinamica_datapizza_Streamlit.py` | v1.0.0 | ✅ Stable | Base interface |
+| `00_interfaccia_dinamica_datapizza_Streamlit.py` | v1.0.0 | ✅ Stable | Interfaccia base |
 
-### 🚀 Quick Start
+---
+
+## 🚀 Quick Start
+
+### Prerequisiti
+
+```bash
+# Python 3.9+
+python --version
+
+# Ollama (per modelli locali)
+ollama --version
+ollama list  # verifica modelli installati
+```
+
+### Installazione
+
+```bash
+# 1. Clona il repository
+git clone https://github.com/DeepAiUG/datapizza-streamlit-interface.git
+cd datapizza-streamlit-interface
+
+# 2. Crea ambiente virtuale (consigliato)
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# oppure: venv\Scripts\activate  # Windows
+
+# 3. Installa dipendenze
+pip install -r requirements.txt
+
+# 4. Avvia l'interfaccia
+streamlit run 03_interfaccia_con_wiki_rag.py
+```
+
+### Avvio Rapido
+
 ```bash
 # CONSIGLIATA: Ultima versione con tutte le funzionalità
+streamlit run 03_interfaccia_con_wiki_rag.py
+
+# Versione con export (senza RAG)
 streamlit run 02_interfaccia_con_export.py
 
 # Versione con memoria (senza export)
 streamlit run 01_interfaccia_con_memoria.py
 
-# Versione base (senza memoria)
+# Versione base
 streamlit run 00_interfaccia_dinamica_datapizza_Streamlit.py
 ```
-### Novità v1.1.1 💾
-
-- 💾 Salvataggio automatico conversazioni
-- 📂 Caricamento conversazioni precedenti
-- 🗂️ Gestione conversazioni multiple
-- 👁️ Preview prima del caricamento
-
-
-### ✨ Novità v1.2.0
-
-- 📥 Export conversazioni in **Markdown, JSON, TXT, PDF**
-- 👁️ Anteprima export prima del download
-- 🗂️ Batch export (tutte le conversazioni in ZIP)
-- 📝 Nome file personalizzabile
-
-Vedi [CHANGELOG.md](CHANGELOG.md) per dettagli completi su tutte le versioni.
 
 ---
 
-## 🔧 Risoluzione Problemi
+## 📚 Wiki RAG - Knowledge Base (v1.3.1)
 
-### Problema: "Module not found" durante l'avvio
+La funzionalità **Wiki RAG** ti permette di interrogare i tuoi documenti locali usando LLM!
 
-**Soluzione**:
-```bash
-# Verifica che tutte le dipendenze siano installate
-pip list | grep datapizza
-pip list | grep streamlit
+### Come Funziona
 
-# Se mancano, reinstalla nell'ordine corretto (vedi Metodo 2)
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    TUOI DOCUMENTI                           │
+│  (Markdown, TXT, HTML, PDF in una cartella locale)          │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────┐
+│              INDICIZZAZIONE (ChromaDB)                      │
+│  - Chunking intelligente (rispetta titoli/paragrafi)        │
+│  - Embeddings vettoriali                                    │
+│  - Storage locale persistente                               │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      CHAT RAG                               │
+│  1. Ricerca documenti rilevanti                             │
+│  2. Contesto iniettato nel prompt                           │
+│  3. LLM risponde basandosi sui documenti                    │
+│  4. Fonti citate nella risposta                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Problema: Errori durante `pip install -r requirements.txt`
+### Setup Knowledge Base
 
-**Soluzione**: Usa l'installazione manuale (Metodo 2) o lo script automatico (Metodo 1)
+1. **Attiva** "🔍 Usa Knowledge Base" nella sidebar
+2. **Inserisci** il percorso della cartella con i documenti
+3. **Seleziona** i formati file da includere (.md, .txt, .html, .pdf)
+4. **Configura** i parametri di chunking (opzionale)
+5. **Clicca** "🔄 Indicizza Documenti"
+6. **Fai domande** sui tuoi documenti!
 
-### Problema: Ollama non rileva modelli
+### Parametri Chunking
 
-**Soluzione**:
+| Parametro | Default | Descrizione |
+|-----------|---------|-------------|
+| Chunk Size | 1000 | Dimensione massima di ogni chunk (caratteri) |
+| Overlap | 200 | Sovrapposizione tra chunk consecutivi |
+| Top K | 5 | Numero di documenti da includere nel contesto |
+
+**Suggerimenti**:
+- **Chunk piccoli** (500-800): più precisione, meno contesto
+- **Chunk grandi** (1500-2000): più contesto, meno precisione
+- **Overlap alto** (30-50%): evita di perdere informazioni ai bordi
+
+### Privacy Mode
+
+Quando la Knowledge Base è attiva:
+- ☁️ **Cloud provider BLOCCATO** automaticamente
+- 💻 Solo **Ollama locale** o **Remote host** permessi
+- 🔒 I tuoi documenti **non escono mai** dal tuo computer
+
+---
+
+## 📋 Dipendenze
+
+```txt
+# Core
+streamlit>=1.28.0
+python-dotenv>=1.0.0
+datapizza>=0.1.0
+
+# Export (v1.2.0+)
+reportlab>=4.0.0
+
+# Wiki RAG (v1.3.0+)
+chromadb>=0.4.0
+beautifulsoup4>=4.12.0
+PyPDF2>=3.0.0
+```
+
+Installa tutto con:
 ```bash
-# Verifica che Ollama sia in esecuzione
-ollama list
+pip install -r requirements.txt
+```
 
-# Se non ci sono modelli, scaricane uno
+---
+
+## 🔧 Configurazione
+
+### API Keys (per Cloud Provider)
+
+Crea una cartella `secrets/` e aggiungi i file:
+
+```
+secrets/
+├── openai_key.txt
+├── anthropic_key.txt
+└── google_key.txt
+```
+
+Oppure usa variabili d'ambiente:
+```bash
+export OPENAI_API_KEY="sk-..."
+export ANTHROPIC_API_KEY="sk-ant-..."
+export GOOGLE_API_KEY="..."
+```
+
+### Modelli Ollama Consigliati
+
+```bash
+# Modelli generali
 ollama pull llama3.2
+ollama pull mistral
+ollama pull qwen2.5
 
-# Clicca "🔄 Aggiorna Modelli" nell'interfaccia
+# Modelli per coding
+ollama pull qwen2.5-coder
+
+# Modelli multimodali
+ollama pull llava
+ollama pull granite3.2-vision
+
+# Modello per embeddings (RAG)
+ollama pull nomic-embed-text
 ```
 
-### Problema: "API key not found" per provider cloud
-
-**Soluzione**:
-1. Verifica che la chiave sia corretta
-2. Controlla che sia nel formato giusto:
-   - OpenAI: `sk-...`
-   - Anthropic: `sk-ant-...`
-   - Google: stringa alfanumerica
-3. Usa l'interfaccia web per salvare la chiave (pulsante "💾 Salva API Key")
-
-### Problema: "Repository not found" durante git push
-
-**Soluzione**: Crea prima il repository su GitHub (vedi sezione Contribuire)
-
 ---
 
-## 🎨 Personalizzazione
+## 📁 Struttura Progetto
 
-### Cambiare il System Prompt predefinito
-
-Modifica la riga nel codice:
-```python
-system_prompt = st.sidebar.text_area(
-    "System prompt",
-    value="Sei un assistente utile e conciso.",  # ← Cambia qui
-    height=100
-)
+```
+datapizza-streamlit-interface/
+├── 00_interfaccia_dinamica_datapizza_Streamlit.py  # v1.0.0
+├── 01_interfaccia_con_memoria.py                    # v1.1.1
+├── 02_interfaccia_con_export.py                     # v1.2.0
+├── 03_interfaccia_con_wiki_rag.py                   # v1.3.1 ⭐
+├── requirements.txt
+├── README.md
+├── CHANGELOG.md
+├── ROADMAP.md
+├── LICENSE
+├── conversations/          # Conversazioni salvate (auto-generato)
+├── knowledge_base/         # Vector store ChromaDB (auto-generato)
+└── secrets/                # API keys (opzionale)
 ```
 
-### Aggiungere nuovi provider
+---
 
-1. Verifica se Datapizza AI supporta il provider
-2. Installa il client: `pip install datapizza-ai-clients-{provider}`
-3. Aggiungi l'opzione nel selectbox del codice
-4. Configura il client in `create_client()`
+## 🗺️ Roadmap
+
+Vedi [ROADMAP.md](ROADMAP.md) per il piano di sviluppo completo.
+
+### Prossime Release
+
+| Versione | Feature | Stato |
+|----------|---------|-------|
+| v1.3.2+ | Adapter MediaWiki, DokuWiki | 📋 Planned |
+| v1.4.0 | Streaming risposte | 📋 Planned |
+| v1.5.0 | Confronto modelli | 📋 Planned |
+| v2.0.0 | Multimodal, Docker, API | 📋 Planned |
 
 ---
 
-## 🤝 Contribuire
+## 🤝 Contributing
 
-I contributi sono benvenuti! Ecco come puoi aiutare:
+Contribuzioni benvenute! 
 
-### Setup per lo sviluppo
-
-```bash
-# 1. Fai un Fork del progetto su GitHub
-
-# 2. Clona il tuo fork
-git clone https://github.com/TUO-USERNAME/datapizza-streamlit-interface.git
-cd datapizza-streamlit-interface
-
-# 3. Aggiungi upstream
-git remote add upstream https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
-
-# 4. Crea branch per la tua feature
-git checkout -b feature/amazing-feature
-
-# 5. Fai le modifiche e testa
-
-# 6. Commit
-git add .
-git commit -m '✨ Add amazing feature'
-
-# 7. Push al tuo fork
-git push origin feature/amazing-feature
-
-# 8. Apri una Pull Request su GitHub verso il branch `dev`
-```
-
-### Branch Strategy
-
-- **`main`**: Branch di produzione (stabile, solo release)
-- **`dev`**: Branch di sviluppo (integrazione feature)
-- **`feature/*`**: Branch per nuove funzionalità
-- **`bugfix/*`**: Branch per correzioni bug
-
-### Linee Guida
-
-- ✅ Scrivi codice pulito e commentato
-- ✅ Testa su Python 3.8, 3.9, 3.10, 3.11
-- ✅ Aggiorna README se aggiungi nuove funzionalità
-- ✅ Usa commit message descrittivi (emoji opzionali: ✨ feature, 🐛 bugfix, 📝 docs)
+1. Fork del repository
+2. Crea un branch (`git checkout -b feature/nuova-feature`)
+3. Commit (`git commit -m 'feat: aggiungi nuova feature'`)
+4. Push (`git push origin feature/nuova-feature`)
+5. Apri una Pull Request
 
 ---
 
-## 📝 TODO / Roadmap
+## 📜 License
 
-- [ ] Supporto per conversazioni multi-turno con memoria
-- [ ] Export conversazioni in Markdown/JSON/PDF
-- [ ] Confronto side-by-side tra più modelli
-- [ ] Supporto per streaming delle risposte in tempo reale
-- [ ] Temi UI personalizzabili (dark/light mode avanzato)
-- [ ] Statistiche d'uso e analytics
-- [ ] Supporto per immagini (vision models GPT-4V, Claude 3)
-- [ ] Supporto per modelli multimodali (audio, video)
-- [ ] Docker container per deploy facile
-- [ ] API REST per integrazioni
-- [ ] Plugin system per estensioni
+MIT License - vedi [LICENSE](LICENSE) per dettagli.
 
 ---
 
-## 🐛 Segnalazione
+## 👥 Credits
+
+- **DeepAiUG** - Community italiana AI
+- **Datapizza** - Framework LLM
+- **Streamlit** - UI Framework
+
+---
+
+## 📞 Contatti
+
+- 🌐 [DeepAiUG](https://deepaiug.it)
+- 💬 Issues su GitHub
+- 📧 info@deepaiug.it
+
+---
+
+*Made with ❤️ by DeepAiUG Community*

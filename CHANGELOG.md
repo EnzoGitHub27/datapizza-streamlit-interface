@@ -1,208 +1,146 @@
-# Changelog
+# 📝 CHANGELOG
 
-Tutte le modifiche notevoli a questo progetto saranno documentate in questo file.
+Tutte le modifiche significative al progetto sono documentate in questo file.
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/),
-e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
+e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
-## [Unreleased] - Branch Dev 🚧
+## [1.3.1] - 2025-01-06
 
-### In Sviluppo Attivo
-Nessuna feature attualmente in sviluppo. Controlla [ROADMAP.md](ROADMAP.md) per i piani futuri.
+### 🐛 Bug Fix
+
+- **Fix Modelli Ollama** (CRITICO): Ora mostra tutti i modelli Ollama installati, non solo quelli con `-` nel nome
+- **Fix Persistenza KB**: Le impostazioni Knowledge Base vengono salvate con la conversazione
+- **Fix Ricarica KB**: Ricaricamento automatico della KB quando si carica una conversazione salvata
+
+### ✨ Nuove Funzionalità
+
+- **Parametri Chunking Configurabili**: Nuovi slider per dimensione chunk (200-3000) e overlap (0-500)
+- **Chunking Intelligente**: Il chunker ora rispetta la struttura del documento (titoli Markdown, paragrafi, frasi)
+- **Ratio Overlap**: Visualizzazione percentuale dell'overlap configurato
+
+### 🔧 Miglioramenti Tecnici
+
+- Normalizzazione whitespace eccessivo nei documenti
+- Migliore gestione dei separatori nel chunking
+- Safety check per evitare loop infiniti nel chunker
 
 ---
 
-## [1.0.0] - 2025-01-02 🎉
+## [1.3.0] - 2025-01-05
 
-### Aggiunto
-- ✨ **Interfaccia Streamlit completa** per interazione con LLM
-- 🖥️ **Supporto modelli locali** tramite Ollama
-  - Rilevamento automatico modelli installati
-  - Pulsante refresh per aggiornare lista modelli
-  - Configurazione endpoint personalizzato
-- 🌐 **Supporto host remoti**
-  - Configurazione multipli endpoint
-  - Selezione dinamica host dalla sidebar
-  - API key opzionale per server protetti
-- ☁️ **Supporto provider cloud**
-  - OpenAI (GPT-4, GPT-3.5-turbo, ecc.)
-  - Anthropic (Claude Sonnet, Opus)
-  - Google (Gemini Pro, Ultra)
-  - Custom cloud provider con configurazione flessibile
-- 🔐 **Gestione sicura API keys**
-  - Caricamento da variabili d'ambiente
-  - Caricamento da file `.env`
-  - Caricamento da file `secrets/{provider}_key.txt`
-  - Salvataggio API keys direttamente dall'interfaccia web
-  - Indicatore visivo chiave presente/mancante
-- 📎 **Upload file con anteprima**
-  - Drag & drop multiplo
-  - Supporto file di testo con preview
-  - Supporto file binari con metadati
-  - Opzione incorporamento contenuto nel prompt
-  - Disabilitato automaticamente in modalità cloud per privacy
-- ⚙️ **Parametri configurabili**
-  - Temperature slider (0.0-2.0)
-  - System prompt personalizzabile
-  - Selezione modello dinamica
-- 🎨 **UI/UX**
-  - Layout responsive a due colonne
-  - Indicatori visivi per tipo connessione
-  - Alert contestuali per modalità cloud
-  - Metriche modello selezionato
-  - Statistiche risposta (caratteri, parole)
-  - Preview espandibile file caricati
-- 💾 **Funzionalità di export**
-  - Download risposta in formato .txt
-  - Download file caricati
-  - Copia risposta negli appunti
-- 🧹 **Gestione sessione**
-  - Pulsante pulisci per reset interfaccia
-  - Session state per persistenza risposta
-  - Memoria ultima richiesta e modello usato
+### ✨ Nuove Funzionalità
 
-### Sicurezza
-- 🔒 File `.gitignore` completo per protezione secrets
-  - Esclusione cartella `secrets/`
-  - Esclusione file `.env`
-  - Esclusione virtual environments
-  - Esclusione configurazioni IDE
-- 🛡️ **Protezione privacy modalità cloud**
-  - Warning visibile su invio dati esterni
-  - Upload file disabilitato
-  - Styling rosso per evidenziare rischi
-  - Messaggi informativi contestuali
+- **📚 Knowledge Base RAG**: Sistema completo di Retrieval-Augmented Generation
+  - Indicizzazione documenti locali (Markdown, TXT, HTML, PDF)
+  - Vector store con ChromaDB (persistente) o fallback in memoria
+  - Ricerca semantica nei documenti
+  - Contesto automatico iniettato nel prompt
+  - Citazione fonti nelle risposte
 
-### Documentazione
-- 📖 README.md completo con:
-  - Istruzioni installazione multiple (automatica, manuale, requirements.txt)
-  - Guida configurazione API keys (4 metodi)
-  - Esempi d'uso per tutte le modalità
-  - Sezione troubleshooting
-  - Guide contribuzione
-- 📜 LICENSE MIT inclusa
-- 🔧 Script di installazione automatica:
-  - `install.sh` per Linux/Mac
-  - `install.bat` per Windows
-- 📦 `requirements.txt` con note installazione manuale
-- 📚 Cartella `examples/` con tutorial datapizza
+- **📁 LocalFolderAdapter**: Primo adapter per sorgenti documentali
+  - Supporto cartelle ricorsive
+  - Filtro per estensioni file
+  - Parsing HTML (BeautifulSoup)
+  - Estrazione testo PDF (PyPDF2)
 
-### Infrastruttura
-- 🌿 Strategia branching: `main` (stabile) + `dev` (sviluppo)
-- 🏷️ Sistema di tagging semantico (v1.0.0)
-- 🔧 Configurazione git ignore completa
-- 📁 Struttura progetto organizzata
+- **🔒 Privacy Mode**: Blocco automatico provider cloud quando KB attiva
+  - Solo Ollama locale o Remote host permessi
+  - Protezione dati sensibili
 
-### Compatibilità
-- 🐍 Python 3.8+
-- 🍕 Datapizza AI framework
-- 🎈 Streamlit 1.28+
-- 🦙 Ollama (opzionale, per locale)
+- **⚙️ Configurazione KB in Sidebar**:
+  - Selezione sorgente documenti
+  - Scelta formati file
+  - Statistiche knowledge base
+  - Parametri RAG (top_k documenti)
 
-## [1.1.0] - 2025-01-03
+### 📦 Nuove Dipendenze
 
-### Aggiunto
-- ✨ Conversazioni multi-turno con memoria completa
-- 💬 Interfaccia chat-style con bolle messaggi (user a destra, AI a sinistra)
-- 📊 Statistiche conversazione in tempo reale (messaggi, token stimati)
-- 🔄 Pulsante reset conversazione con conferma
-- 🧠 Configurazione memoria (max messaggi, cronologia completa)
-- ⏰ Timestamp per ogni messaggio
-- 🏷️ Badge modello per risposte AI
-- 🎨 Supporto dark mode con colori adattivi
+- `chromadb>=0.4.0` - Database vettoriale
+- `beautifulsoup4>=4.12.0` - Parsing HTML
+- `PyPDF2>=3.0.0` - Estrazione testo PDF
 
-### Modificato
-- ♻️ Refactoring completo rendering messaggi
-- 🎨 Migliorato layout con sistema colonne Streamlit
-- 📝 Semplificato system prompt di default
-
-### Corretto
-- 🐛 Risolto bug CSS styles che apparivano nei messaggi
-- 🐛 Eliminata funzione render_chat_message() duplicata
-- 🐛 Fix colori testo in dark mode
-
-### Tecnico
-- Session state per persistenza cronologia
-- Prompt costruito con cronologia conversazione
-- Stima token approssimativa (4 caratteri = 1 token)
-- ID univoco per ogni sessione conversazione
-
-## [1.1.1] - 2025-01-03
-
-### Aggiunto
-- 💾 **Salvataggio automatico conversazioni** in file JSON locale
-- 📂 **Caricamento conversazioni precedenti** dalla sidebar
-- 🗂️ **Lista conversazioni salvate** con data, modello e numero messaggi
-- 👁️ **Preview conversazioni** prima del caricamento (primi 3 messaggi)
-- 🗑️ **Eliminazione conversazioni** con conferma di sicurezza
-- 🔘 **Toggle auto-save** per controllare salvataggio automatico
-- 💾 **Pulsante salvataggio manuale** per salvare on-demand
-- 📊 **Metadata completi** in JSON (created_at, last_updated, model, provider, stats)
-
-### Modificato
-- 📁 Le conversazioni vengono salvate in directory `conversations/`
-- 🔄 Reset conversazione ora avvisa che la conversazione corrente è già salvata
-- 🆔 ID conversazione persiste attraverso il caricamento
-
-### Tecnico
-- Formato JSON strutturato per persistenza
-- Funzioni: `save_conversation_to_file()`, `load_conversation_from_file()`
-- Funzioni: `list_saved_conversations()`, `delete_conversation_file()`
-- Auto-save trigger su ogni `add_message()`
-- Directory `conversations/` creata automaticamente
-
+---
 
 ## [1.2.0] - 2025-01-04
 
-### Aggiunto
-- 📥 **Export Markdown** (.md) - formattato per blog, Obsidian, Notion
-- 📥 **Export JSON** (.json) - strutturato per elaborazione programmata
-- 📥 **Export TXT** (.txt) - backup semplice e leggibile
-- 📥 **Export PDF** (.pdf) - documenti stampabili (richiede `reportlab`)
-- 👁️ **Preview export** - anteprima contenuto prima del download
-- 📝 **Nome file personalizzabile** - modifica nome prima di salvare
-- 📊 **Selezione contenuto** - esporta tutto o ultimi N messaggi
-- 🗂️ **Batch export** - esporta tutte le conversazioni in ZIP
-- 🎨 **Nuova sezione sidebar** "📤 Export Conversazione"
+### ✨ Nuove Funzionalità
 
-### Modificato
-- 📁 Nuovo file `02_interfaccia_con_export.py` per v1.2.0
-- 🔧 Metadata completi inclusi in tutti i formati export
-- 📊 Statistiche (messaggi, token) incluse nell'export
+- **📥 Export Multi-Formato**: Esportazione conversazioni in:
+  - Markdown (.md) - per blog, Obsidian, Notion
+  - JSON (.json) - per elaborazione programmata
+  - TXT (.txt) - backup semplice
+  - PDF (.pdf) - documenti stampabili
 
-### Corretto
-- 🐛 Fix AttributeError nel preview export (st.sidebar.session_state)
+- **👁️ Preview Export**: Anteprima del contenuto prima del download
+- **📝 Nome File Personalizzabile**: Scelta del nome file per l'export
+- **📊 Selezione Contenuto**: Export completo o ultimi N messaggi
+- **🗂️ Batch Export**: Esportazione di tutte le conversazioni in ZIP
 
-### Tecnico
-- Funzioni: `export_to_markdown()`, `export_to_json()`, `export_to_txt()`, `export_to_pdf()`
-- Funzione: `create_batch_export_zip()` per export multiplo
-- Dipendenza opzionale: `reportlab` per generazione PDF
-- Preview salva opzioni in session_state prima di mostrare
+### 📦 Nuove Dipendenze
+
+- `reportlab>=4.0.0` - Generazione PDF
 
 ---
 
-## Come Leggere Questo Changelog
+## [1.1.1] - 2025-01-03
 
-### Tipi di Modifiche
-- **Aggiunto**: per nuove funzionalità
-- **Modificato**: per cambiamenti a funzionalità esistenti
-- **Deprecato**: per funzionalità che verranno rimosse
-- **Rimosso**: per funzionalità rimosse
-- **Corretto**: per bug fix
-- **Sicurezza**: per vulnerabilità corrette
+### 🐛 Bug Fix
 
-### Versioning
-Usiamo [Semantic Versioning](https://semver.org/lang/it/):
-- **MAJOR** (1.x.x): Cambiamenti incompatibili con API precedenti
-- **MINOR** (x.1.x): Nuove funzionalità backward-compatible
-- **PATCH** (x.x.1): Bug fix backward-compatible
+- Fix salvataggio conversazioni con caratteri speciali
+- Fix caricamento conversazioni corrotte
+- Migliorata gestione errori nel salvataggio
+
+### 🔧 Miglioramenti
+
+- Auto-save più affidabile
+- Feedback visivo migliorato per operazioni di salvataggio
 
 ---
 
-## Link Utili
-- [Repository GitHub](https://github.com/EnzoGitHub27/datapizza-streamlit-interface)
-- [Issues](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/issues)
-- [Roadmap](ROADMAP.md)
-- [Contributing](CONTRIBUTING.md)
+## [1.1.0] - 2025-01-02
+
+### ✨ Nuove Funzionalità
+
+- **💬 Conversazioni Multi-Turno**: Memoria del contesto tra messaggi
+- **💾 Persistenza Conversazioni**: Salvataggio automatico su file JSON
+- **📂 Gestione Conversazioni**: Lista, caricamento, eliminazione conversazioni salvate
+- **📊 Statistiche**: Contatore messaggi, token stimati, ID conversazione
+- **🔄 Auto-Save**: Salvataggio automatico configurabile
+
+### 🔧 Miglioramenti
+
+- Nuova sidebar organizzata per sezioni
+- Indicatori di stato connessione
+- Gestione errori migliorata
+
+---
+
+## [1.0.0] - 2025-01-01
+
+### 🎉 Release Iniziale
+
+- **🤖 Multi-Provider**: Supporto Ollama (locale), Remote host, Cloud
+- **☁️ Cloud Provider**: OpenAI, Anthropic (Claude), Google Gemini
+- **🎛️ Parametri LLM**: System prompt, temperature, selezione modello
+- **💬 Chat Base**: Invio messaggi e ricezione risposte
+- **🎨 UI Streamlit**: Interfaccia moderna con tema chiaro/scuro
+- **🔑 Gestione API Keys**: Salvataggio sicuro in file locali
+
+---
+
+## Legenda
+
+- ✨ **Nuove Funzionalità** - Nuove feature aggiunte
+- 🐛 **Bug Fix** - Correzione di bug
+- 🔧 **Miglioramenti** - Miglioramenti a feature esistenti
+- 📦 **Dipendenze** - Nuove librerie richieste
+- ⚠️ **Breaking Changes** - Modifiche che richiedono azioni
+- 🗑️ **Deprecato** - Feature che verranno rimosse
+- 🔒 **Sicurezza** - Fix di sicurezza
+
+---
+
+*Datapizza Streamlit Interface - DeepAiUG © 2025*
