@@ -7,6 +7,66 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.3.3] - 2025-01-07
+
+### 🐛 Bug Fix
+
+- **Ripristino Export Conversazioni**: La sezione export era stata persa nella v1.3.0+
+
+### ✨ Funzionalità Ripristinate
+
+- **📤 Export Conversazione** nella sidebar:
+  - Selezione formato (Markdown, JSON, TXT, PDF)
+  - Selezione contenuto (completo o ultimi N messaggi)
+  - Nome file personalizzabile
+  - Bottone anteprima export
+  - Download diretto
+
+- **👁️ Anteprima Export**: Preview del contenuto prima del download
+
+- **🗂️ Batch Export**: Esportazione di tutte le conversazioni in ZIP
+
+---
+
+## [1.3.2] - 2025-01-07
+
+### ✨ Nuove Funzionalità
+
+- **MediaWikiAdapter**: Nuovo adapter per sincronizzare wiki MediaWiki
+  - Connessione via `mwclient` alle API MediaWiki
+  - Download batch delle pagine con progress bar
+  - Parsing wikitext → testo pulito (rimozione template, link, markup)
+  - Supporto autenticazione (username/password)
+  - Filtro per namespace e categorie
+  - Esclusione pagine/categorie configurabile
+  - Sync locale con ChromaDB (no query live alla wiki)
+
+- **Configurazione YAML** (`wiki_sources.yaml`):
+  - 3 modalità operative: `fixed`, `selectable`, `custom`
+  - Lista wiki preconfigurate con tutti i parametri
+  - Impostazioni globali (user-agent, delay, batch size)
+  - Supporto variabili ambiente per credenziali
+
+- **UI MediaWiki in Sidebar**:
+  - Selezione wiki da configurazione
+  - URL custom per wiki non configurate
+  - Bottone "Sincronizza Wiki"
+  - Info ultimo sync (data, pagine caricate)
+  - Parametri chunking configurabili
+
+### 📦 Nuove Dipendenze
+
+- `mwclient>=0.10.0` - Client Python per MediaWiki API
+- `pyyaml>=6.0` - Parser YAML per configurazione
+
+### 🔧 Miglioramenti
+
+- Refactoring sezione sidebar Knowledge Base
+- Supporto per sorgenti multiple (Cartella Locale + MediaWiki)
+- Cache locale per info sync wiki
+
+---
+
 ## [1.3.1] - 2025-01-06
 
 ### 🐛 Bug Fix
