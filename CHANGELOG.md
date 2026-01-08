@@ -7,6 +7,63 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.4.0] - 2025-01-08
+
+### ♻️ Refactoring Completo - Architettura Modulare
+
+Il file monolitico v1.3.3 (2287 righe) è stato completamente riorganizzato in una struttura pulita di packages Python.
+
+### ✨ Nuova Struttura
+
+```
+datapizza-streamlit-interface/
+├── app.py                    # Entry point principale
+├── config/                   # Configurazione
+│   ├── constants.py          # Costanti globali
+│   └── settings.py           # Loader settings, API keys
+├── core/                     # Logica core
+│   ├── llm_client.py         # Factory client LLM
+│   ├── conversation.py       # Gestione messaggi
+│   └── persistence.py        # Salvataggio/caricamento
+├── rag/                      # Sistema RAG
+│   ├── models.py             # Document, Chunk
+│   ├── chunker.py            # TextChunker intelligente
+│   ├── vector_store.py       # ChromaDB + fallback
+│   ├── manager.py            # KnowledgeBaseManager
+│   └── adapters/             # Sorgenti dati
+│       ├── base.py           # WikiAdapter (ABC)
+│       ├── local_folder.py   # File locali
+│       └── mediawiki.py      # API MediaWiki
+├── export/                   # Sistema export
+│   └── exporters.py          # MD, JSON, TXT, PDF, ZIP
+├── ui/                       # Interfaccia utente
+│   ├── styles.py             # CSS
+│   ├── chat.py               # Rendering chat
+│   └── sidebar/              # Componenti sidebar
+│       ├── llm_config.py     # Config LLM
+│       ├── knowledge_base.py # Config KB
+│       ├── conversations.py  # Gestione salvataggi
+│       └── export_ui.py      # UI export
+└── old/                      # Versioni archiviate
+```
+
+### 🔧 Miglioramenti
+
+- **Separazione responsabilità**: Ogni modulo ha un compito specifico
+- **Testabilità**: Componenti isolati e facilmente testabili
+- **Manutenibilità**: Modifiche localizzate senza impatti globali
+- **Riusabilità**: Componenti importabili in altri progetti
+- **Import puliti**: Ogni package espone API chiare via `__init__.py`
+
+### 📦 Migrazione
+
+- **Nessuna breaking change** per l'utente finale
+- Stesso comportamento di v1.3.3
+- Entry point: `streamlit run app.py`
+- File vecchi archiviati in `old/`
+
+---
+
 ## [1.3.3] - 2025-01-07
 
 ### 🐛 Bug Fix
@@ -196,6 +253,7 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 - ✨ **Nuove Funzionalità** - Nuove feature aggiunte
 - 🐛 **Bug Fix** - Correzione di bug
 - 🔧 **Miglioramenti** - Miglioramenti a feature esistenti
+- ♻️ **Refactoring** - Riorganizzazione codice
 - 📦 **Dipendenze** - Nuove librerie richieste
 - ⚠️ **Breaking Changes** - Modifiche che richiedono azioni
 - 🗑️ **Deprecato** - Feature che verranno rimosse

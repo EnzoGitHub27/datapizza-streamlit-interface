@@ -1,0 +1,155 @@
+# ============================================================================
+# CONFIGURAZIONE SORGENTI MEDIAWIKI - Datapizza v1.3.2+
+# ============================================================================
+# Questo file configura le wiki MediaWiki disponibili nell'interfaccia.
+# 
+# MODALITÀ DISPONIBILI:
+# - fixed: Solo le wiki configurate, nessuna scelta utente
+# - selectable: L'utente può scegliere tra le wiki configurate
+# - custom: L'utente può anche aggiungere URL custom
+#
+# POSIZIONE FILE:
+# - Stessa cartella dello script Python
+# - Oppure in ./config/wiki_sources.yaml
+# ============================================================================
+
+# Modalità di utilizzo
+# Valori: "fixed" | "selectable" | "custom"
+mode: "selectable"
+
+# Wiki predefinita (usata in modalità "fixed" o come default nelle altre)
+default_wiki: "wiki_associazione"
+
+# ============================================================================
+# LISTA WIKI CONFIGURATE
+# ============================================================================
+
+wikis:
+  # Wiki interna dell'associazione (esempio)
+  wiki_associazione:
+    name: "Wiki Associazione"
+    description: "Documentazione interna e procedure"
+    url: "https://wiki.mia-associazione.it"
+    # API endpoint (default: /w/api.php o /api.php)
+    api_path: "/w/api.php"
+    # Richiede autenticazione?
+    requires_auth: false
+    # Credenziali (se requires_auth: true)
+    # username: "bot_user"
+    # password: "bot_password"  # O meglio: usa variabile ambiente WIKI_PASSWORD
+    # Namespace da includere (default: 0 = Main)
+    # Lista completa: https://www.mediawiki.org/wiki/Manual:Namespace
+    namespaces:
+      - 0      # Main (articoli)
+      # - 1    # Talk
+      # - 2    # User
+      # - 4    # Project
+      # - 10   # Template
+      # - 14   # Category
+    # Categorie da includere (opzionale, tutte se vuoto)
+    categories: []
+    # Categorie da escludere
+    exclude_categories:
+      - "Bozze"
+      - "Da cancellare"
+    # Pagine da escludere (titoli esatti o pattern)
+    exclude_pages:
+      - "Pagina_principale"
+      - "Sandbox"
+    # Limite pagine (0 = tutte)
+    max_pages: 0
+    # Includi pagine di redirect?
+    include_redirects: false
+    # Timeout connessione (secondi)
+    timeout: 30
+  
+  # Wiki locale per test (localhost)
+  wiki_locale:
+    name: "Wiki Locale (Test)"
+    description: "MediaWiki locale per sviluppo"
+    url: "http://localhost:8080"
+    api_path: "/api.php"
+    requires_auth: false
+    namespaces:
+      - 0
+    categories: []
+    exclude_categories: []
+    exclude_pages: []
+    max_pages: 100
+    include_redirects: false
+    timeout: 10
+  
+  # Esempio: Wiki pubblica (solo lettura)
+  # wikipedia_it:
+  #   name: "Wikipedia Italiana"
+  #   description: "Enciclopedia libera (attenzione: molte pagine!)"
+  #   url: "https://it.wikipedia.org"
+  #   api_path: "/w/api.php"
+  #   requires_auth: false
+  #   namespaces:
+  #     - 0
+  #   categories:
+  #     - "Informatica"  # Limita a una categoria specifica
+  #   max_pages: 50      # Limita fortemente per test
+  #   include_redirects: false
+  #   timeout: 30
+
+# ============================================================================
+# IMPOSTAZIONI GLOBALI
+# ============================================================================
+
+global_settings:
+  # User-Agent per le richieste API (importante per wiki pubbliche)
+  user_agent: "DatapizzaBot/1.3.2 (https://github.com/EnzoGitHub27/datapizza-streamlit-interface)"
+  
+  # Ritardo tra richieste API (secondi) - per non sovraccaricare il server
+  request_delay: 0.5
+  
+  # Dimensione batch per download pagine
+  batch_size: 50
+  
+  # Directory per cache locale delle pagine
+  cache_dir: "wiki_cache"
+  
+  # Tempo di vita cache (ore) - 0 = no cache
+  cache_ttl_hours: 24
+  
+  # Formato export pagine prima dell'indicizzazione
+  # Valori: "text" | "html" | "wikitext"
+  export_format: "text"
+  
+  # Rimuovi markup wiki nel parsing
+  strip_wiki_markup: true
+  
+  # Includi metadati pagina (autore, data modifica, etc.)
+  include_metadata: true
+
+# ============================================================================
+# NOTE PER L'UTENTE
+# ============================================================================
+# 
+# 1. AUTENTICAZIONE:
+#    Se la wiki richiede login, puoi usare variabili ambiente:
+#    export WIKI_ASSOCIAZIONE_USER="username"
+#    export WIKI_ASSOCIAZIONE_PASS="password"
+#    Poi nel config: username: "${WIKI_ASSOCIAZIONE_USER}"
+#
+# 2. NAMESPACE COMUNI:
+#    0  = Main (articoli normali)
+#    1  = Talk (discussioni)
+#    2  = User (pagine utente)
+#    4  = Project (namespace del progetto)
+#    6  = File (descrizioni file)
+#    10 = Template
+#    14 = Category
+#
+# 3. CATEGORIE:
+#    Usa nomi senza prefisso "Categoria:" 
+#    Es: "Procedure" non "Categoria:Procedure"
+#
+# 4. PERFORMANCE:
+#    - Limita namespace e categorie per wiki grandi
+#    - Usa max_pages per test iniziali
+#    - Aumenta request_delay per wiki pubbliche
+#
+# ============================================================================

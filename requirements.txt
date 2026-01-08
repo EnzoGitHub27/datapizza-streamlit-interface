@@ -1,34 +1,41 @@
 # =============================================================================
-# requirements.txt - Datapizza Streamlit LLM Interface
+# Datapizza Streamlit LLM Interface v1.4.0
 # =============================================================================
-# 
-# NOTA: Se riscontri problemi con l'installazione automatica, 
-# installa i pacchetti manualmente nell'ordine seguente:
-# 
-# pip install streamlit python-dotenv
-# pip install datapizza-ai
-# pip install datapizza-ai-clients-openai-like
-# pip install datapizza-ai-clients-openai
-# pip install datapizza-ai-clients-anthropic
-# pip install datapizza-ai-clients-google
+#
+# ⚠️ IMPORTANTE: Ordine di installazione!
+# Se pip install -r requirements.txt fallisce, installa manualmente:
+#
+# 1. pip install streamlit python-dotenv pyyaml reportlab
+# 2. pip install datapizza-ai
+# 3. pip install datapizza-ai-clients-openai-like
+# 4. pip install chromadb beautifulsoup4 PyPDF2 mwclient
 #
 # =============================================================================
 
-# Streamlit per l'interfaccia web
+# Core Framework
 streamlit>=1.28.0
-
-# Gestione variabili d'ambiente
 python-dotenv>=1.0.0
+pyyaml>=6.0
 
-# Datapizza AI - Core framework (installare PRIMA dei client)
+# Datapizza AI (installare PRIMA dei clients!)
 datapizza-ai
 
-# Datapizza AI - Client specifici per provider cloud
-# (installare DOPO datapizza-ai)
+# Datapizza Clients (installare DOPO datapizza-ai!)
+# Ollama locale (obbligatorio)
 datapizza-ai-clients-openai-like
-datapizza-ai-clients-openai
-datapizza-ai-clients-anthropic
-datapizza-ai-clients-google
 
-# Opzionale: per export PDF
+# Cloud providers (opzionali - decommentare se necessari)
+# datapizza-ai-clients-openai
+# datapizza-ai-clients-anthropic
+# datapizza-ai-clients-google
+
+# Knowledge Base / RAG
+chromadb>=0.4.0
+beautifulsoup4>=4.12.0
+PyPDF2>=3.0.0
+
+# MediaWiki Adapter
+mwclient>=0.10.0
+
+# Export PDF
 reportlab>=4.0.0

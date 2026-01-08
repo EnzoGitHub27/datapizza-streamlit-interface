@@ -1,9 +1,9 @@
 # 🍕 Datapizza Streamlit LLM Interface
 
-> Interfaccia Streamlit per interagire con LLM locali (Ollama), remoti e cloud.
+> Interfaccia Streamlit modulare per interagire con LLM locali (Ollama), remoti e cloud.
 > Progetto Open Source della community **DeepAiUG**.
 
-[![Version](https://img.shields.io/badge/version-1.3.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -15,21 +15,58 @@
 - 🤖 **Multi-provider**: Ollama (locale), Remote host, Cloud (OpenAI, Anthropic, Google)
 - 💬 **Conversazioni multi-turno** con memoria del contesto
 - 💾 **Persistenza** delle conversazioni su file JSON
-- 📥 **Export** in Markdown, JSON, TXT, PDF
-- 📚 **Knowledge Base RAG** - Interroga i tuoi documenti locali! ⭐ NEW
+- 📥 **Export** in Markdown, JSON, TXT, PDF + Batch ZIP
+- 📚 **Knowledge Base RAG** - Interroga documenti locali e wiki MediaWiki!
 - 🔒 **Privacy-first** - Blocco automatico cloud quando usi documenti sensibili
 - 🎨 **UI moderna** con temi chiaro/scuro
+- ♻️ **Architettura modulare** - Codice organizzato in packages (v1.4.0)
 
 ---
 
-## 📂 Versioni Disponibili
+## 🏗️ Architettura v1.4.0
 
-| File | Versione | Stato | Descrizione |
-|------|----------|-------|-------------|
-| `03_interfaccia_con_wiki_rag.py` | **v1.3.1** | ⭐ **Latest** | Multi-turno + Persistenza + Export + **Wiki RAG** |
-| `02_interfaccia_con_export.py` | v1.2.0 | ✅ Stable | Multi-turno + Persistenza + Export |
-| `01_interfaccia_con_memoria.py` | v1.1.1 | ✅ Stable | Multi-turno + Persistenza |
-| `00_interfaccia_dinamica_datapizza_Streamlit.py` | v1.0.0 | ✅ Stable | Interfaccia base |
+```
+datapizza-streamlit-interface/
+├── app.py                    # ⭐ Entry point principale
+├── wiki_sources.yaml         # Configurazione wiki MediaWiki
+│
+├── config/                   # 📁 Configurazione
+│   ├── constants.py          # Costanti globali
+│   └── settings.py           # Loader settings, API keys
+│
+├── core/                     # 📁 Logica core
+│   ├── llm_client.py         # Factory client LLM
+│   ├── conversation.py       # Gestione messaggi
+│   └── persistence.py        # Salvataggio/caricamento
+│
+├── rag/                      # 📁 Sistema RAG
+│   ├── models.py             # Document, Chunk
+│   ├── chunker.py            # TextChunker intelligente
+│   ├── vector_store.py       # ChromaDB + fallback
+│   ├── manager.py            # KnowledgeBaseManager
+│   └── adapters/             # Sorgenti dati
+│       ├── base.py           # WikiAdapter (ABC)
+│       ├── local_folder.py   # File locali
+│       └── mediawiki.py      # API MediaWiki
+│
+├── export/                   # 📁 Sistema export
+│   └── exporters.py          # MD, JSON, TXT, PDF, ZIP
+│
+├── ui/                       # 📁 Interfaccia utente
+│   ├── styles.py             # CSS
+│   ├── chat.py               # Rendering chat
+│   └── sidebar/              # Componenti sidebar
+│       ├── llm_config.py     # Config LLM
+│       ├── knowledge_base.py # Config KB
+│       ├── conversations.py  # Gestione salvataggi
+│       └── export_ui.py      # UI export
+│
+├── old/                      # 📁 Versioni archiviate (v1.0-v1.3)
+├── conversations/            # 📁 Conversazioni salvate (auto)
+├── knowledge_base/           # 📁 Vector store ChromaDB (auto)
+├── secrets/                  # 📁 API keys (opzionale)
+└── examples/                 # 📁 Tutorial e esempi
+```
 
 ---
 
@@ -99,7 +136,7 @@ deepaiug-interface\Scripts\activate  # Su Windows
 
 ```bash
 # 3.1 - Dipendenze base
-pip install streamlit python-dotenv reportlab
+pip install streamlit python-dotenv pyyaml reportlab
 
 # 3.2 - Datapizza AI core (PRIMA dei client!)
 pip install datapizza-ai
@@ -118,11 +155,12 @@ pip install datapizza-ai-clients-anthropic
 
 # Per Google Gemini
 pip install datapizza-ai-clients-google
-```
 
-#### 4. Dipendenze per Wiki RAG (v1.3.0+)
-```bash
+# 3.4 - Dipendenze RAG
 pip install chromadb beautifulsoup4 PyPDF2
+
+# 3.5 - MediaWiki (opzionale)
+pip install mwclient
 ```
 
 ---
@@ -186,79 +224,120 @@ Puoi anche inserire e salvare le API keys direttamente dall'interfaccia Streamli
 ## ▶️ Avvio
 
 ```bash
-# CONSIGLIATA: Ultima versione con tutte le funzionalità
-streamlit run 03_interfaccia_con_wiki_rag.py
+# Avvia l'interfaccia (v1.4.0+)
+streamlit run app.py
+```
 
-# Versione con export (senza RAG)
-streamlit run 02_interfaccia_con_export.py
+### Versioni Precedenti (archiviate in `old/`)
 
-# Versione con memoria (senza export)
-streamlit run 01_interfaccia_con_memoria.py
+```bash
+# v1.3.3 - MediaWiki RAG + Export (monolitico)
+streamlit run old/04_interfaccia_con_mediawiki.py
 
-# Versione base
-streamlit run 00_interfaccia_dinamica_datapizza_Streamlit.py
+# v1.3.1 - Wiki RAG
+streamlit run old/03_interfaccia_con_wiki_rag.py
+
+# v1.2.0 - Export
+streamlit run old/02_interfaccia_con_export.py
+
+# v1.1.1 - Memoria
+streamlit run old/01_interfaccia_con_memoria.py
+
+# v1.0.0 - Base
+streamlit run old/00_interfaccia_dinamica_datapizza_Streamlit.py
 ```
 
 ---
 
-## 📚 Wiki RAG - Knowledge Base (v1.3.1)
+## 📚 Knowledge Base RAG
 
-La funzionalità **Wiki RAG** ti permette di interrogare i tuoi documenti locali usando LLM!
+La funzionalità **RAG** ti permette di interrogare i tuoi documenti usando LLM!
+
+### Sorgenti Supportate
+
+| Sorgente | Descrizione | Formati |
+|----------|-------------|---------|
+| **Cartella Locale** | Documenti sul tuo PC | .md, .txt, .html, .pdf |
+| **MediaWiki** | Wiki online (Wikipedia-like) | API MediaWiki |
 
 ### Come Funziona
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    TUOI DOCUMENTI                           │
-│  (Markdown, TXT, HTML, PDF in una cartella locale)          │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│              INDICIZZAZIONE (ChromaDB)                      │
-│  - Chunking intelligente (rispetta titoli/paragrafi)        │
-│  - Embeddings vettoriali                                    │
-│  - Storage locale persistente                               │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      CHAT RAG                               │
-│  1. Ricerca documenti rilevanti                             │
-│  2. Contesto iniettato nel prompt                           │
-│  3. LLM risponde basandosi sui documenti                    │
-│  4. Fonti citate nella risposta                             │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    TUOI DOCUMENTI                               │
+│  (Markdown, TXT, HTML, PDF locali o pagine MediaWiki)           │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              INDICIZZAZIONE (ChromaDB)                          │
+│  - Chunking intelligente (rispetta titoli/paragrafi)            │
+│  - Embeddings vettoriali                                        │
+│  - Storage locale persistente                                   │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      CHAT RAG                                   │
+│  1. Ricerca documenti rilevanti                                 │
+│  2. Contesto iniettato nel prompt                               │
+│  3. LLM risponde basandosi sui documenti                        │
+│  4. Fonti citate nella risposta                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Setup Knowledge Base
 
 1. **Attiva** "🔍 Usa Knowledge Base" nella sidebar
-2. **Inserisci** il percorso della cartella con i documenti
-3. **Seleziona** i formati file da includere (.md, .txt, .html, .pdf)
-4. **Configura** i parametri di chunking (opzionale)
-5. **Clicca** "🔄 Indicizza Documenti"
-6. **Fai domande** sui tuoi documenti!
+2. **Scegli sorgente**: Cartella Locale o MediaWiki
+3. **Configura** percorso/URL della sorgente
+4. **Clicca** "🔄 Indicizza" o "🔄 Sincronizza Wiki"
+5. **Fai domande** sui tuoi documenti!
 
-### Parametri Chunking
+### Configurazione MediaWiki
 
-| Parametro | Default | Descrizione |
-|-----------|---------|-------------|
-| Chunk Size | 1000 | Dimensione massima di ogni chunk (caratteri) |
-| Overlap | 200 | Sovrapposizione tra chunk consecutivi |
-| Top K | 5 | Numero di documenti da includere nel contesto |
+Modifica `wiki_sources.yaml` per configurare le tue wiki:
 
-**Suggerimenti**:
-- **Chunk piccoli** (500-800): più precisione, meno contesto
-- **Chunk grandi** (1500-2000): più contesto, meno precisione
-- **Overlap alto** (30-50%): evita di perdere informazioni ai bordi
+```yaml
+mode: "selectable"  # fixed | selectable | custom
+default_wiki: "mia_wiki"
 
-### Privacy Mode
+wikis:
+  mia_wiki:
+    name: "Wiki Interna"
+    url: "https://wiki.example.com"
+    api_path: "/w/api.php"
+    namespaces: [0]
+    max_pages: 100
+
+global_settings:
+  user_agent: "DatapizzaBot/1.4.0"
+  request_delay: 0.5
+```
+
+### Privacy Mode 🔒
 
 Quando la Knowledge Base è attiva:
 - ☁️ **Cloud provider BLOCCATO** automaticamente
 - 💻 Solo **Ollama locale** o **Remote host** permessi
 - 🔒 I tuoi documenti **non escono mai** dal tuo computer
+
+---
+
+## 📤 Export Conversazioni
+
+### Formati Disponibili
+
+| Formato | Estensione | Uso consigliato |
+|---------|------------|-----------------|
+| Markdown | .md | Blog, Obsidian, Notion |
+| JSON | .json | Elaborazione programmata |
+| TXT | .txt | Backup semplice |
+| PDF | .pdf | Documenti stampabili |
+
+### Batch Export
+
+Esporta **tutte** le conversazioni salvate in un file ZIP!
 
 ---
 
@@ -268,15 +347,25 @@ Quando la Knowledge Base è attiva:
 # Core
 streamlit>=1.28.0
 python-dotenv>=1.0.0
+pyyaml>=6.0
 datapizza-ai
 
-# Export (v1.2.0+)
-reportlab>=4.0.0
+# Client LLM
+datapizza-ai-clients-openai-like  # Ollama
+datapizza-ai-clients-openai       # OpenAI (opzionale)
+datapizza-ai-clients-anthropic    # Anthropic (opzionale)
+datapizza-ai-clients-google       # Google (opzionale)
 
-# Wiki RAG (v1.3.0+)
+# RAG
 chromadb>=0.4.0
 beautifulsoup4>=4.12.0
 PyPDF2>=3.0.0
+
+# MediaWiki (opzionale)
+mwclient>=0.10.0
+
+# Export
+reportlab>=4.0.0
 ```
 
 ---
@@ -302,28 +391,6 @@ ollama pull nomic-embed-text
 
 ---
 
-## 📁 Struttura Progetto
-
-```
-datapizza-streamlit-interface/
-├── 00_interfaccia_dinamica_datapizza_Streamlit.py  # v1.0.0
-├── 01_interfaccia_con_memoria.py                    # v1.1.1
-├── 02_interfaccia_con_export.py                     # v1.2.0
-├── 03_interfaccia_con_wiki_rag.py                   # v1.3.1 ⭐
-├── requirements.txt
-├── install.sh                  # Script installazione Linux/Mac
-├── install.bat                 # Script installazione Windows
-├── README.md
-├── CHANGELOG.md
-├── ROADMAP.md
-├── LICENSE
-├── conversations/              # Conversazioni salvate (auto-generato)
-├── knowledge_base/             # Vector store ChromaDB (auto-generato)
-└── secrets/                    # API keys (opzionale)
-```
-
----
-
 ## 🗺️ Roadmap
 
 Vedi [ROADMAP.md](ROADMAP.md) per il piano di sviluppo completo.
@@ -332,16 +399,16 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano di sviluppo completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
-| v1.3.2+ | Adapter MediaWiki, DokuWiki | 📋 Planned |
-| v1.4.0 | Streaming risposte | 📋 Planned |
-| v1.5.0 | Confronto modelli | 📋 Planned |
+| v1.4.1 | Bug fix, miglioramenti UI | 📋 Planned |
+| v1.5.0 | Streaming risposte | 📋 Planned |
+| v1.6.0 | Confronto modelli | 📋 Planned |
 | v2.0.0 | Multimodal, Docker, API | 📋 Planned |
 
 ---
 
 ## 🤝 Contributing
 
-Contribuzioni benvenute! 
+Contribuzioni benvenute! Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per le linee guida.
 
 1. Fork del repository
 2. Crea un branch (`git checkout -b feature/nuova-feature`)
