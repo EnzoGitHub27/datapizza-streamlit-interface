@@ -1,33 +1,14 @@
-# ============================================================================
-# .gitignore per Datapizza Streamlit LLM Interface by Gilles DeepAiUG
-# Creato da Enzo (EnzoGitHub27) - Dicembre 2025
-# ============================================================================
+# =============================================================================
+# Datapizza Streamlit Interface - .gitignore
+# =============================================================================
 
-# ============================================================================
-# API Keys e Secrets - IMPORTANTE: Mai committare chiavi API!
-# ============================================================================
-secrets/*.txt
-secrets/*.key
-!secrets/.gitkeep
-.env
-.env.local
-.env.*.local
-*.pem
-*.key
-*.crt
-
-# ============================================================================
+# =============================================================================
 # Python
-# ============================================================================
-# Byte-compiled / optimized / DLL files
+# =============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -41,292 +22,117 @@ parts/
 sdist/
 var/
 wheels/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
-# PyInstaller
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# poetry
-poetry.lock
-
-# pdm
-.pdm.toml
-
-# PEP 582
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
+# =============================================================================
+# Virtual Environments
+# =============================================================================
 venv/
 ENV/
-env.bak/
-venv.bak/
+env/
+.venv/
 deepaiug-interface/
-*-env/
-*-venv/
+datapizza-env/
+.python-version
 
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# ============================================================================
-# Streamlit
-# ============================================================================
-.streamlit/secrets.toml
-.streamlit/config.toml
-
-# ============================================================================
+# =============================================================================
 # IDE / Editor
-# ============================================================================
-# VSCode
-.vscode/
-*.code-workspace
-
-# PyCharm
+# =============================================================================
 .idea/
-*.iml
-*.iws
-*.ipr
-
-# Sublime Text
-*.sublime-project
-*.sublime-workspace
-
-# Vim
+.vscode/
 *.swp
 *.swo
 *~
-.vim/
-*.un~
-
-# Emacs
-*~
-\#*\#
-.\#*
-.emacs.desktop
-.emacs.desktop.lock
-*.elc
-auto-save-list
-tramp
-.\#*
-
-# Eclipse
 .project
 .pydevproject
 .settings/
+*.sublime-project
+*.sublime-workspace
 
-# NetBeans
-nbproject/
-
-# ============================================================================
-# Operating System
-# ============================================================================
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
-
-# Windows
-Thumbs.db
-Thumbs.db:encryptable
-ehthumbs.db
-ehthumbs_vista.db
-*.stackdump
-[Dd]esktop.ini
-$RECYCLE.BIN/
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-*.lnk
-
-# Linux
-*~
-.fuse_hidden*
-.directory
-.Trash-*
-.nfs*
-
-# ============================================================================
-# Backup / Temporary Files
-# ============================================================================
-*.bak
-*.tmp
-*.temp
-*~
-*.old
-*.orig
-*.save
-*.backup
-
-# ============================================================================
-# Logs e Database
-# ============================================================================
-*.log
-*.sql
-*.sqlite
-*.db
-
-# ============================================================================
-# Media / Large Files (opzionale)
-# ============================================================================
-# Decommenta se vuoi escludere file media pesanti
-# *.mp4
-# *.avi
-# *.mov
-# *.mp3
-# *.wav
-# *.zip
-# *.tar.gz
-# *.rar
-
-# ============================================================================
-# Project Specific
-# ============================================================================
-# File di test e sviluppo
-test_*.py
-scratch/
-playground/
-experiments/
-
-# Output e risposte salvate
-output/
-responses/
-downloads/
-
-# Screenshots temporanei (mantieni screenshot.png per README)
-*_screenshot.png
-temp_*.png
-!screenshot.png
+# =============================================================================
+# Datapizza - Dati Generati (NON committare)
+# =============================================================================
 
 # Conversazioni salvate (dati utente)
-conversations/*.json
+conversations/
 !conversations/.gitkeep
 
-#### **📄 LICENSE** (MIT License suggerita)
-```
-MIT License
+# Knowledge Base / Vector Store (dati indicizzati)
+knowledge_base/
+!knowledge_base/.gitkeep
 
-Copyright (c) 2025 Enzo Gilles (EnzoGitHub27) - DeepAiUG
+# Cache wiki MediaWiki
+wiki_cache/
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+# =============================================================================
+# Secrets / API Keys (MAI committare!)
+# =============================================================================
+secrets/
+!secrets/.gitkeep
+*.key
+*.pem
+.env
+.env.local
+.env.*.local
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+# =============================================================================
+# OS Generated
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+# =============================================================================
+# Logs & Temp
+# =============================================================================
+*.log
+*.tmp
+*.temp
+*.bak
+.cache/
+tmp/
+temp/
+
+# =============================================================================
+# Streamlit
+# =============================================================================
+.streamlit/secrets.toml
+
+# =============================================================================
+# ChromaDB (database locale)
+# =============================================================================
+chroma_data/
+*.chroma
+
+# =============================================================================
+# Jupyter (se usato per test)
+# =============================================================================
+.ipynb_checkpoints/
+*.ipynb
+
+# =============================================================================
+# Test / Coverage
+# =============================================================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# =============================================================================
+# Build / Distribution
+# =============================================================================
+*.manifest
+*.spec
+
+# =============================================================================
+# File specifici da ignorare
+# =============================================================================
+# Aggiungi qui file specifici del tuo ambiente se necessario
