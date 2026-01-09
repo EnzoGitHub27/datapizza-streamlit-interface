@@ -73,32 +73,153 @@ python --version
 
 # Ollama (per modelli locali)
 ollama --version
-ollama list
+ollama list  # verifica modelli installati
 ```
 
-### Installazione
+---
 
+## 🚀 Installazione
+
+### Metodo 1: Script Automatico (Consigliato) ⭐
+
+Questo metodo gestisce automaticamente l'ordine di installazione dei pacchetti.
+
+#### Linux/Mac
 ```bash
-# Clone
 git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
 cd datapizza-streamlit-interface
-
-# Ambiente virtuale (consigliato)
-python3 -m venv deepaiug-interface
-source deepaiug-interface/bin/activate  # Linux/Mac
-
-# Dipendenze (ordine importante!)
-pip install datapizza-ai
-pip install datapizza-ai-clients-openai-like
-pip install streamlit pyyaml python-dotenv
-pip install chromadb beautifulsoup4 PyPDF2
-pip install mwclient reportlab
-
-# DokuWiki support (opzionale)
-pip install dokuwiki
+chmod +x install.sh
+./install.sh
 ```
 
-### Avvio
+> ⚠️ Se lo script non funziona, usa il **Metodo 2** (installazione manuale).
+
+#### Windows (da testare)
+```bash
+git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
+cd datapizza-streamlit-interface
+install.bat
+```
+
+Lo script ti chiederà quali provider cloud installare.
+
+---
+
+### Metodo 2: Installazione Manuale Passo-Passo
+
+Se lo script automatico non funziona o preferisci installare manualmente:
+
+#### 1. Clona il repository
+```bash
+git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
+cd datapizza-streamlit-interface
+```
+
+#### 2. Crea un ambiente virtuale (FORTEMENTE consigliato)
+```bash
+python3 -m venv deepaiug-interface
+source deepaiug-interface/bin/activate  # Su Linux/Mac
+# oppure
+deepaiug-interface\Scripts\activate  # Su Windows
+```
+
+#### 3. Installa le dipendenze nell'ordine corretto
+
+**⚠️ IMPORTANTE: L'ordine di installazione è cruciale!**
+
+```bash
+# 3.1 - Dipendenze base
+pip install streamlit python-dotenv reportlab pyyaml
+
+# 3.2 - Datapizza AI core (PRIMA dei client!)
+pip install datapizza-ai
+
+# 3.3 - Client provider cloud (DOPO datapizza-ai)
+# Installa solo quelli che ti servono:
+
+# Per Ollama in Locale
+pip install datapizza-ai-clients-openai-like
+
+# Per OpenAI (GPT-4, GPT-3.5, ecc.)
+pip install datapizza-ai-clients-openai
+
+# Per Anthropic Claude
+pip install datapizza-ai-clients-anthropic
+
+# Per Google Gemini
+pip install datapizza-ai-clients-google
+```
+
+#### 4. Dipendenze per Wiki RAG (v1.3.0+)
+```bash
+pip install chromadb beautifulsoup4 PyPDF2
+```
+
+#### 5. Dipendenze per Wiki Adapters (v1.3.2+)
+```bash
+pip install mwclient      # MediaWiki
+pip install dokuwiki      # DokuWiki (v1.4.1+)
+```
+
+---
+
+### Metodo 3: Usando requirements.txt
+
+⚠️ **Nota**: Alcuni utenti hanno riscontrato problemi con questo metodo. Se fallisce, usa il **Metodo 2**.
+
+```bash
+pip install -r requirements.txt
+```
+
+Se riscontri errori, segui le istruzioni nel Metodo 2.
+
+---
+
+## 🔧 Configurazione API Keys
+
+### Opzione A: File .env (Consigliata per sviluppo)
+
+Crea un file `.env` nella root del progetto:
+
+```env
+OPENAI_API_KEY=sk-your-openai-key-here
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-key-here
+GOOGLE_API_KEY=your-google-gemini-key-here
+```
+
+### Opzione B: File secrets (Consigliata per produzione)
+
+```bash
+# Crea la cartella secrets se non esiste
+mkdir -p secrets
+
+# Crea i file per ogni provider
+echo "sk-your-openai-key" > secrets/openai_key.txt
+echo "sk-ant-your-anthropic-key" > secrets/anthropic_key.txt
+echo "your-gemini-key" > secrets/google_key.txt
+```
+
+### Opzione C: Variabili d'ambiente di sistema
+
+```bash
+# Linux/Mac
+export OPENAI_API_KEY="sk-your-key-here"
+export ANTHROPIC_API_KEY="sk-ant-your-key-here"
+export GOOGLE_API_KEY="your-key-here"
+
+# Windows PowerShell
+$env:OPENAI_API_KEY="sk-your-key-here"
+$env:ANTHROPIC_API_KEY="sk-ant-your-key-here"
+$env:GOOGLE_API_KEY="your-key-here"
+```
+
+### Opzione D: Interfaccia Web
+
+Puoi anche inserire e salvare le API keys direttamente dall'interfaccia Streamlit!
+
+---
+
+## ▶️ Avvio
 
 ```bash
 streamlit run app.py
@@ -153,16 +274,23 @@ Quando la Knowledge Base è attiva:
 
 ---
 
-## 🔧 Configurazione API Keys
+## 🔧 Modelli Ollama Consigliati
 
 ```bash
-# File secrets (consigliato)
-mkdir -p secrets
-echo "sk-your-key" > secrets/openai_key.txt
+# Modelli generali
+ollama pull llama3.2
+ollama pull mistral
+ollama pull qwen2.5
 
-# Oppure variabili ambiente
-export OPENAI_API_KEY="sk-your-key"
-export ANTHROPIC_API_KEY="sk-ant-your-key"
+# Modelli per coding
+ollama pull qwen2.5-coder
+
+# Modelli multimodali
+ollama pull llava
+ollama pull granite3.2-vision
+
+# Modello per embeddings (RAG)
+ollama pull nomic-embed-text
 ```
 
 ---
@@ -209,9 +337,11 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 Contribuzioni benvenute! Vedi [CONTRIBUTING.md](CONTRIBUTING.md).
 
-1. Fork → Branch → PR
-2. Segui le convenzioni
-3. Testa le modifiche
+1. Fork del repository
+2. Crea un branch (`git checkout -b feature/nuova-feature`)
+3. Commit (`git commit -m 'feat: aggiungi nuova feature'`)
+4. Push (`git push origin feature/nuova-feature`)
+5. Apri una Pull Request
 
 ---
 
