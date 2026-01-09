@@ -392,15 +392,17 @@ Cita sempre le fonti quando usi informazioni dai documenti.
 st.markdown("---")
 c1, c2, _ = st.columns([2, 8, 2])
 c1.caption("🍕 Datapizza AI")
-c2.caption(f"{VERSION} - Modular Architecture + MediaWiki RAG | Gilles DeepAiUG © 2025")
+c2.caption(f"{VERSION} - Modular Architecture + Multi-Wiki RAG | DeepAiUG © 2025")
 
 # Visual indicators
 if connection_type == "Cloud provider":
+    # Rosso per cloud (warning: dati esterni)
     st.markdown(
         '<style>.stApp { border-top: 4px solid #ff6b6b !important; }</style>',
         unsafe_allow_html=True
     )
-elif st.session_state.get("use_knowledge_base"):
+else:
+    # Verde per Local/Remote (safe: dati locali)
     st.markdown(
         '<style>.stApp { border-top: 4px solid #4CAF50 !important; }</style>',
         unsafe_allow_html=True
