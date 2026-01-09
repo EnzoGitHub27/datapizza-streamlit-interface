@@ -7,6 +7,49 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.4.1] - 2025-01-09
+
+### ✨ Nuove Funzionalità
+
+- **Supporto Multi-Wiki**: Oltre a MediaWiki, ora supporta anche **DokuWiki**
+- **Nuovo formato `wiki_sources.yaml`**: Campo `type` per specificare il tipo di sorgente
+- **UI Multi-Tipo**: Selezione sorgenti con icone e raggruppamento per tipo
+- **Configurazione YAML estendibile**: Pronto per futuri tipi wiki (Confluence, BookStack)
+
+### Aggiunto
+
+- **rag/adapters/dokuwiki.py** - Nuovo adapter per wiki DokuWiki
+  - Connessione via XML-RPC
+  - Download pagine con filtro namespace
+  - Parsing DokuWiki syntax → testo pulito
+  - Cache locale sync info
+
+- **config/constants.py**
+  - `WIKI_TYPES` - Dizionario tipi wiki supportati con metadata
+
+- **config/settings.py** - Nuove funzioni:
+  - `get_available_sources()` - Lista tutte le sorgenti
+  - `get_sources_by_type()` - Filtra per tipo
+  - `get_source_adapter_config()` - Config generica
+  - `is_source_type_available()` - Verifica dipendenze
+  - `get_missing_package()` - Pacchetto mancante
+
+### Modificato
+
+- **wiki_sources.yaml** - Nuovo formato con:
+  - `sources:` invece di `wikis:` (retrocompatibile)
+  - Campo `type:` obbligatorio (mediawiki, dokuwiki, local)
+  - Campo `icon:` per personalizzazione UI
+  
+- **ui/sidebar/knowledge_base.py** - Riscritto per supporto multi-tipo
+  - Fix: Cartella locale da YAML ora mostra tutti i campi configurazione
+
+### 📦 Nuove Dipendenze
+
+- `dokuwiki>=0.1.0` - Client Python per DokuWiki XML-RPC
+
+---
+
 ## [1.4.0] - 2025-01-08
 
 ### ♻️ Refactoring Completo - Architettura Modulare
@@ -18,33 +61,12 @@ Il file monolitico v1.3.3 (2287 righe) è stato completamente riorganizzato in u
 ```
 datapizza-streamlit-interface/
 ├── app.py                    # Entry point principale
-├── config/                   # Configurazione
-│   ├── constants.py          # Costanti globali
-│   └── settings.py           # Loader settings, API keys
-├── core/                     # Logica core
-│   ├── llm_client.py         # Factory client LLM
-│   ├── conversation.py       # Gestione messaggi
-│   └── persistence.py        # Salvataggio/caricamento
-├── rag/                      # Sistema RAG
-│   ├── models.py             # Document, Chunk
-│   ├── chunker.py            # TextChunker intelligente
-│   ├── vector_store.py       # ChromaDB + fallback
-│   ├── manager.py            # KnowledgeBaseManager
-│   └── adapters/             # Sorgenti dati
-│       ├── base.py           # WikiAdapter (ABC)
-│       ├── local_folder.py   # File locali
-│       └── mediawiki.py      # API MediaWiki
-├── export/                   # Sistema export
-│   └── exporters.py          # MD, JSON, TXT, PDF, ZIP
-├── ui/                       # Interfaccia utente
-│   ├── styles.py             # CSS
-│   ├── chat.py               # Rendering chat
-│   └── sidebar/              # Componenti sidebar
-│       ├── llm_config.py     # Config LLM
-│       ├── knowledge_base.py # Config KB
-│       ├── conversations.py  # Gestione salvataggi
-│       └── export_ui.py      # UI export
-└── old/                      # Versioni archiviate
+├── config/                   # Configurazione (constants, settings)
+├── core/                     # LLM client, persistenza, conversazioni
+├── rag/                      # RAG: models, chunker, vector_store, adapters
+├── export/                   # Export: MD, JSON, TXT, PDF, ZIP
+├── ui/                       # Streamlit UI: styles, chat, sidebar
+└── old/                      # Versioni archiviate (v1.0 → v1.3.3)
 ```
 
 ### 🔧 Miglioramenti
@@ -54,13 +76,6 @@ datapizza-streamlit-interface/
 - **Manutenibilità**: Modifiche localizzate senza impatti globali
 - **Riusabilità**: Componenti importabili in altri progetti
 - **Import puliti**: Ogni package espone API chiare via `__init__.py`
-
-### 📦 Migrazione
-
-- **Nessuna breaking change** per l'utente finale
-- Stesso comportamento di v1.3.3
-- Entry point: `streamlit run app.py`
-- File vecchi archiviati in `old/`
 
 ---
 
@@ -72,15 +87,8 @@ datapizza-streamlit-interface/
 
 ### ✨ Funzionalità Ripristinate
 
-- **📤 Export Conversazione** nella sidebar:
-  - Selezione formato (Markdown, JSON, TXT, PDF)
-  - Selezione contenuto (completo o ultimi N messaggi)
-  - Nome file personalizzabile
-  - Bottone anteprima export
-  - Download diretto
-
+- **📤 Export Conversazione** nella sidebar
 - **👁️ Anteprima Export**: Preview del contenuto prima del download
-
 - **🗂️ Batch Export**: Esportazione di tutte le conversazioni in ZIP
 
 ---
@@ -90,37 +98,13 @@ datapizza-streamlit-interface/
 ### ✨ Nuove Funzionalità
 
 - **MediaWikiAdapter**: Nuovo adapter per sincronizzare wiki MediaWiki
-  - Connessione via `mwclient` alle API MediaWiki
-  - Download batch delle pagine con progress bar
-  - Parsing wikitext → testo pulito (rimozione template, link, markup)
-  - Supporto autenticazione (username/password)
-  - Filtro per namespace e categorie
-  - Esclusione pagine/categorie configurabile
-  - Sync locale con ChromaDB (no query live alla wiki)
-
-- **Configurazione YAML** (`wiki_sources.yaml`):
-  - 3 modalità operative: `fixed`, `selectable`, `custom`
-  - Lista wiki preconfigurate con tutti i parametri
-  - Impostazioni globali (user-agent, delay, batch size)
-  - Supporto variabili ambiente per credenziali
-
-- **UI MediaWiki in Sidebar**:
-  - Selezione wiki da configurazione
-  - URL custom per wiki non configurate
-  - Bottone "Sincronizza Wiki"
-  - Info ultimo sync (data, pagine caricate)
-  - Parametri chunking configurabili
+- **Configurazione YAML** (`wiki_sources.yaml`)
+- **UI MediaWiki in Sidebar**
 
 ### 📦 Nuove Dipendenze
 
 - `mwclient>=0.10.0` - Client Python per MediaWiki API
 - `pyyaml>=6.0` - Parser YAML per configurazione
-
-### 🔧 Miglioramenti
-
-- Refactoring sezione sidebar Knowledge Base
-- Supporto per sorgenti multiple (Cartella Locale + MediaWiki)
-- Cache locale per info sync wiki
 
 ---
 
@@ -128,21 +112,14 @@ datapizza-streamlit-interface/
 
 ### 🐛 Bug Fix
 
-- **Fix Modelli Ollama** (CRITICO): Ora mostra tutti i modelli Ollama installati, non solo quelli con `-` nel nome
-- **Fix Persistenza KB**: Le impostazioni Knowledge Base vengono salvate con la conversazione
-- **Fix Ricarica KB**: Ricaricamento automatico della KB quando si carica una conversazione salvata
+- **Fix Modelli Ollama** (CRITICO): Ora mostra tutti i modelli Ollama installati
+- **Fix Persistenza KB**: Le impostazioni Knowledge Base vengono salvate
+- **Fix Ricarica KB**: Ricaricamento automatico della KB
 
 ### ✨ Nuove Funzionalità
 
-- **Parametri Chunking Configurabili**: Nuovi slider per dimensione chunk (200-3000) e overlap (0-500)
-- **Chunking Intelligente**: Il chunker ora rispetta la struttura del documento (titoli Markdown, paragrafi, frasi)
-- **Ratio Overlap**: Visualizzazione percentuale dell'overlap configurato
-
-### 🔧 Miglioramenti Tecnici
-
-- Normalizzazione whitespace eccessivo nei documenti
-- Migliore gestione dei separatori nel chunking
-- Safety check per evitare loop infiniti nel chunker
+- **Parametri Chunking Configurabili**
+- **Chunking Intelligente**
 
 ---
 
@@ -151,33 +128,14 @@ datapizza-streamlit-interface/
 ### ✨ Nuove Funzionalità
 
 - **📚 Knowledge Base RAG**: Sistema completo di Retrieval-Augmented Generation
-  - Indicizzazione documenti locali (Markdown, TXT, HTML, PDF)
-  - Vector store con ChromaDB (persistente) o fallback in memoria
-  - Ricerca semantica nei documenti
-  - Contesto automatico iniettato nel prompt
-  - Citazione fonti nelle risposte
-
-- **📁 LocalFolderAdapter**: Primo adapter per sorgenti documentali
-  - Supporto cartelle ricorsive
-  - Filtro per estensioni file
-  - Parsing HTML (BeautifulSoup)
-  - Estrazione testo PDF (PyPDF2)
-
+- **📁 LocalFolderAdapter**: File locali (MD, TXT, HTML, PDF)
 - **🔒 Privacy Mode**: Blocco automatico provider cloud quando KB attiva
-  - Solo Ollama locale o Remote host permessi
-  - Protezione dati sensibili
-
-- **⚙️ Configurazione KB in Sidebar**:
-  - Selezione sorgente documenti
-  - Scelta formati file
-  - Statistiche knowledge base
-  - Parametri RAG (top_k documenti)
 
 ### 📦 Nuove Dipendenze
 
-- `chromadb>=0.4.0` - Database vettoriale
-- `beautifulsoup4>=4.12.0` - Parsing HTML
-- `PyPDF2>=3.0.0` - Estrazione testo PDF
+- `chromadb>=0.4.0`
+- `beautifulsoup4>=4.12.0`
+- `PyPDF2>=3.0.0`
 
 ---
 
@@ -185,53 +143,22 @@ datapizza-streamlit-interface/
 
 ### ✨ Nuove Funzionalità
 
-- **📥 Export Multi-Formato**: Esportazione conversazioni in:
-  - Markdown (.md) - per blog, Obsidian, Notion
-  - JSON (.json) - per elaborazione programmata
-  - TXT (.txt) - backup semplice
-  - PDF (.pdf) - documenti stampabili
-
-- **👁️ Preview Export**: Anteprima del contenuto prima del download
-- **📝 Nome File Personalizzabile**: Scelta del nome file per l'export
-- **📊 Selezione Contenuto**: Export completo o ultimi N messaggi
-- **🗂️ Batch Export**: Esportazione di tutte le conversazioni in ZIP
+- **📥 Export Multi-Formato**: MD, JSON, TXT, PDF
+- **🗂️ Batch Export ZIP**
 
 ### 📦 Nuove Dipendenze
 
-- `reportlab>=4.0.0` - Generazione PDF
+- `reportlab>=4.0.0`
 
 ---
 
-## [1.1.1] - 2025-01-03
-
-### 🐛 Bug Fix
-
-- Fix salvataggio conversazioni con caratteri speciali
-- Fix caricamento conversazioni corrotte
-- Migliorata gestione errori nel salvataggio
-
-### 🔧 Miglioramenti
-
-- Auto-save più affidabile
-- Feedback visivo migliorato per operazioni di salvataggio
-
----
-
-## [1.1.0] - 2025-01-02
+## [1.1.x] - 2025-01-02/03
 
 ### ✨ Nuove Funzionalità
 
-- **💬 Conversazioni Multi-Turno**: Memoria del contesto tra messaggi
-- **💾 Persistenza Conversazioni**: Salvataggio automatico su file JSON
-- **📂 Gestione Conversazioni**: Lista, caricamento, eliminazione conversazioni salvate
-- **📊 Statistiche**: Contatore messaggi, token stimati, ID conversazione
-- **🔄 Auto-Save**: Salvataggio automatico configurabile
-
-### 🔧 Miglioramenti
-
-- Nuova sidebar organizzata per sezioni
-- Indicatori di stato connessione
-- Gestione errori migliorata
+- **💬 Conversazioni Multi-Turno**
+- **💾 Persistenza Conversazioni**
+- **🔄 Auto-Save**
 
 ---
 
@@ -239,25 +166,19 @@ datapizza-streamlit-interface/
 
 ### 🎉 Release Iniziale
 
-- **🤖 Multi-Provider**: Supporto Ollama (locale), Remote host, Cloud
-- **☁️ Cloud Provider**: OpenAI, Anthropic (Claude), Google Gemini
-- **🎛️ Parametri LLM**: System prompt, temperature, selezione modello
-- **💬 Chat Base**: Invio messaggi e ricezione risposte
-- **🎨 UI Streamlit**: Interfaccia moderna con tema chiaro/scuro
-- **🔑 Gestione API Keys**: Salvataggio sicuro in file locali
+- **🤖 Multi-Provider**: Ollama, Remote, Cloud
+- **☁️ Cloud Provider**: OpenAI, Anthropic, Google
+- **🎨 UI Streamlit**
 
 ---
 
 ## Legenda
 
-- ✨ **Nuove Funzionalità** - Nuove feature aggiunte
-- 🐛 **Bug Fix** - Correzione di bug
-- 🔧 **Miglioramenti** - Miglioramenti a feature esistenti
-- ♻️ **Refactoring** - Riorganizzazione codice
-- 📦 **Dipendenze** - Nuove librerie richieste
-- ⚠️ **Breaking Changes** - Modifiche che richiedono azioni
-- 🗑️ **Deprecato** - Feature che verranno rimosse
-- 🔒 **Sicurezza** - Fix di sicurezza
+- ✨ **Nuove Funzionalità**
+- 🐛 **Bug Fix**
+- 🔧 **Miglioramenti**
+- ♻️ **Refactoring**
+- 📦 **Dipendenze**
 
 ---
 

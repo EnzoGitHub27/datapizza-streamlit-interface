@@ -1,15 +1,9 @@
 # =============================================================================
-# Datapizza Streamlit LLM Interface v1.4.0
+# Datapizza Streamlit LLM Interface v1.4.1
 # =============================================================================
-#
-# ⚠️ IMPORTANTE: Ordine di installazione!
-# Se pip install -r requirements.txt fallisce, installa manualmente:
-#
-# 1. pip install streamlit python-dotenv pyyaml reportlab
-# 2. pip install datapizza-ai
-# 3. pip install datapizza-ai-clients-openai-like
-# 4. pip install chromadb beautifulsoup4 PyPDF2 mwclient
-#
+# IMPORTANTE: Ordine di installazione!
+# 1. Prima: datapizza-ai
+# 2. Dopo: datapizza-ai-clients-openai-like
 # =============================================================================
 
 # Core Framework
@@ -21,21 +15,16 @@ pyyaml>=6.0
 datapizza-ai
 
 # Datapizza Clients (installare DOPO datapizza-ai!)
-# Ollama locale (obbligatorio)
 datapizza-ai-clients-openai-like
-
-# Cloud providers (opzionali - decommentare se necessari)
-# datapizza-ai-clients-openai
-# datapizza-ai-clients-anthropic
-# datapizza-ai-clients-google
 
 # Knowledge Base / RAG
 chromadb>=0.4.0
 beautifulsoup4>=4.12.0
 PyPDF2>=3.0.0
 
-# MediaWiki Adapter
-mwclient>=0.10.0
+# Wiki Adapters
+mwclient>=0.10.0      # MediaWiki
+dokuwiki>=0.1.0       # DokuWiki
 
-# Export PDF
+# Export
 reportlab>=4.0.0

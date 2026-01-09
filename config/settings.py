@@ -1,5 +1,5 @@
 # config/settings.py
-# Datapizza v1.4.0 - Funzioni gestione configurazioni
+# Datapizza v1.4.1 - Funzioni gestione configurazioni
 # ============================================================================
 
 import os
@@ -11,6 +11,7 @@ from .constants import (
     WIKI_CONFIG_FILE,
     WIKI_CONFIG_ALT,
     SECRETS_DIR,
+    WIKI_TYPES,
 )
 
 # ============================================================================
@@ -26,11 +27,13 @@ except ImportError:
 
 def load_wiki_config() -> Optional[Dict[str, Any]]:
     """
-    Carica configurazione wiki da file YAML.
+    Carica configurazione sorgenti da file YAML.
     
     Cerca in ordine:
     1. wiki_sources.yaml nella root del progetto
     2. config/wiki_sources.yaml
+    
+    Supporta sia il vecchio formato (wikis) che il nuovo (sources).
     
     Returns:
         Dict con la configurazione o None se non trovata/errore
@@ -51,36 +54,134 @@ def load_wiki_config() -> Optional[Dict[str, Any]]:
     try:
         with open(config_path, "r", encoding="utf-8") as f:
             config = yaml.safe_load(f)
+        
+        # Retrocompatibilità: converti vecchio formato "wikis" a "sources"
+        if "wikis" in config and "sources" not in config:
+            config["sources"] = {}
+            for wiki_id, wiki_data in config["wikis"].items():
+                # Aggiungi type: mediawiki se non presente
+                if "type" not in wiki_data:
+                    wiki_data["type"] = "mediawiki"
+                config["sources"][wiki_id] = wiki_data
+        
         return config
     except Exception as e:
         print(f"⚠️ Errore lettura config wiki: {e}")
         return None
 
 
-def get_available_wikis(config: Dict[str, Any]) -> List[Dict[str, Any]]:
+def get_available_sources(config: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
-    Estrae lista wiki disponibili dalla config.
+    Estrae lista sorgenti disponibili dalla config.
     
     Args:
         config: Configurazione YAML caricata
         
     Returns:
-        Lista di dict con info wiki (id, name, description, url, etc.)
+        Lista di dict con info sorgente (id, name, type, icon, etc.)
     """
-    wikis = []
+    sources = []
     
-    wikis_config = config.get("wikis", {})
-    for wiki_id, wiki_data in wikis_config.items():
-        wiki_info = {
-            "id": wiki_id,
-            "name": wiki_data.get("name", wiki_id),
-            "description": wiki_data.get("description", ""),
-            "url": wiki_data.get("url", ""),
-            **wiki_data  # Include tutti gli altri campi
+    # Supporta sia "sources" (nuovo) che "wikis" (vecchio)
+    sources_config = config.get("sources", config.get("wikis", {}))
+    
+    for source_id, source_data in sources_config.items():
+        source_info = {
+            "id": source_id,
+            "name": source_data.get("name", source_id),
+            "type": source_data.get("type", "mediawiki"),  # Default per retrocompatibilità
+            "icon": source_data.get("icon", _get_default_icon(source_data.get("type", "mediawiki"))),
+            "description": source_data.get("description", ""),
+            "url": source_data.get("url", source_data.get("folder_path", "")),
+            **source_data
         }
-        wikis.append(wiki_info)
+        sources.append(source_info)
     
-    return wikis
+    return sources
+
+
+def get_available_wikis(config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    Retrocompatibilità: alias per get_available_sources.
+    Filtra solo sorgenti di tipo wiki (mediawiki, dokuwiki).
+    
+    Args:
+        config: Configurazione YAML caricata
+        
+    Returns:
+        Lista di dict con info wiki
+    """
+    all_sources = get_available_sources(config)
+    wiki_types = ["mediawiki", "dokuwiki"]
+    return [s for s in all_sources if s.get("type") in wiki_types]
+
+
+def get_sources_by_type(config: Dict[str, Any], source_type: str) -> List[Dict[str, Any]]:
+    """
+    Filtra sorgenti per tipo specifico.
+    
+    Args:
+        config: Configurazione YAML caricata
+        source_type: Tipo sorgente ("mediawiki", "dokuwiki", "local")
+        
+    Returns:
+        Lista di dict con info sorgenti del tipo specificato
+    """
+    all_sources = get_available_sources(config)
+    return [s for s in all_sources if s.get("type") == source_type]
+
+
+def _get_default_icon(source_type: str) -> str:
+    """Ritorna icona di default per tipo sorgente."""
+    icons = {
+        "mediawiki": "🌐",
+        "dokuwiki": "📘",
+        "local": "📁",
+        "confluence": "📄",
+        "bookstack": "📚",
+    }
+    return icons.get(source_type, "📄")
+
+
+def get_source_adapter_config(
+    source_id: str, 
+    config: Dict[str, Any], 
+    global_settings: Dict[str, Any] = None
+) -> Dict[str, Any]:
+    """
+    Costruisce configurazione completa per un adapter.
+    
+    Merge impostazioni sorgente specifiche con global_settings.
+    Espande variabili ambiente per credenziali.
+    
+    Args:
+        source_id: ID della sorgente nella config
+        config: Configurazione completa YAML
+        global_settings: Impostazioni globali (opzionale)
+        
+    Returns:
+        Dict con configurazione completa per l'adapter
+    """
+    # Supporta sia "sources" (nuovo) che "wikis" (vecchio)
+    sources = config.get("sources", config.get("wikis", {}))
+    source_data = sources.get(source_id, {})
+    
+    if global_settings is None:
+        global_settings = config.get("global_settings", {})
+    
+    # Merge con global settings
+    adapter_config = {
+        **global_settings,
+        **source_data,
+    }
+    
+    # Gestisci variabili ambiente per credenziali
+    _expand_env_vars(adapter_config, "username")
+    _expand_env_vars(adapter_config, "password")
+    _expand_env_vars(adapter_config, "api_key")
+    _expand_env_vars(adapter_config, "token")
+    
+    return adapter_config
 
 
 def get_wiki_adapter_config(
@@ -89,37 +190,83 @@ def get_wiki_adapter_config(
     global_settings: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
-    Costruisce configurazione completa per MediaWikiAdapter.
-    
-    Merge impostazioni wiki specifiche con global_settings.
-    Espande variabili ambiente per credenziali.
+    Retrocompatibilità: alias per get_source_adapter_config.
     
     Args:
         wiki_id: ID della wiki nella config
         wiki_config: Configurazione completa YAML
-        global_settings: Impostazioni globali da wiki_config
+        global_settings: Impostazioni globali
         
     Returns:
         Dict con configurazione completa per l'adapter
     """
-    wiki_data = wiki_config.get("wikis", {}).get(wiki_id, {})
+    return get_source_adapter_config(wiki_id, wiki_config, global_settings)
+
+
+def _expand_env_vars(config: Dict[str, Any], key: str):
+    """
+    Espande variabili ambiente nel valore di una chiave.
     
-    # Merge con global settings
-    config = {
-        **global_settings,
-        **wiki_data,
-    }
+    Formato supportato: ${NOME_VAR}
     
-    # Gestisci variabili ambiente per credenziali
-    if "${" in str(config.get("username", "")):
-        env_var = config["username"].strip("${}")
-        config["username"] = os.getenv(env_var, "")
+    Args:
+        config: Dizionario da modificare
+        key: Chiave da controllare
+    """
+    value = config.get(key, "")
+    if isinstance(value, str) and "${" in value:
+        # Estrai nome variabile
+        env_var = value.strip("${}")
+        config[key] = os.getenv(env_var, "")
+
+
+def is_source_type_available(source_type: str) -> bool:
+    """
+    Verifica se le dipendenze per un tipo di sorgente sono installate.
     
-    if "${" in str(config.get("password", "")):
-        env_var = config["password"].strip("${}")
-        config["password"] = os.getenv(env_var, "")
+    Args:
+        source_type: Tipo sorgente
+        
+    Returns:
+        True se disponibile
+    """
+    if source_type == "local":
+        return True
     
-    return config
+    if source_type == "mediawiki":
+        try:
+            import mwclient
+            return True
+        except ImportError:
+            return False
+    
+    if source_type == "dokuwiki":
+        try:
+            import dokuwiki
+            return True
+        except ImportError:
+            return False
+    
+    # Altri tipi futuri
+    return False
+
+
+def get_missing_package(source_type: str) -> Optional[str]:
+    """
+    Ritorna il nome del pacchetto mancante per un tipo di sorgente.
+    
+    Args:
+        source_type: Tipo sorgente
+        
+    Returns:
+        Nome pacchetto da installare o None se disponibile
+    """
+    type_info = WIKI_TYPES.get(source_type, {})
+    package = type_info.get("package")
+    
+    if package and not is_source_type_available(source_type):
+        return package
+    return None
 
 
 # ============================================================================

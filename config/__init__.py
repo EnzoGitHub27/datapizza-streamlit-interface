@@ -1,5 +1,5 @@
 # config/__init__.py
-# Datapizza v1.4.0 - Modulo configurazione
+# Datapizza v1.4.1 - Modulo configurazione
 # ============================================================================
 
 from .constants import (
@@ -37,6 +37,8 @@ from .constants import (
     MEDIAWIKI_DEFAULT_REQUEST_DELAY,
     MEDIAWIKI_DEFAULT_BATCH_SIZE,
     MEDIAWIKI_DEFAULT_TIMEOUT,
+    # Wiki Types
+    WIKI_TYPES,
 )
 
 __all__ = [
@@ -67,4 +69,5 @@ __all__ = [
     "MEDIAWIKI_DEFAULT_REQUEST_DELAY",
     "MEDIAWIKI_DEFAULT_BATCH_SIZE",
     "MEDIAWIKI_DEFAULT_TIMEOUT",
+    "WIKI_TYPES",
 ]

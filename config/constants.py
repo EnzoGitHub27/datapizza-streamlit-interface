@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.4.0"
+VERSION = "1.4.1"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Refactoring Modulare"
+VERSION_DESCRIPTION = "Multi-Wiki Support"
 
 # ============================================================================
 # PATHS
@@ -122,3 +122,28 @@ MEDIAWIKI_DEFAULT_USER_AGENT = f"DatapizzaBot/{VERSION}"
 MEDIAWIKI_DEFAULT_REQUEST_DELAY = 0.5
 MEDIAWIKI_DEFAULT_BATCH_SIZE = 50
 MEDIAWIKI_DEFAULT_TIMEOUT = 30
+
+# ============================================================================
+# WIKI TYPES SUPPORTATI
+# ============================================================================
+
+WIKI_TYPES = {
+    "mediawiki": {
+        "name": "MediaWiki",
+        "icon": "🌐",
+        "description": "Wikipedia, wiki aziendali (mwclient)",
+        "package": "mwclient",
+    },
+    "dokuwiki": {
+        "name": "DokuWiki",
+        "icon": "📘",
+        "description": "Wiki leggera per documentazione tecnica",
+        "package": "dokuwiki",
+    },
+    "local": {
+        "name": "Cartella Locale",
+        "icon": "📁",
+        "description": "File locali (MD, TXT, HTML, PDF)",
+        "package": None,
+    },
+}

@@ -1,5 +1,5 @@
 # rag/__init__.py
-# Datapizza v1.4.0 - Modulo RAG (Retrieval-Augmented Generation)
+# Datapizza v1.4.1 - Modulo RAG (Retrieval-Augmented Generation)
 # ============================================================================
 
 from .models import Document, Chunk
@@ -10,6 +10,7 @@ from .adapters import (
     WikiAdapter,
     LocalFolderAdapter,
     MediaWikiAdapter,
+    DokuWikiAdapter,
 )
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "WikiAdapter",
     "LocalFolderAdapter",
     "MediaWikiAdapter",
+    "DokuWikiAdapter",
 ]

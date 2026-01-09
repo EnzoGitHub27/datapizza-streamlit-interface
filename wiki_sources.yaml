@@ -1,15 +1,16 @@
 # ============================================================================
-# CONFIGURAZIONE SORGENTI MEDIAWIKI - Datapizza v1.3.2+
+# CONFIGURAZIONE SORGENTI WIKI - Datapizza v1.4.1+
 # ============================================================================
-# Questo file configura le wiki MediaWiki disponibili nell'interfaccia.
+# Questo file configura le sorgenti documentali disponibili nell'interfaccia.
+# Supporta: MediaWiki, DokuWiki, Cartella Locale
 # 
 # MODALITÀ DISPONIBILI:
-# - fixed: Solo le wiki configurate, nessuna scelta utente
-# - selectable: L'utente può scegliere tra le wiki configurate
+# - fixed: Solo le sorgenti configurate, nessuna scelta utente
+# - selectable: L'utente può scegliere tra le sorgenti configurate
 # - custom: L'utente può anche aggiungere URL custom
 #
 # POSIZIONE FILE:
-# - Stessa cartella dello script Python
+# - Stessa cartella di app.py
 # - Oppure in ./config/wiki_sources.yaml
 # ============================================================================
 
@@ -17,55 +18,48 @@
 # Valori: "fixed" | "selectable" | "custom"
 mode: "selectable"
 
-# Wiki predefinita (usata in modalità "fixed" o come default nelle altre)
-default_wiki: "wiki_associazione"
+# Sorgente predefinita (usata in modalità "fixed" o come default nelle altre)
+default_source: "wiki_associazione"
 
 # ============================================================================
-# LISTA WIKI CONFIGURATE
+# LISTA SORGENTI CONFIGURATE
+# ============================================================================
+# Ogni sorgente DEVE avere un campo "type" che specifica il tipo:
+# - mediawiki: Wiki basate su MediaWiki (Wikipedia, ecc.)
+# - dokuwiki: Wiki DokuWiki
+# - local: Cartella locale con documenti
 # ============================================================================
 
-wikis:
-  # Wiki interna dell'associazione (esempio)
+sources:
+  # ========== MEDIAWIKI ==========
+  
   wiki_associazione:
+    type: "mediawiki"
     name: "Wiki Associazione"
+    icon: "🌐"
     description: "Documentazione interna e procedure"
     url: "https://wiki.mia-associazione.it"
-    # API endpoint (default: /w/api.php o /api.php)
     api_path: "/w/api.php"
-    # Richiede autenticazione?
     requires_auth: false
-    # Credenziali (se requires_auth: true)
     # username: "bot_user"
-    # password: "bot_password"  # O meglio: usa variabile ambiente WIKI_PASSWORD
-    # Namespace da includere (default: 0 = Main)
-    # Lista completa: https://www.mediawiki.org/wiki/Manual:Namespace
+    # password: "bot_password"  # Meglio: WIKI_ASSOCIAZIONE_PASS
     namespaces:
       - 0      # Main (articoli)
-      # - 1    # Talk
-      # - 2    # User
-      # - 4    # Project
-      # - 10   # Template
-      # - 14   # Category
-    # Categorie da includere (opzionale, tutte se vuoto)
     categories: []
-    # Categorie da escludere
     exclude_categories:
       - "Bozze"
       - "Da cancellare"
-    # Pagine da escludere (titoli esatti o pattern)
     exclude_pages:
       - "Pagina_principale"
       - "Sandbox"
-    # Limite pagine (0 = tutte)
-    max_pages: 0
-    # Includi pagine di redirect?
+    max_pages: 0  # 0 = tutte
     include_redirects: false
-    # Timeout connessione (secondi)
     timeout: 30
   
-  # Wiki locale per test (localhost)
   wiki_locale:
-    name: "Wiki Locale (Test)"
+    type: "mediawiki"
+    name: "MediaWiki Locale (Test)"
+    icon: "🖥️"
     description: "MediaWiki locale per sviluppo"
     url: "http://localhost:8080"
     api_path: "/api.php"
@@ -78,19 +72,75 @@ wikis:
     max_pages: 100
     include_redirects: false
     timeout: 10
+
+  # ========== DOKUWIKI ==========
   
-  # Esempio: Wiki pubblica (solo lettura)
+  docs_tecniche:
+    type: "dokuwiki"
+    name: "Documentazione Tecnica"
+    icon: "📘"
+    description: "Wiki DokuWiki per documentazione IT"
+    url: "https://docs.example.com"
+    # Autenticazione (opzionale)
+    requires_auth: false
+    # username: "reader"
+    # password: "${DOKUWIKI_PASS}"
+    # Namespace da includere (equivalente alle categorie)
+    # Lasciare vuoto per tutti
+    namespaces: []
+    # Namespace da escludere
+    exclude_namespaces:
+      - "playground"
+      - "wiki"
+    # Pattern pagine da escludere (regex supportato)
+    exclude_patterns:
+      - "^start$"
+      - "^sidebar$"
+    # Limite pagine (0 = tutte)
+    max_pages: 0
+    timeout: 30
+  
+  dokuwiki_locale:
+    type: "dokuwiki"
+    name: "DokuWiki Locale"
+    icon: "📗"
+    description: "DokuWiki locale per test"
+    url: "http://localhost:8081"
+    requires_auth: false
+    namespaces: []
+    exclude_namespaces: []
+    exclude_patterns: []
+    max_pages: 50
+    timeout: 10
+
+  # ========== CARTELLA LOCALE ==========
+  
+  documenti_locali:
+    type: "local"
+    name: "Documenti Locali"
+    icon: "📁"
+    description: "File nella cartella documenti"
+    folder_path: "/home/user/documenti"
+    extensions:
+      - ".md"
+      - ".txt"
+      - ".pdf"
+    recursive: true
+  
+  # Esempio: Wikipedia (solo lettura, limitata)
   # wikipedia_it:
+  #   type: "mediawiki"
   #   name: "Wikipedia Italiana"
-  #   description: "Enciclopedia libera (attenzione: molte pagine!)"
+  #   icon: "🌍"
+  #   description: "Enciclopedia libera (limitata a categoria)"
   #   url: "https://it.wikipedia.org"
   #   api_path: "/w/api.php"
   #   requires_auth: false
   #   namespaces:
   #     - 0
   #   categories:
-  #     - "Informatica"  # Limita a una categoria specifica
-  #   max_pages: 50      # Limita fortemente per test
+  #     - "Informatica"
+  #   max_pages: 50
   #   include_redirects: false
   #   timeout: 30
 
@@ -100,7 +150,7 @@ wikis:
 
 global_settings:
   # User-Agent per le richieste API (importante per wiki pubbliche)
-  user_agent: "DatapizzaBot/1.3.2 (https://github.com/EnzoGitHub27/datapizza-streamlit-interface)"
+  user_agent: "DatapizzaBot/1.4.1 (https://github.com/EnzoGitHub27/datapizza-streamlit-interface)"
   
   # Ritardo tra richieste API (secondi) - per non sovraccaricare il server
   request_delay: 0.5
@@ -125,31 +175,39 @@ global_settings:
   include_metadata: true
 
 # ============================================================================
-# NOTE PER L'UTENTE
+# NOTE PER IL SISTEMISTA
 # ============================================================================
 # 
-# 1. AUTENTICAZIONE:
-#    Se la wiki richiede login, puoi usare variabili ambiente:
-#    export WIKI_ASSOCIAZIONE_USER="username"
-#    export WIKI_ASSOCIAZIONE_PASS="password"
-#    Poi nel config: username: "${WIKI_ASSOCIAZIONE_USER}"
+# 1. TIPI SUPPORTATI:
+#    - mediawiki: Richiede `pip install mwclient`
+#    - dokuwiki: Richiede `pip install dokuwiki`
+#    - local: Nessuna dipendenza aggiuntiva
 #
-# 2. NAMESPACE COMUNI:
+# 2. AUTENTICAZIONE:
+#    Usa variabili ambiente per le password:
+#    export WIKI_ASSOCIAZIONE_PASS="password"
+#    Poi nel config: password: "${WIKI_ASSOCIAZIONE_PASS}"
+#
+# 3. NAMESPACE MEDIAWIKI:
 #    0  = Main (articoli normali)
 #    1  = Talk (discussioni)
 #    2  = User (pagine utente)
 #    4  = Project (namespace del progetto)
-#    6  = File (descrizioni file)
 #    10 = Template
 #    14 = Category
 #
-# 3. CATEGORIE:
-#    Usa nomi senza prefisso "Categoria:" 
-#    Es: "Procedure" non "Categoria:Procedure"
+# 4. NAMESPACE DOKUWIKI:
+#    I namespace DokuWiki sono gerarchici (es: "it:docs:manual")
+#    Usa il nome senza prefisso (es: "docs" non "docs:")
 #
-# 4. PERFORMANCE:
-#    - Limita namespace e categorie per wiki grandi
-#    - Usa max_pages per test iniziali
-#    - Aumenta request_delay per wiki pubbliche
+# 5. ICONE DISPONIBILI:
+#    🌐 🖥️ 📘 📗 📁 📄 📚 🏢 🔒 🌍
+#
+# 6. AGGIUNGERE NUOVI TIPI:
+#    Per aggiungere supporto ad altri wiki (Confluence, BookStack, etc.):
+#    1. Crea un adapter in rag/adapters/
+#    2. Registralo in rag/adapters/__init__.py
+#    3. Aggiungi il tipo in config/constants.py WIKI_TYPES
+#    4. Aggiorna la UI in ui/sidebar/knowledge_base.py
 #
 # ============================================================================
