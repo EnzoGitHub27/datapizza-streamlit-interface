@@ -3,7 +3,7 @@
 > Interfaccia Streamlit modulare per interagire con LLM locali (Ollama), remoti e cloud.
 > Progetto Open Source della community **DeepAiUG**.
 
-[![Version](https://img.shields.io/badge/version-1.4.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.5.0)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -17,14 +17,37 @@
 - 💾 **Persistenza** delle conversazioni su file JSON
 - 📥 **Export** in Markdown, JSON, TXT, PDF + Batch ZIP
 - 📚 **Knowledge Base RAG** - Interroga documenti locali e wiki!
-- 🌐 **Multi-Wiki** - MediaWiki + DokuWiki support ⭐ NEW
-- 🔒 **Privacy-first** - Blocco automatico cloud quando usi documenti sensibili
+- 🌐 **Multi-Wiki** - MediaWiki + DokuWiki support
+- 📎 **File Upload in Chat** - Allega PDF, DOCX, TXT, immagini ⭐ NEW
+- 🔐 **Privacy-First Protection** - Sistema completo protezione dati sensibili ⭐ NEW
 - 🎨 **UI moderna** con temi chiaro/scuro
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
 
-## 🏗️ Architettura v1.4.1
+## 🆕 Novità v1.5.0
+
+### 📎 File Upload in Chat
+Allega file direttamente nella chat, come in ChatGPT/Claude.ai!
+
+| Tipo | Formati | Note |
+|------|---------|------|
+| 📄 **Documenti** | PDF, TXT, MD, DOCX | Testo estratto e aggiunto al contesto |
+| 🖼️ **Immagini** | PNG, JPG, GIF, WEBP | Richiede modello Vision (LLaVA, Granite3.2-Vision) |
+
+### 🔐 Privacy-First Protection
+Sistema completo per proteggere i tuoi documenti sensibili:
+
+| Protezione | Descrizione |
+|------------|-------------|
+| 🔒 **Upload bloccato su Cloud** | I file possono essere caricati solo con Ollama locale o Remote host |
+| ⚠️ **Privacy Dialog** | Warning automatico quando passi da Local→Cloud con documenti in memoria |
+| 📢 **Banner promemoria** | Ricorda che la sessione contiene dati estratti da documenti |
+| ✅ **Conferma esplicita** | Due opzioni: Reset chat (consigliato) o Procedi con conferma |
+
+---
+
+## 🏗️ Architettura v1.5.0
 
 ```
 datapizza-streamlit-interface/
@@ -32,13 +55,14 @@ datapizza-streamlit-interface/
 ├── wiki_sources.yaml         # Configurazione sorgenti wiki
 │
 ├── config/                   # 📁 Configurazione
-│   ├── constants.py          # Costanti, WIKI_TYPES
+│   ├── constants.py          # Costanti, WIKI_TYPES, VISION_MODELS
 │   └── settings.py           # Loader settings, API keys
 │
 ├── core/                     # 📁 Logica core
 │   ├── llm_client.py         # Factory client LLM
 │   ├── conversation.py       # Gestione messaggi
-│   └── persistence.py        # Salvataggio/caricamento
+│   ├── persistence.py        # Salvataggio/caricamento
+│   └── file_processors.py    # ⭐ NEW - Estrazione testo da file
 │
 ├── rag/                      # 📁 Sistema RAG
 │   ├── models.py             # Document, Chunk
@@ -48,7 +72,7 @@ datapizza-streamlit-interface/
 │   └── adapters/             # Sorgenti dati
 │       ├── local_folder.py   # File locali
 │       ├── mediawiki.py      # API MediaWiki
-│       └── dokuwiki.py       # DokuWiki ⭐ NEW
+│       └── dokuwiki.py       # DokuWiki
 │
 ├── export/                   # 📁 Sistema export
 │   └── exporters.py          # MD, JSON, TXT, PDF, ZIP
@@ -56,6 +80,8 @@ datapizza-streamlit-interface/
 ├── ui/                       # 📁 Interfaccia utente
 │   ├── styles.py             # CSS
 │   ├── chat.py               # Rendering chat
+│   ├── file_upload.py        # ⭐ NEW - Widget upload file
+│   ├── privacy_warning.py    # ⭐ NEW - Dialog privacy
 │   └── sidebar/              # Componenti sidebar
 │
 └── old/                      # 📁 Versioni archiviate
@@ -161,6 +187,12 @@ pip install mwclient      # MediaWiki
 pip install dokuwiki      # DokuWiki (v1.4.1+)
 ```
 
+#### 6. Dipendenze per File Upload (v1.5.0+)
+```bash
+pip install python-docx   # Estrazione testo DOCX
+pip install Pillow        # Processamento immagini
+```
+
 ---
 
 ### Metodo 3: Usando requirements.txt
@@ -227,6 +259,76 @@ streamlit run app.py
 
 ---
 
+## 📎 File Upload in Chat (v1.5.0+)
+
+### Come Funziona
+
+1. **Seleziona** Ollama locale o Remote host (upload bloccato su Cloud)
+2. **Carica** file tramite il widget sotto la chat
+3. **Anteprima** automatica del contenuto
+4. **Invia** il messaggio - il contenuto viene aggiunto al contesto
+
+### Formati Supportati
+
+| Formato | Estensione | Estrazione |
+|---------|------------|------------|
+| PDF | `.pdf` | Testo da tutte le pagine |
+| Word | `.docx` | Paragrafi e tabelle |
+| Testo | `.txt`, `.md` | Contenuto completo |
+| Immagini | `.png`, `.jpg`, `.gif`, `.webp` | Base64 per modelli Vision |
+
+### Modelli Vision Supportati
+
+Per analizzare immagini, usa uno di questi modelli:
+- `llava`, `llava-llama3`, `llava-phi3`
+- `granite3.2-vision`
+- `moondream`, `bakllava`
+
+```bash
+# Installa un modello Vision
+ollama pull llava
+ollama pull granite3.2-vision
+```
+
+---
+
+## 🔐 Privacy Protection (v1.5.0+)
+
+### Filosofia Privacy-First
+
+I tuoi documenti sensibili **non devono mai** finire su server esterni senza il tuo consenso esplicito.
+
+### Come Funziona
+
+```
+┌─────────────────────────────────────────────────────┐
+│ 1. Carichi documento con Local/Remote               │
+│                    ↓                                │
+│ 2. Sistema traccia: "documenti in sessione"         │
+│                    ↓                                │
+│ 3. Provi a passare a Cloud provider                 │
+│                    ↓                                │
+│ ┌─────────────────────────────────────────────────┐ │
+│ │  ⚠️ PRIVACY DIALOG                              │ │
+│ │                                                 │ │
+│ │  La cronologia contiene dati dai documenti.    │ │
+│ │                                                 │ │
+│ │  [🔄 Reset Chat]  [✅ Procedi con conferma]    │ │
+│ └─────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────┘
+```
+
+### Protezioni Attive
+
+| Situazione | Protezione |
+|------------|------------|
+| Upload su Cloud | ❌ Bloccato automaticamente |
+| KB attiva + Cloud | ❌ Bloccato automaticamente |
+| Local→Cloud con documenti | ⚠️ Dialog conferma |
+| Cloud con documenti in memoria | 📢 Banner warning |
+
+---
+
 ## 📚 Knowledge Base RAG
 
 ### Sorgenti Supportate
@@ -285,7 +387,7 @@ ollama pull qwen2.5
 # Modelli per coding
 ollama pull qwen2.5-coder
 
-# Modelli multimodali
+# Modelli multimodali (per immagini)
 ollama pull llava
 ollama pull granite3.2-vision
 
@@ -314,6 +416,10 @@ PyPDF2>=3.0.0
 mwclient>=0.10.0      # MediaWiki
 dokuwiki>=0.1.0       # DokuWiki
 
+# File Upload (v1.5.0+)
+python-docx>=0.8.0    # Estrazione DOCX
+Pillow>=10.0.0        # Processamento immagini
+
 # Export
 reportlab>=4.0.0
 ```
@@ -327,9 +433,10 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 | Versione | Feature | Stato |
 |----------|---------|-------|
 | v1.4.1 | Multi-Wiki (DokuWiki) | ✅ |
-| v1.5.0 | Streaming risposte | 📋 |
-| v1.6.0 | Confronto modelli | 📋 |
-| v2.0.0 | Multimodal, Docker, API | 🎯 |
+| v1.5.0 | File Upload + Privacy Protection | ✅ |
+| v1.6.0 | Streaming risposte | 📋 |
+| v1.7.0 | Confronto modelli side-by-side | 📋 |
+| v2.0.0 | Multimodal avanzato, Docker, API | 🎯 |
 
 ---
 
