@@ -28,3 +28,7 @@ dokuwiki>=0.1.0       # DokuWiki
 
 # Export
 reportlab>=4.0.0
+
+# v1.5.0 - File Upload
+python-docx>=0.8.0
+Pillow>=10.0.0

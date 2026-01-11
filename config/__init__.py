@@ -1,5 +1,5 @@
 # config/__init__.py
-# Datapizza v1.4.1 - Modulo configurazione
+# Datapizza v1.5.0 - Modulo configurazione
 # ============================================================================
 
 from .constants import (
@@ -39,6 +39,11 @@ from .constants import (
     MEDIAWIKI_DEFAULT_TIMEOUT,
     # Wiki Types
     WIKI_TYPES,
+    # 🆕 v1.5.0 - File Upload
+    ALLOWED_UPLOAD_TYPES,
+    VISION_MODEL_PATTERNS,
+    MAX_FILE_SIZE_MB,
+    MAX_DOCUMENT_CHARS,
 )
 
 __all__ = [
@@ -70,4 +75,9 @@ __all__ = [
     "MEDIAWIKI_DEFAULT_BATCH_SIZE",
     "MEDIAWIKI_DEFAULT_TIMEOUT",
     "WIKI_TYPES",
+    # 🆕 v1.5.0 - File Upload
+    "ALLOWED_UPLOAD_TYPES",
+    "VISION_MODEL_PATTERNS",
+    "MAX_FILE_SIZE_MB",
+    "MAX_DOCUMENT_CHARS",
 ]

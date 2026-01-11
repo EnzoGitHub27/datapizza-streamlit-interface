@@ -1,5 +1,7 @@
 # ui/chat.py
-# Datapizza v1.4.0 - Rendering Chat
+# Datapizza v1.5.0 - Rendering Chat
+# ============================================================================
+# 🆕 v1.5.0: Aggiunto supporto per visualizzazione allegati nei messaggi
 # ============================================================================
 
 from datetime import datetime
@@ -13,7 +15,7 @@ def render_chat_message(message: Dict[str, Any], index: int):
     Renderizza un singolo messaggio della chat con stile bubble.
     
     Args:
-        message: Dizionario con role, content, timestamp, model, sources
+        message: Dizionario con role, content, timestamp, model, sources, attachments
         index: Indice del messaggio nella conversazione
     """
     role = message["role"]
@@ -21,6 +23,7 @@ def render_chat_message(message: Dict[str, Any], index: int):
     timestamp = message.get("timestamp", "")
     model_used = message.get("model", "")
     sources = message.get("sources", [])
+    attachments = message.get("attachments", [])  # 🆕 v1.5.0
     
     # Format timestamp
     time_str = ""
@@ -46,6 +49,12 @@ def render_chat_message(message: Dict[str, Any], index: int):
     with cols[1]:
         st.caption(f"{avatar} **{label}** • {time_str}")
         st.markdown(f'<div class="{bubble_class}">', unsafe_allow_html=True)
+        
+        # 🆕 v1.5.0 - Mostra allegati se presenti (solo per messaggi utente)
+        if attachments and role == "user":
+            attachments_str = ", ".join(attachments)
+            st.caption(f"📎 **Allegati:** {attachments_str}")
+        
         st.write(content)
         
         # Show sources if present (RAG)

@@ -7,6 +7,42 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.5.0] - 2025-01-11
+
+### ✨ Novità
+
+- **File Upload in Chat**: Possibilità di allegare file direttamente nella chat
+  - 📄 Documenti supportati: PDF, TXT, MD, DOCX
+  - 🖼️ Immagini supportate: PNG, JPG, JPEG, GIF, WEBP (richiede modello Vision)
+  - Anteprima file prima dell'invio
+  - Contenuto documenti estratto e aggiunto automaticamente al prompt
+
+- **Privacy-First Upload**: Upload automaticamente disabilitato con Cloud provider
+  - Protegge i documenti sensibili dall'invio a servizi esterni
+  - Disponibile solo con Ollama locale e Remote host
+
+- **Rilevamento Modelli Vision**: Riconoscimento automatico modelli con supporto immagini
+  - LLaVA, Granite3.2-Vision, Moondream, BakLLaVA e altri
+  - Warning se si caricano immagini con modello non-Vision
+
+- **🔐 Privacy Dialog per passaggio Local→Cloud**: Protezione dati sensibili
+  - Warning automatico quando si passa a Cloud con documenti in memoria
+  - Due opzioni: Reset Chat (consigliato) o Procedi con conferma esplicita
+  - Banner di promemoria quando si usa Cloud con documenti in sessione
+
+### 🔧 Modifiche Tecniche
+
+- Aggiunto campo `attachments` nei messaggi per tracciare file allegati
+- Nuovi moduli: `core/file_processors.py`, `ui/file_upload.py`, `ui/privacy_warning.py`
+- Aggiornato `ui/chat.py` per mostrare allegati nei messaggi utente
+
+### 📦 Dipendenze
+
+- Aggiunto: `python-docx>=0.8.0`
+- Aggiunto: `Pillow>=10.0.0`
+
+---
+
 ## [1.4.1] - 2025-01-09
 
 ### ✨ Nuove Funzionalità

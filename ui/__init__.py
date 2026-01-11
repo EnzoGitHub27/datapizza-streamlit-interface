@@ -1,5 +1,5 @@
 # ui/__init__.py
-# Datapizza v1.4.0 - UI Components Package
+# Datapizza v1.5.0 - UI Components Package
 # ============================================================================
 
 from ui.styles import (
@@ -23,6 +23,27 @@ from ui.sidebar import (
     render_export_preview,
 )
 
+# 🆕 v1.5.0 - File Upload
+from ui.file_upload import (
+    render_file_upload_widget,
+    enrich_prompt_with_files,
+    is_vision_model,
+    store_pending_files,
+    get_pending_files,
+    clear_pending_files,
+)
+
+# 🆕 v1.5.0 - Privacy Warning
+from ui.privacy_warning import (
+    check_privacy_risk,
+    render_privacy_dialog,
+    handle_privacy_action,
+    render_privacy_warning_banner,
+    reset_privacy_flags,
+    should_show_privacy_dialog,
+    mark_documents_uploaded,
+)
+
 __all__ = [
     # Styles
     "MAIN_CSS",
@@ -39,4 +60,19 @@ __all__ = [
     "render_conversations_manager",
     "render_export_section",
     "render_export_preview",
+    # 🆕 v1.5.0 - File Upload
+    "render_file_upload_widget",
+    "enrich_prompt_with_files",
+    "is_vision_model",
+    "store_pending_files",
+    "get_pending_files",
+    "clear_pending_files",
+    # 🆕 v1.5.0 - Privacy Warning
+    "check_privacy_risk",
+    "render_privacy_dialog",
+    "handle_privacy_action",
+    "render_privacy_warning_banner",
+    "reset_privacy_flags",
+    "should_show_privacy_dialog",
+    "mark_documents_uploaded",
 ]

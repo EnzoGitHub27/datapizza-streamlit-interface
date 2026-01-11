@@ -1,5 +1,7 @@
 # ui/sidebar/llm_config.py
-# Datapizza v1.4.0 - Sidebar: Configurazione LLM
+# Datapizza v1.5.0 - Sidebar: Configurazione LLM
+# ============================================================================
+# 🆕 v1.5.0: Aggiunto controllo privacy per passaggio a Cloud con documenti
 # ============================================================================
 
 import streamlit as st
@@ -28,11 +30,29 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int]:
     st.sidebar.header("⚙️ Configurazione")
     
     # Tipo connessione
+    # 🆕 v1.5.0: Controlla se mostrare warning privacy
+    current_connection = st.session_state.get("connection_type", "Local (Ollama)")
+    
     connection_type = st.sidebar.selectbox(
         "Tipo connessione", 
         ["Local (Ollama)", "Remote host", "Cloud provider"], 
-        index=0
+        index=["Local (Ollama)", "Remote host", "Cloud provider"].index(current_connection)
     )
+    
+    # 🆕 v1.5.0: Rileva cambio verso Cloud con documenti in memoria
+    docs_uploaded = st.session_state.get("documents_uploaded_this_session", False)
+    privacy_acknowledged = st.session_state.get("privacy_acknowledged_for_cloud", False)
+    
+    if connection_type == "Cloud provider" and docs_uploaded and not privacy_acknowledged:
+        # Segnala che serve il dialog di privacy (gestito in app.py)
+        st.session_state["show_privacy_dialog"] = True
+        st.sidebar.warning(
+            "⚠️ **Documenti in memoria!**\n\n"
+            "Conferma richiesta prima di usare Cloud."
+        )
+    else:
+        st.session_state["show_privacy_dialog"] = False
+    
     st.session_state["connection_type"] = connection_type
     
     # Blocco Cloud se Knowledge Base attiva (PRIVACY)

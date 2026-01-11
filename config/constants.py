@@ -1,5 +1,5 @@
 # config/constants.py
-# Datapizza v1.4.0 - Costanti globali
+# Datapizza v1.5.0 - Costanti globali
 # ============================================================================
 
 from pathlib import Path
@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.4.1"
+VERSION = "1.5.0"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Multi-Wiki Support"
+VERSION_DESCRIPTION = "File Upload in Chat"
 
 # ============================================================================
 # PATHS
@@ -147,3 +147,29 @@ WIKI_TYPES = {
         "package": None,
     },
 }
+
+# ============================================================================
+# FILE UPLOAD IN CHAT - v1.5.0
+# ============================================================================
+
+# Estensioni per st.file_uploader (senza punto)
+ALLOWED_UPLOAD_TYPES = ["pdf", "txt", "md", "docx", "png", "jpg", "jpeg", "gif", "webp"]
+
+# Pattern per rilevare modelli Vision (case-insensitive)
+VISION_MODEL_PATTERNS = [
+    "llava",
+    "llava-llama3",
+    "llava-phi3",
+    "llava-v1.6",
+    "granite3-vision",
+    "granite3.2-vision",
+    "moondream",
+    "bakllava",
+    "cogvlm",
+    "fuyu",
+    "minicpm-v",
+]
+
+# Limiti upload
+MAX_FILE_SIZE_MB = 10
+MAX_DOCUMENT_CHARS = 50000
