@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "datapizza-streamlit-interface"
+version = "0.1.0"
+description = ""
+authors = ["alessiogandelli <alessiogandelli99@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.14"
+datapizza-ai = "^0.0.9"
+datapizza-ai-clients-openai-like = "^0.0.8"
+datapizza-ai-clients-openai = "^0.0.9"
+datapizza-ai-clients-anthropic = "^0.0.4"
+datapizza-ai-clients-google = "^0.0.5"
+streamlit = "^1.52.2"
+python-dotenv = "^1.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
