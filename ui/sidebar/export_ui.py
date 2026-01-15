@@ -1,5 +1,5 @@
 # ui/sidebar/export_ui.py
-# Datapizza v1.4.0 - Sidebar: Export conversazioni
+# Datapizza v1.4.0 - Sidebar: Export conversazioni (Refactored for Layout Agnosticism)
 # ============================================================================
 
 from datetime import datetime
@@ -18,25 +18,25 @@ from export import (
 
 
 def render_export_section():
-    """Renderizza la sezione export nella sidebar."""
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 📤 Export Conversazione")
+    """Renderizza la sezione export."""
+    st.markdown("---")
+    st.markdown("### 📤 Export Conversazione")
     
     messages = st.session_state.get("messages", [])
     
     if not messages:
-        st.sidebar.info("💡 Inizia una conversazione per abilitare l'export")
+        st.info("💡 Inizia una conversazione per abilitare l'export")
         return
     
     # Selezione formato
-    export_format = st.sidebar.selectbox(
+    export_format = st.selectbox(
         "Formato Export",
         options=list(EXPORT_FORMATS.keys()),
         format_func=lambda x: f"{EXPORT_FORMATS[x]['icon']} {x} ({EXPORT_FORMATS[x]['ext']})"
     )
     
     # Selezione contenuto
-    content_option = st.sidebar.selectbox(
+    content_option = st.selectbox(
         "Contenuto", 
         options=list(CONTENT_OPTIONS.keys())
     )
@@ -44,28 +44,30 @@ def render_export_section():
     # Nome file
     conv_id = st.session_state.get("conversation_id", "unknown")
     default_filename = f"conversation_{conv_id}"
-    export_filename = st.sidebar.text_input(
+    export_filename = st.text_input(
         "Nome file (senza estensione)", 
         value=default_filename
     )
     
     # Preview button
-    if st.sidebar.button("👁️ Anteprima Export", use_container_width=True):
+    def preview_callback():
         st.session_state["show_export_preview"] = True
         st.session_state["preview_content_option"] = content_option
         st.session_state["preview_format"] = export_format
-        st.rerun()
+
+    st.button("👁️ Anteprima Export", use_container_width=True, key="export_preview_btn", on_click=preview_callback)
     
     # Export button
-    col_exp1, col_exp2 = st.sidebar.columns(2)
+    col_exp1, col_exp2 = st.columns(2)
     with col_exp1:
-        if st.button("📥 Download", use_container_width=True, type="primary"):
+        if st.button("📥 Download", use_container_width=True, type="primary", key="export_download_btn"):
             _generate_and_download(
                 messages, 
                 export_format, 
                 content_option, 
                 export_filename,
-                conv_id
+                conv_id,
+                container=col_exp2 # Pass container for download button
             )
     
     # Batch export
@@ -77,18 +79,13 @@ def _generate_and_download(
     export_format, 
     content_option, 
     export_filename,
-    conv_id
+    conv_id,
+    container=None
 ):
-    """
-    Genera e offre download del file export.
+    """Genera e offre download."""
+    # Use provided container or fallback to st (current context)
+    target = container if container else st
     
-    Args:
-        messages: Lista messaggi
-        export_format: Formato selezionato
-        content_option: Opzione contenuto
-        export_filename: Nome file senza estensione
-        conv_id: ID conversazione
-    """
     messages_to_export = get_messages_for_export(messages, content_option)
     
     metadata = {
@@ -101,6 +98,7 @@ def _generate_and_download(
     }
     
     # Genera export
+    content = None
     if export_format == "Markdown":
         content = export_to_markdown(messages_to_export, metadata)
     elif export_format == "JSON":
@@ -109,16 +107,14 @@ def _generate_and_download(
         content = export_to_txt(messages_to_export, metadata)
     elif export_format == "PDF":
         content = export_to_pdf(messages_to_export, metadata)
-    else:
-        return
     
     if content:
         ext = EXPORT_FORMATS[export_format]["ext"]
         mime = EXPORT_FORMATS[export_format]["mime"]
         filename = f"{export_filename}{ext}"
         
-        st.sidebar.download_button(
-            label=f"💾 Salva {export_format}",
+        target.download_button(
+            label=f"💾 Salva",
             data=content,
             file_name=filename,
             mime=mime,
@@ -133,11 +129,11 @@ def _render_batch_export():
     if not saved_conversations:
         return
     
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🗂️ Batch Export")
-    st.sidebar.caption(f"📁 {len(saved_conversations)} conversazioni salvate")
+    st.markdown("---")
+    st.markdown("### 🗂️ Batch Export")
+    st.caption(f"📁 {len(saved_conversations)} conversazioni salvate")
     
-    batch_format = st.sidebar.selectbox(
+    batch_format = st.selectbox(
         "Formato batch",
         options=list(EXPORT_FORMATS.keys()),
         key="batch_format",
@@ -145,7 +141,7 @@ def _render_batch_export():
     )
     
     # Pulsante genera ZIP
-    if st.sidebar.button("📦 Genera ZIP", use_container_width=True):
+    if st.button("📦 Genera ZIP", use_container_width=True, key="export_batch_zip_btn"):
         with st.spinner("Creazione ZIP in corso..."):
             zip_data = create_batch_export_zip(saved_conversations, batch_format)
             if zip_data:
@@ -154,7 +150,7 @@ def _render_batch_export():
                 st.session_state["batch_zip_count"] = len(saved_conversations)
             else:
                 st.session_state["batch_zip_data"] = None
-                st.sidebar.error("❌ Errore generazione ZIP")
+                st.error("❌ Errore generazione ZIP")
     
     # Mostra download se ZIP generato
     if st.session_state.get("batch_zip_data"):
@@ -163,8 +159,8 @@ def _render_batch_export():
         zip_format = st.session_state.get("batch_zip_format", "Markdown")
         zip_count = st.session_state.get("batch_zip_count", 0)
         
-        st.sidebar.success(f"✅ ZIP pronto ({zip_count} conversazioni, {zip_format})")
-        st.sidebar.download_button(
+        st.success(f"✅ ZIP pronto ({zip_count} conversazioni, {zip_format})")
+        st.download_button(
             label="💾 Download ZIP",
             data=st.session_state["batch_zip_data"],
             file_name=zip_filename,
@@ -210,8 +206,9 @@ def render_export_preview():
     else:
         st.info("📕 Preview PDF non disponibile. Clicca 'Download' per generare il PDF.")
     
-    if st.button("❌ Chiudi Anteprima"):
+    def close_preview_callback():
         st.session_state["show_export_preview"] = False
-        st.rerun()
+        
+    st.button("❌ Chiudi Anteprima", key="export_close_preview", on_click=close_preview_callback)
     
     return True
