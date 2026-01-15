@@ -84,7 +84,7 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int]:
         
         with col_c:
             if models_local:
-                st.metric("", len(models_local))
+                st.metric("Modelli", len(models_local), label_visibility="collapsed")
         
         if models_local:
             prev = st.session_state.get("model_select")
