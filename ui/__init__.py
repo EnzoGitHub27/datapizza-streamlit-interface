@@ -4,9 +4,8 @@
 
 from ui.styles import (
     MAIN_CSS,
-    CLOUD_INDICATOR_CSS,
-    KB_INDICATOR_CSS,
-    get_connection_indicator_css,
+    THEME_LOCAL,
+    THEME_CLOUD,
 )
 
 from ui.chat import (
@@ -47,9 +46,8 @@ from ui.privacy_warning import (
 __all__ = [
     # Styles
     "MAIN_CSS",
-    "CLOUD_INDICATOR_CSS",
-    "KB_INDICATOR_CSS",
-    "get_connection_indicator_css",
+    "THEME_LOCAL",
+    "THEME_CLOUD",
     # Chat
     "render_chat_message",
     "render_chat_area",
