@@ -3,7 +3,7 @@
 > Interfaccia Streamlit modulare per interagire con LLM locali (Ollama), remoti e cloud.
 > Progetto Open Source della community **DeepAiUG**.
 
-[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.5.0)
+[![Version](https://img.shields.io/badge/version-1.5.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.5.1)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -25,7 +25,19 @@
 
 ---
 
-## 🆕 Novità v1.5.0
+## 🆕 Novità v1.5.1
+
+### 🐛 Critical Bugfix
+- **RISOLTO**: Wiki non funzionavano per pacchetti `mwclient` e `dokuwiki` mancanti
+- Aggiunte 4 wiki pubbliche pronte all'uso per test immediato del RAG
+- Migliorata documentazione setup e dipendenze
+
+### 🧪 Wiki di Test
+Ora puoi provare subito il sistema RAG con Wikipedia, Wikivoyage e Wikibooks!
+
+---
+
+## Novità v1.5.0
 
 ### 📎 File Upload in Chat
 Allega file direttamente nella chat, come in ChatGPT/Claude.ai!
@@ -397,6 +409,32 @@ Quando la Knowledge Base è attiva:
 - ☁️ **Cloud provider BLOCCATO** automaticamente
 - 💻 Solo **Ollama locale** o **Remote host** permessi
 - 🔒 I tuoi documenti **non escono mai** dal tuo computer
+
+### 🧪 Wiki Pubbliche di Test (v1.5.1+)
+
+Vuoi provare subito il sistema RAG? Usa una delle wiki pubbliche preconfigurate!
+
+| Wiki | Categoria | Pagine | Descrizione |
+|------|-----------|--------|-------------|
+| 🌍 **Wikipedia IT** | Intelligenza Artificiale | 30 | Articoli italiani su AI |
+| 🌎 **Wikipedia EN** | Artificial Intelligence | 20 | Articoli inglesi su AI |
+| ✈️ **Wikivoyage IT** | Italia | 15 | Guide di viaggio |
+| 📚 **Wikibooks IT** | Informatica | 20 | Manuali liberi |
+
+**Come usare:**
+1. Nella sidebar: attiva "🔍 Usa Knowledge Base"
+2. Seleziona una wiki dal dropdown (es: "🌍 Wikipedia IT (Test)")
+3. Clicca "🔄 Sincronizza" e aspetta il download
+4. Fai domande! Es: "Cos'è l'intelligenza artificiale forte?"
+
+**Test veloce:**
+```bash
+# Test connessione Wikipedia
+python test_wiki.py
+
+# Test tutte le wiki configurate
+python test_all_wikis.py
+```
 
 ---
 

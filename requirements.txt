@@ -1,5 +1,5 @@
 # =============================================================================
-# Datapizza Streamlit LLM Interface v1.4.1
+# Datapizza Streamlit LLM Interface v1.5.1
 # =============================================================================
 # IMPORTANTE: Ordine di installazione!
 # 1. Prima: datapizza-ai

@@ -7,6 +7,37 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.5.1] - 2025-01-16
+
+### 🐛 Bug Fix
+
+- **CRITICAL FIX**: Wiki non funzionavano per pacchetti mancanti
+  - Problema: `mwclient` e `dokuwiki` non erano installati nel venv
+  - Soluzione: Aggiornato README con istruzioni installazione dipendenze
+  - Test: Verificata connessione con Wikipedia e altre wiki pubbliche
+
+### ✨ Novità
+
+- **Wiki Pubbliche di Test**: Aggiunte 4 wiki pronte all'uso in `wiki_sources.yaml`
+  - 🌍 Wikipedia IT - Intelligenza Artificiale (30 pagine)
+  - 🌎 Wikipedia EN - Artificial Intelligence (20 pagine)
+  - ✈️ Wikivoyage IT - Guide viaggio Italia (15 pagine)
+  - 📚 Wikibooks IT - Manuali Informatica (20 pagine)
+
+### 🔧 Miglioramenti
+
+- Cambiato `default_source` da wiki non esistente a `wikipedia_it`
+- Aggiunti script di test: `test_wiki.py` e `test_all_wikis.py`
+- Migliorata documentazione setup venv e dipendenze
+
+### 📚 Documentazione
+
+- README aggiornato con sezione "Setup Virtual Environment"
+- Istruzioni chiare per installazione dipendenze wiki
+- Esempi di utilizzo wiki pubbliche per test
+
+---
+
 ## [1.5.0] - 2025-01-11
 
 ### ✨ Novità

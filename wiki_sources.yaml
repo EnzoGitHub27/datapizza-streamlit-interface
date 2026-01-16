@@ -19,7 +19,7 @@
 mode: "selectable"
 
 # Sorgente predefinita (usata in modalità "fixed" o come default nelle altre)
-default_source: "wiki_associazione"
+default_source: "wikipedia_it"
 
 # ============================================================================
 # LISTA SORGENTI CONFIGURATE
@@ -127,22 +127,71 @@ sources:
       - ".pdf"
     recursive: true
   
-  # Esempio: Wikipedia (solo lettura, limitata)
-  # wikipedia_it:
-  #   type: "mediawiki"
-  #   name: "Wikipedia Italiana"
-  #   icon: "🌍"
-  #   description: "Enciclopedia libera (limitata a categoria)"
-  #   url: "https://it.wikipedia.org"
-  #   api_path: "/w/api.php"
-  #   requires_auth: false
-  #   namespaces:
-  #     - 0
-  #   categories:
-  #     - "Informatica"
-  #   max_pages: 50
-  #   include_redirects: false
-  #   timeout: 30
+  # ========== WIKI PUBBLICHE DI TEST ==========
+
+  wikipedia_it:
+    type: "mediawiki"
+    name: "Wikipedia IT (Test)"
+    icon: "🌍"
+    description: "Wiki di test - Categoria Intelligenza Artificiale"
+    url: "https://it.wikipedia.org"
+    api_path: "/w/api.php"
+    requires_auth: false
+    namespaces:
+      - 0
+    categories:
+      - "Intelligenza artificiale"
+    max_pages: 30
+    include_redirects: false
+    timeout: 30
+
+  wikipedia_en:
+    type: "mediawiki"
+    name: "Wikipedia EN (Test)"
+    icon: "🌎"
+    description: "Test wiki - Artificial Intelligence category"
+    url: "https://en.wikipedia.org"
+    api_path: "/w/api.php"
+    requires_auth: false
+    namespaces:
+      - 0
+    categories:
+      - "Artificial intelligence"
+    max_pages: 20
+    include_redirects: false
+    timeout: 30
+
+  wikivoyage_it:
+    type: "mediawiki"
+    name: "Wikivoyage IT"
+    icon: "✈️"
+    description: "Guide di viaggio - Destinazioni Italia"
+    url: "https://it.wikivoyage.org"
+    api_path: "/w/api.php"
+    requires_auth: false
+    namespaces:
+      - 0
+    categories:
+      - "Italia"
+    max_pages: 15
+    include_redirects: false
+    timeout: 30
+
+  wikibooks_it:
+    type: "mediawiki"
+    name: "Wikibooks IT"
+    icon: "📚"
+    description: "Libri e manuali liberi - Informatica"
+    url: "https://it.wikibooks.org"
+    api_path: "/w/api.php"
+    requires_auth: false
+    namespaces:
+      - 0
+    categories:
+      - "Informatica"
+    max_pages: 20
+    include_redirects: false
+    timeout: 30
 
 # ============================================================================
 # IMPOSTAZIONI GLOBALI
