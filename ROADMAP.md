@@ -29,7 +29,9 @@ v1.0.0 ✅ (2025-01-01)          Base interface + Multi-provider
    │
    ├─→ v1.5.1 ✅ (2025-01-16)   + Wiki Bugfix + Test Sources
    │
-   ├─→ v1.6.0 📋 (Q1 2025)      + Streaming responses
+   ├─→ v1.6.0 ✅ (2025-01-25)   + Streaming responses (Ollama/Remote)
+   │
+   ├─→ v1.6.1 📋 (Q1 2025)      + Streaming for Cloud providers
    │
    ├─→ v1.7.0 📋 (Q1 2025)      + Model comparison side-by-side
    │
@@ -112,15 +114,25 @@ v1.0.0 ✅ (2025-01-01)          Base interface + Multi-provider
 - [x] Fix default_source in wiki_sources.yaml
 - [x] Documentazione migliorata setup venv
 
+### v1.6.0 - Streaming Responses (2025-01-25)
+- [x] Streaming token-by-token per Ollama locale
+- [x] Streaming token-by-token per Remote host
+- [x] Implementazione con client.stream_invoke()
+- [x] Deduplica testo incrementale (previous_text tracking)
+- [x] UI aggiornata con st.write_stream()
+- [x] Footer rinominato: 🤖 DeepAiUG by Gilles
+- [x] Migliore UX per risposte lunghe
+
 ---
 
 ## 📋 Pianificate
 
-### v1.6.0 - Streaming Responses
-- [ ] Streaming token-by-token
-- [ ] Progress indicator durante generazione
-- [ ] Stop generation button
-- [ ] Migliore UX per risposte lunghe
+### v1.6.1 - Streaming for Cloud Providers
+- [ ] Fix streaming per OpenAI
+- [ ] Fix streaming per Anthropic (Claude)
+- [ ] Fix streaming per Google Gemini
+- [ ] Gestione format chunk diversi per provider
+- [ ] Test completi tutti i provider
 
 ### v1.7.0 - Model Comparison
 - [ ] Confronto side-by-side
@@ -238,5 +250,5 @@ Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per dettagli.
 
 ---
 
-*Ultimo aggiornamento: 2025-01-16*
+*Ultimo aggiornamento: 2025-01-25*
 *Datapizza Streamlit Interface - DeepAiUG © 2025*

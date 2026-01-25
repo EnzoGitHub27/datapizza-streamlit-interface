@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.5.1"
+VERSION = "1.6.0"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Wiki Bugfix + Test Sources"
+VERSION_DESCRIPTION = "Streaming Responses"
 
 # ============================================================================
 # PATHS

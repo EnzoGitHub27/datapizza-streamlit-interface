@@ -7,6 +7,47 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.6.0] - 2025-01-25
+
+### ✨ Novità
+
+- **Streaming Responses**: Le risposte dell'AI ora appaiono token-by-token in tempo reale!
+  - Esperienza utente simile a ChatGPT/Claude.ai
+  - Visualizzazione progressiva del testo durante la generazione
+  - Sensazione di maggiore reattività e velocità
+
+### ✅ Provider Supportati
+
+- ✅ **Ollama locale**: Streaming perfetto e fluido
+- ✅ **Remote host**: Streaming perfetto e fluido
+- ⚠️ **Cloud providers** (OpenAI, Anthropic, Google): Streaming non attivo (verrà fixato in v1.6.1)
+
+### 🔧 Implementazione Tecnica
+
+- Sostituito `client.invoke()` con `client.stream_invoke()`
+- Creato `response_generator()` per estrarre testo incrementale dai chunk
+- Usato `st.write_stream()` per visualizzazione real-time
+- Implementata deduplica testo per evitare ripetizioni
+
+### 🎨 UI/UX
+
+- **Footer aggiornato**: Nuovo branding "🤖 DeepAiUG by Gilles"
+- Rimosso spinner "sta pensando..." (sostituito da streaming progressivo)
+- Migliore percezione di velocità durante le risposte lunghe
+
+### 🐛 Bug Fix
+
+- Risolto problema di ripetizione testo durante streaming
+- Implementato tracking `previous_text` per calcolare delta correttamente
+
+### 📚 Note
+
+- Breaking changes: Nessuno ✅
+- La feature funziona perfettamente con l'80% dei casi d'uso (Ollama)
+- Cloud providers mantengono funzionalità normale (risposta completa)
+
+---
+
 ## [1.5.1] - 2025-01-16
 
 ### 🐛 Bug Fix

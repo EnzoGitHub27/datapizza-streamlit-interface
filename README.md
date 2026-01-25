@@ -3,7 +3,7 @@
 > Interfaccia Streamlit modulare per interagire con LLM locali (Ollama), remoti e cloud.
 > Progetto Open Source della community **DeepAiUG**.
 
-[![Version](https://img.shields.io/badge/version-1.5.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.5.1)
+[![Version](https://img.shields.io/badge/version-1.6.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.6.0)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -13,27 +13,43 @@
 ## ✨ Features
 
 - 🤖 **Multi-provider**: Ollama (locale), Remote host, Cloud (OpenAI, Anthropic, Google)
+- 🌊 **Streaming Responses** - Risposte token-by-token in tempo reale! ⭐ NEW
 - 💬 **Conversazioni multi-turno** con memoria del contesto
 - 💾 **Persistenza** delle conversazioni su file JSON
 - 📥 **Export** in Markdown, JSON, TXT, PDF + Batch ZIP
 - 📚 **Knowledge Base RAG** - Interroga documenti locali e wiki!
 - 🌐 **Multi-Wiki** - MediaWiki + DokuWiki support
-- 📎 **File Upload in Chat** - Allega PDF, DOCX, TXT, immagini ⭐ NEW
-- 🔐 **Privacy-First Protection** - Sistema completo protezione dati sensibili ⭐ NEW
+- 📎 **File Upload in Chat** - Allega PDF, DOCX, TXT, immagini
+- 🔐 **Privacy-First Protection** - Sistema completo protezione dati sensibili
 - 🎨 **UI moderna** con temi chiaro/scuro
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
 
-## 🆕 Novità v1.5.1
+## 🆕 Novità v1.6.0
+
+### 🌊 Streaming Responses
+Le risposte dell'AI ora appaiono **token-by-token in tempo reale**, come in ChatGPT!
+
+**Come funziona:**
+- Le parole appaiono progressivamente durante la generazione
+- Sensazione di maggiore reattività e velocità
+- Esperienza utente fluida e moderna
+
+**Provider supportati:**
+- ✅ **Ollama locale**: Streaming perfetto
+- ✅ **Remote host**: Streaming perfetto
+- ⚠️ **Cloud (OpenAI, etc)**: In arrivo con v1.6.1
+
+**Footer aggiornato:** 🤖 DeepAiUG by Gilles
+
+---
+
+## Novità v1.5.1
 
 ### 🐛 Critical Bugfix
 - **RISOLTO**: Wiki non funzionavano per pacchetti `mwclient` e `dokuwiki` mancanti
 - Aggiunte 4 wiki pubbliche pronte all'uso per test immediato del RAG
-- Migliorata documentazione setup e dipendenze
-
-### 🧪 Wiki di Test
-Ora puoi provare subito il sistema RAG con Wikipedia, Wikivoyage e Wikibooks!
 
 ---
 
