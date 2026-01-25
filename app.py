@@ -483,14 +483,19 @@ Cita sempre le fonti quando usi informazioni dai documenti.
             # 🆕 TODO: Aggiungere supporto Vision API per immagini
             # Per ora le immagini vengono preparate ma non inviate (richiede modifiche a llm_client)
 
-            # Generator per estrarre testo dai chunk
+            # Generator per estrarre solo il nuovo testo dai chunk
             def response_generator():
-                """Yielda testo dai chunk di streaming"""
+                """Yielda solo il nuovo testo incrementale dai chunk di streaming"""
+                previous_text = ""
                 for chunk in client.stream_invoke(full_prompt):
                     # Estrai testo dal chunk
-                    text = getattr(chunk, "text", str(chunk))
-                    if text:
-                        yield text
+                    current_text = getattr(chunk, "text", str(chunk))
+                    if current_text:
+                        # Yielda solo la differenza (nuovo testo)
+                        new_text = current_text[len(previous_text):]
+                        if new_text:
+                            yield new_text
+                            previous_text = current_text
 
             # Display streaming response
             with st.chat_message("assistant"):
