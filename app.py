@@ -479,18 +479,33 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                     else enriched_input
                 )
             
-            # Invoke LLM
-            # 🆕 TODO v1.5.1: Aggiungere supporto Vision API per immagini
+            # Invoke LLM with streaming ✨ v1.6.0
+            # 🆕 TODO: Aggiungere supporto Vision API per immagini
             # Per ora le immagini vengono preparate ma non inviate (richiede modifiche a llm_client)
-            with st.spinner(f"🤖 {model} sta pensando..."):
-                response = client.invoke(full_prompt)
-                response_text = getattr(response, "text", str(response))
-            
-            # Add response with sources
+
+            # Generator per estrarre solo il nuovo testo dai chunk
+            def response_generator():
+                """Yielda solo il nuovo testo incrementale dai chunk di streaming"""
+                previous_text = ""
+                for chunk in client.stream_invoke(full_prompt):
+                    # Estrai testo dal chunk
+                    current_text = getattr(chunk, "text", str(chunk))
+                    if current_text:
+                        # Yielda solo la differenza (nuovo testo)
+                        new_text = current_text[len(previous_text):]
+                        if new_text:
+                            yield new_text
+                            previous_text = current_text
+
+            # Display streaming response
+            with st.chat_message("assistant"):
+                response_text = st.write_stream(response_generator())
+
+            # Add response with sources to conversation
             add_message(
-                "assistant", 
-                response_text, 
-                model=model, 
+                "assistant",
+                response_text,
+                model=model,
                 sources=sources if sources else None
             )
             
@@ -508,7 +523,7 @@ Cita sempre le fonti quando usi informazioni dai documenti.
 
 st.markdown("---")
 c1, c2, _ = st.columns([2, 8, 2])
-c1.caption("🍕 Datapizza AI")
+c1.caption("🤖 DeepAiUG by Gilles")
 c2.caption(f"{VERSION} - File Upload + Privacy-First | DeepAiUG © 2025")
 
 # Visual indicators

@@ -25,11 +25,15 @@ v1.0.0 ✅ (2025-01-01)          Base interface + Multi-provider
    │
    ├─→ v1.4.1 ✅ (2025-01-09)   + Multi-Wiki (DokuWiki) + UI migliorata
    │
-   ├─→ v1.5.0 📋 (Q1 2025)      + Streaming responses
+   ├─→ v1.5.0 ✅ (2025-01-11)   + File Upload in Chat + Privacy Protection
    │
-   ├─→ v1.6.0 📋 (Q1 2025)      + Model comparison side-by-side
+   ├─→ v1.5.1 ✅ (2025-01-16)   + Wiki Bugfix + Test Sources
    │
-   ├─→ v1.7.0 📋 (Q2 2025)      + Altri wiki adapters (Confluence, BookStack)
+   ├─→ v1.6.0 📋 (Q1 2025)      + Streaming responses
+   │
+   ├─→ v1.7.0 📋 (Q1 2025)      + Model comparison side-by-side
+   │
+   ├─→ v1.8.0 📋 (Q2 2025)      + Altri wiki adapters (Confluence, BookStack)
    │
    └─→ v2.0.0 🎯 (Q3 2025)      + Multimodal + Docker + API REST
 
@@ -92,29 +96,45 @@ v1.0.0 ✅ (2025-01-01)          Base interface + Multi-provider
 - [x] Verifica dipendenze automatica
 - [x] Fix UI cartella locale da YAML
 
+### v1.5.0 - File Upload + Privacy Protection (2025-01-11)
+- [x] Upload file in chat (PDF, DOCX, TXT, MD)
+- [x] Upload immagini per modelli Vision
+- [x] Privacy-First: Upload bloccato su Cloud provider
+- [x] Privacy Dialog per passaggio Local→Cloud
+- [x] Banner warning con documenti in memoria
+- [x] Rilevamento automatico modelli Vision
+- [x] File processors modulari
+
+### v1.5.1 - Wiki Bugfix + Test Sources (2025-01-16)
+- [x] CRITICAL FIX: Wiki non funzionavano (mwclient/dokuwiki mancanti)
+- [x] Aggiunte 4 wiki pubbliche di test (Wikipedia IT/EN, Wikivoyage, Wikibooks)
+- [x] Script test: test_wiki.py e test_all_wikis.py
+- [x] Fix default_source in wiki_sources.yaml
+- [x] Documentazione migliorata setup venv
+
 ---
 
 ## 📋 Pianificate
 
-### v1.5.0 - Streaming Responses
+### v1.6.0 - Streaming Responses
 - [ ] Streaming token-by-token
 - [ ] Progress indicator durante generazione
 - [ ] Stop generation button
 - [ ] Migliore UX per risposte lunghe
 
-### v1.6.0 - Model Comparison
+### v1.7.0 - Model Comparison
 - [ ] Confronto side-by-side
 - [ ] Stesso prompt a modelli diversi
 - [ ] Metriche comparazione (tempo, token, qualità)
 - [ ] Export comparazione
 
-### v1.7.0 - Wiki Adapters Aggiuntivi
+### v1.8.0 - Wiki Adapters Aggiuntivi
 - [ ] ConfluenceAdapter (Atlassian)
 - [ ] BookStackAdapter
 - [ ] NotionAdapter
 - [ ] Wiki.js Adapter
 
-### v1.8.0 - Analytics & Stats
+### v1.9.0 - Analytics & Stats
 - [ ] Dashboard statistiche uso
 - [ ] Grafici token consumati
 - [ ] History query RAG
@@ -150,7 +170,7 @@ v1.0.0 ✅ (2025-01-01)          Base interface + Multi-provider
 
 ---
 
-## 🛠️ Architettura Attuale (v1.4.1)
+## 🛠️ Architettura Attuale (v1.5.1)
 
 ```
 datapizza-streamlit-interface/
@@ -164,7 +184,8 @@ datapizza-streamlit-interface/
 ├── core/                     # Logica core
 │   ├── llm_client.py         # Factory LLM
 │   ├── conversation.py       # Messaggi
-│   └── persistence.py        # Salvataggio
+│   ├── persistence.py        # Salvataggio
+│   └── file_processors.py    # ✨ File upload extraction
 │
 ├── rag/                      # Sistema RAG
 │   ├── models.py             # Document, Chunk
@@ -182,9 +203,11 @@ datapizza-streamlit-interface/
 └── ui/                       # Interfaccia
     ├── styles.py
     ├── chat.py
+    ├── file_upload.py        # ✨ File upload widget
+    ├── privacy_warning.py    # ✨ Privacy dialog
     └── sidebar/
         ├── llm_config.py
-        ├── knowledge_base.py # Multi-tipo ✨ UPDATED
+        ├── knowledge_base.py # Multi-wiki support
         ├── conversations.py
         └── export_ui.py
 ```
@@ -200,6 +223,7 @@ datapizza-streamlit-interface/
 | MediaWiki | mwclient |
 | DokuWiki | dokuwiki |
 | Export PDF | reportlab |
+| File Upload | python-docx, Pillow |
 
 ---
 
@@ -214,5 +238,5 @@ Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per dettagli.
 
 ---
 
-*Ultimo aggiornamento: 2025-01-09*
+*Ultimo aggiornamento: 2025-01-16*
 *Datapizza Streamlit Interface - DeepAiUG © 2025*
