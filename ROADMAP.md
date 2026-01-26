@@ -4,185 +4,161 @@ Piano di sviluppo del progetto.
 
 ---
 
+## 🧠 Visione: Strumento Socratico
+
+A partire dalla v1.6.1, DeepAiUG abbraccia una nuova filosofia ispirata al **capitale semantico** (Floridi/Quartarone):
+
+> **DeepAiUG non è un oracolo che dà risposte, ma uno strumento che aiuta a costruire SENSO.**
+
+L'AI produce significato plausibile, ma il **senso** lo costruisce l'umano. Le feature "socratiche" stimolano:
+1. **Costruzione di senso** - collegare informazioni
+2. **Valutazione semantica** - capire cosa conta
+3. **Contestualizzazione** - collocare nel contesto giusto
+4. **Resistenza alla plausibilità** - non fidarsi del "suona giusto"
+
+### Scelta di Design
+L'approccio socratico è **OPZIONALE** (3 livelli: Veloce/Standard/Socratico).
+Libertà di scelta = valore fondamentale. **Nessuno forzato.**
+
+---
+
 ## 📊 Overview Versioni
 
 ```
-v1.0.0 ✅ (2025-01-01)          Base interface + Multi-provider
+v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    │
-   ├─→ v1.1.0 ✅ (2025-01-02)   + Multi-turn conversations + Persistenza
+   ├─→ v1.1.0 ✅ (2026-01-02)   + Multi-turn conversations + Persistenza
    │
-   ├─→ v1.2.0 ✅ (2025-01-04)   + Export (MD, JSON, TXT, PDF, ZIP)
+   ├─→ v1.2.0 ✅ (2026-01-04)   + Export (MD, JSON, TXT, PDF, ZIP)
    │
-   ├─→ v1.3.0 ✅ (2025-01-05)   + Knowledge Base RAG + LocalFolder
+   ├─→ v1.3.0 ✅ (2026-01-05)   + Knowledge Base RAG + LocalFolder
    │
-   ├─→ v1.3.1 ✅ (2025-01-06)   + Fix Ollama + Chunking configurabile
+   ├─→ v1.3.1 ✅ (2026-01-06)   + Fix Ollama + Chunking configurabile
    │
-   ├─→ v1.3.2 ✅ (2025-01-07)   + MediaWiki Adapter + YAML config
+   ├─→ v1.3.2 ✅ (2026-01-07)   + MediaWiki Adapter + YAML config
    │
-   ├─→ v1.3.3 ✅ (2025-01-07)   + Ripristino Export completo
+   ├─→ v1.3.3 ✅ (2026-01-07)   + Ripristino Export completo
    │
-   ├─→ v1.4.0 ✅ (2025-01-08)   + Architettura Modulare (27 moduli)
+   ├─→ v1.4.0 ✅ (2026-01-08)   + Architettura Modulare (27 moduli)
    │
-   ├─→ v1.4.1 ✅ (2025-01-09)   + Multi-Wiki (DokuWiki) + UI migliorata
+   ├─→ v1.4.1 ✅ (2026-01-09)   + Multi-Wiki (DokuWiki) + UI migliorata
    │
-   ├─→ v1.5.0 ✅ (2025-01-11)   + File Upload in Chat + Privacy Protection
+   ├─→ v1.5.0 ✅ (2026-01-11)   + File Upload in Chat + Privacy Protection
    │
-   ├─→ v1.5.1 ✅ (2025-01-16)   + Wiki Bugfix + Test Sources
+   ├─→ v1.5.1 ✅ (2026-01-16)   + Wiki Bugfix + Test Sources
    │
-   ├─→ v1.6.0 ✅ (2025-01-25)   + Streaming responses (Ollama/Remote)
+   ├─→ v1.6.0 ✅ (2026-01-25)   + Streaming responses (Ollama/Remote)
    │
-   ├─→ v1.6.1 📋 (Q1 2025)      + Streaming for Cloud providers
+   ├─→ v1.6.1 ✅ (2026-01-26)   + 🧠 Socratic Buttons (Genera alternative)
    │
-   ├─→ v1.7.0 📋 (Q1 2025)      + Model comparison side-by-side
+   ├─→ v1.7.0 📋 (Q1 2026)      + 🧠 Bottoni "Assunzioni" + "Limiti"
    │
-   ├─→ v1.8.0 📋 (Q2 2025)      + Altri wiki adapters (Confluence, BookStack)
+   ├─→ v1.8.0 📋 (Q1 2026)      + 🧠 Toggle modalità (Veloce/Standard/Socratico)
    │
-   └─→ v2.0.0 🎯 (Q3 2025)      + Multimodal + Docker + API REST
+   ├─→ v1.9.0 📋 (Q2 2026)      + Preparazione Semantic Layer (JSON-LD)
+   │
+   └─→ v2.0.0 🎯 (Q3-Q4 2026)   + Semantic Layer + Knowledge Graph
 
 ✅ = Completata
 🚧 = In sviluppo
 📋 = Pianificata
 🎯 = Obiettivo futuro
+🧠 = Feature Socratica
 ```
 
 ---
 
 ## ✅ Completate
 
-### v1.0.0 - Base Interface (2025-01-01)
-- [x] Multi-provider: Ollama locale, Remote host, Cloud
-- [x] Cloud providers: OpenAI, Anthropic, Google Gemini
-- [x] Parametri LLM: System prompt, temperature, modello
-- [x] Chat base con invio messaggi
-- [x] UI Streamlit moderna
-- [x] Gestione API keys (file + env)
+### v1.6.1 - 🧠 Socratic Buttons (2026-01-26)
+- [x] Nuovo modulo `ui/socratic/`
+- [x] Bottone "🔄 Genera alternative" sotto ogni risposta AI
+- [x] Genera 3 interpretazioni alternative con presupposti diversi
+- [x] Cache risposte socratiche in session_state
+- [x] Integrazione con streaming esistente
 
-### v1.1.x - Conversazioni (2025-01-02/03)
-- [x] Conversazioni multi-turno con memoria
-- [x] Persistenza su file JSON
-- [x] Gestione conversazioni (lista, carica, elimina)
-- [x] Auto-save configurabile
-- [x] Statistiche (messaggi, token, ID)
+### v1.6.0 - Streaming Responses (2026-01-25)
+- [x] Streaming token-by-token per Ollama locale
+- [x] Streaming token-by-token per Remote host
+- [x] Implementazione con client.stream_invoke()
+- [x] UI aggiornata con st.write_stream()
+- [x] Footer rinominato: 🤖 DeepAiUG by Gilles
 
-### v1.2.0 - Export (2025-01-04)
-- [x] Export Markdown
-- [x] Export JSON
-- [x] Export TXT
-- [x] Export PDF
-- [x] Batch export ZIP
-- [x] Preview export
-- [x] Nome file personalizzabile
-
-### v1.3.x - Knowledge Base RAG (2025-01-05/07)
-- [x] Sistema RAG completo
-- [x] Vector store ChromaDB + fallback memoria
-- [x] LocalFolderAdapter (MD, TXT, HTML, PDF)
-- [x] MediaWikiAdapter con mwclient
-- [x] Chunking intelligente configurabile
-- [x] Privacy mode (blocco cloud con KB)
-- [x] Configurazione YAML (`wiki_sources.yaml`)
-- [x] Citazione fonti nelle risposte
-
-### v1.4.0 - Architettura Modulare (2025-01-08)
-- [x] Refactoring da monolite a packages
-- [x] 27 moduli in 6 packages
-- [x] Entry point: `app.py`
-- [x] Import puliti via `__init__.py`
-- [x] Archiviazione versioni precedenti in `old/`
-
-### v1.4.1 - Multi-Wiki Support (2025-01-09)
-- [x] DokuWikiAdapter
-- [x] Nuovo formato YAML con campo `type`
-- [x] UI multi-tipo con icone
-- [x] Retrocompatibilità vecchio formato
-- [x] Verifica dipendenze automatica
-- [x] Fix UI cartella locale da YAML
-
-### v1.5.0 - File Upload + Privacy Protection (2025-01-11)
+### v1.5.x - File Upload + Privacy (2026-01-11/16)
 - [x] Upload file in chat (PDF, DOCX, TXT, MD)
 - [x] Upload immagini per modelli Vision
 - [x] Privacy-First: Upload bloccato su Cloud provider
 - [x] Privacy Dialog per passaggio Local→Cloud
-- [x] Banner warning con documenti in memoria
-- [x] Rilevamento automatico modelli Vision
-- [x] File processors modulari
+- [x] Wiki Bugfix + 4 wiki pubbliche di test
 
-### v1.5.1 - Wiki Bugfix + Test Sources (2025-01-16)
-- [x] CRITICAL FIX: Wiki non funzionavano (mwclient/dokuwiki mancanti)
-- [x] Aggiunte 4 wiki pubbliche di test (Wikipedia IT/EN, Wikivoyage, Wikibooks)
-- [x] Script test: test_wiki.py e test_all_wikis.py
-- [x] Fix default_source in wiki_sources.yaml
-- [x] Documentazione migliorata setup venv
+### v1.4.x - Architettura Modulare (2026-01-08/09)
+- [x] Refactoring da monolite a packages (27 moduli)
+- [x] DokuWikiAdapter + Multi-Wiki support
+- [x] Entry point: `app.py`
 
-### v1.6.0 - Streaming Responses (2025-01-25)
-- [x] Streaming token-by-token per Ollama locale
-- [x] Streaming token-by-token per Remote host
-- [x] Implementazione con client.stream_invoke()
-- [x] Deduplica testo incrementale (previous_text tracking)
-- [x] UI aggiornata con st.write_stream()
-- [x] Footer rinominato: 🤖 DeepAiUG by Gilles
-- [x] Migliore UX per risposte lunghe
+### v1.3.x - Knowledge Base RAG (2026-01-05/07)
+- [x] Sistema RAG completo con ChromaDB
+- [x] LocalFolderAdapter + MediaWikiAdapter
+- [x] Chunking intelligente configurabile
+- [x] Privacy mode (blocco cloud con KB)
+
+### v1.0.0 → v1.2.0 - Base (2026-01-01/04)
+- [x] Multi-provider: Ollama, Remote, Cloud
+- [x] Conversazioni multi-turno + Persistenza
+- [x] Export: MD, JSON, TXT, PDF, ZIP
 
 ---
 
 ## 📋 Pianificate
 
-### v1.6.1 - Streaming for Cloud Providers
-- [ ] Fix streaming per OpenAI
-- [ ] Fix streaming per Anthropic (Claude)
-- [ ] Fix streaming per Google Gemini
-- [ ] Gestione format chunk diversi per provider
-- [ ] Test completi tutti i provider
+### v1.7.0 - 🧠 Socratic Expansion
+- [ ] Bottone "🤔 Assunzioni" - Mostra assunzioni implicite della risposta
+- [ ] Bottone "⚠️ Limiti" - Mostra quando la risposta non funziona
+- [ ] Expander con spiegazione delle 4 capacità
+- [ ] Metriche: quante volte l'utente usa i bottoni socratici
 
-### v1.7.0 - Model Comparison
-- [ ] Confronto side-by-side
-- [ ] Stesso prompt a modelli diversi
-- [ ] Metriche comparazione (tempo, token, qualità)
-- [ ] Export comparazione
+### v1.8.0 - 🧠 Modalità Socratica
+- [ ] Toggle 3 livelli: Veloce / Standard / Socratico
+  - **Veloce**: Solo risposte (come ChatGPT)
+  - **Standard**: Risposte + bottoni socratici visibili
+  - **Socratico**: Risposte + domande automatiche + inviti a riflettere
+- [ ] Bottone "🎭 Confuta" - L'AI confuta la propria risposta
+- [ ] Persistenza preferenza modalità
 
-### v1.8.0 - Wiki Adapters Aggiuntivi
-- [ ] ConfluenceAdapter (Atlassian)
-- [ ] BookStackAdapter
-- [ ] NotionAdapter
-- [ ] Wiki.js Adapter
-
-### v1.9.0 - Analytics & Stats
-- [ ] Dashboard statistiche uso
-- [ ] Grafici token consumati
-- [ ] History query RAG
-- [ ] Performance metrics
+### v1.9.0 - Preparazione Semantic Layer
+- [ ] Metadati JSON-LD sui documenti
+- [ ] Export RDF base
+- [ ] Template ontologie per settore
+- [ ] Wizard "Definisci la tua semantica"
 
 ---
 
 ## 🎯 Obiettivi Futuri (v2.0.0)
 
-### Multimodal
-- [ ] Supporto immagini in chat
-- [ ] Vision models (LLaVA, GPT-4V)
-- [ ] Analisi documenti con immagini
-- [ ] OCR integrato
+### Semantic Layer Completo
+- [ ] Knowledge Graph con NetworkX/Neo4j
+- [ ] Validazione SHACL
+- [ ] Query SPARQL
+- [ ] RAG ibrido (vector + graph)
+
+### Journaling Riflessivo
+- [ ] Salvataggio riflessioni utente
+- [ ] Tracking crescita capitale semantico
+- [ ] Report settimanale apprendimento
 
 ### Docker & Deployment
 - [ ] Dockerfile ottimizzato
 - [ ] Docker Compose con Ollama
 - [ ] Deployment one-click
-- [ ] Configurazione via env vars
 
 ### API REST
 - [ ] Endpoint REST per integrazioni
 - [ ] Authentication API
-- [ ] Rate limiting
 - [ ] Documentazione OpenAPI
-
-### Avanzate
-- [ ] Plugin system
-- [ ] Temi personalizzabili
-- [ ] Multi-utente con profili
-- [ ] Backup cloud conversazioni
 
 ---
 
-## 🛠️ Architettura Attuale (v1.5.1)
+## 🛠️ Architettura Attuale (v1.6.1)
 
 ```
 datapizza-streamlit-interface/
@@ -197,7 +173,7 @@ datapizza-streamlit-interface/
 │   ├── llm_client.py         # Factory LLM
 │   ├── conversation.py       # Messaggi
 │   ├── persistence.py        # Salvataggio
-│   └── file_processors.py    # ✨ File upload extraction
+│   └── file_processors.py    # File upload extraction
 │
 ├── rag/                      # Sistema RAG
 │   ├── models.py             # Document, Chunk
@@ -207,19 +183,23 @@ datapizza-streamlit-interface/
 │   └── adapters/
 │       ├── local_folder.py   # File locali
 │       ├── mediawiki.py      # MediaWiki
-│       └── dokuwiki.py       # DokuWiki ✨ NEW
+│       └── dokuwiki.py       # DokuWiki
 │
 ├── export/                   # Export
 │   └── exporters.py          # MD, JSON, TXT, PDF, ZIP
 │
 └── ui/                       # Interfaccia
     ├── styles.py
-    ├── chat.py
-    ├── file_upload.py        # ✨ File upload widget
-    ├── privacy_warning.py    # ✨ Privacy dialog
+    ├── chat.py               # ✨ Integrato con socratic
+    ├── file_upload.py
+    ├── privacy_warning.py
+    ├── socratic/             # 🧠 NEW v1.6.1
+    │   ├── __init__.py
+    │   ├── prompts.py        # Template prompt socratici
+    │   └── buttons.py        # Rendering bottoni
     └── sidebar/
         ├── llm_config.py
-        ├── knowledge_base.py # Multi-wiki support
+        ├── knowledge_base.py
         ├── conversations.py
         └── export_ui.py
 ```
@@ -236,6 +216,7 @@ datapizza-streamlit-interface/
 | DokuWiki | dokuwiki |
 | Export PDF | reportlab |
 | File Upload | python-docx, Pillow |
+| Semantic (futuro) | rdflib, pyshacl, networkx |
 
 ---
 
@@ -250,5 +231,5 @@ Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per dettagli.
 
 ---
 
-*Ultimo aggiornamento: 2025-01-25*
-*Datapizza Streamlit Interface - DeepAiUG © 2025*
+*Ultimo aggiornamento: 2026-01-26*
+*Datapizza Streamlit Interface - DeepAiUG © 2026*

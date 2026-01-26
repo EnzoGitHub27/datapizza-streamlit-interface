@@ -7,7 +7,60 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
-## [1.6.0] - 2025-01-25
+## [1.6.1] - 2026-01-26
+
+### 🧠 Novità - Approccio Socratico
+
+DeepAiUG evolve da semplice interfaccia chat a **strumento socratico** per costruire comprensione.
+
+Ispirato al concetto di **"capitale semantico"** (Floridi/Quartarone):
+> L'AI produce significato plausibile, ma il SENSO lo costruisce l'umano.
+
+### ✨ Nuove Funzionalità
+
+- **🔄 Bottone "Genera alternative"**: Sotto ogni risposta AI
+  - Genera 3 interpretazioni alternative dello stesso problema
+  - Ogni alternativa basata su presupposti diversi
+  - Stimola il pensiero critico e la riflessione
+  
+- **Nuovo modulo `ui/socratic/`**:
+  - `prompts.py`: Template prompt socratici (alternative, assunzioni, limiti, confuta)
+  - `buttons.py`: Logica e rendering bottoni
+  - Cache risposte per evitare rigenerazioni
+
+### 🎯 Filosofia
+
+Le 4 capacità che DeepAiUG vuole allenare:
+1. **Costruzione di senso** - collegare informazioni
+2. **Valutazione semantica** - capire cosa conta
+3. **Contestualizzazione** - collocare nel contesto giusto
+4. **Resistenza alla plausibilità** - non fidarsi del "suona giusto"
+
+### 📁 Nuovi File
+
+```
+ui/socratic/
+├── __init__.py
+├── prompts.py    # Template prompt socratici
+└── buttons.py    # Logica bottoni
+```
+
+### 🔧 Modifiche Tecniche
+
+- `app.py`: Aggiunto supporto client socratico
+- `ui/chat.py`: Integrazione bottoni sotto risposte AI
+- `ui/__init__.py`: Export modulo socratic
+- `config/constants.py`: VERSION → 1.6.1
+
+### 🔮 Prossime Feature Socratiche (v1.7.0+)
+
+- Bottoni "🤔 Assunzioni" e "⚠️ Limiti"
+- Bottone "🎭 Confuta"
+- Toggle modalità: Veloce / Standard / Socratico
+
+---
+
+## [1.6.0] - 2026-01-25
 
 ### ✨ Novità
 
@@ -20,7 +73,7 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 - ✅ **Ollama locale**: Streaming perfetto e fluido
 - ✅ **Remote host**: Streaming perfetto e fluido
-- ⚠️ **Cloud providers** (OpenAI, Anthropic, Google): Streaming non attivo (verrà fixato in v1.6.1)
+- ⚠️ **Cloud providers** (OpenAI, Anthropic, Google): In arrivo
 
 ### 🔧 Implementazione Tecnica
 
@@ -40,73 +93,43 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 - Risolto problema di ripetizione testo durante streaming
 - Implementato tracking `previous_text` per calcolare delta correttamente
 
-### 📚 Note
-
-- Breaking changes: Nessuno ✅
-- La feature funziona perfettamente con l'80% dei casi d'uso (Ollama)
-- Cloud providers mantengono funzionalità normale (risposta completa)
-
 ---
 
-## [1.5.1] - 2025-01-16
+## [1.5.1] - 2026-01-16
 
 ### 🐛 Bug Fix
 
 - **CRITICAL FIX**: Wiki non funzionavano per pacchetti mancanti
   - Problema: `mwclient` e `dokuwiki` non erano installati nel venv
   - Soluzione: Aggiornato README con istruzioni installazione dipendenze
-  - Test: Verificata connessione con Wikipedia e altre wiki pubbliche
 
 ### ✨ Novità
 
-- **Wiki Pubbliche di Test**: Aggiunte 4 wiki pronte all'uso in `wiki_sources.yaml`
-  - 🌍 Wikipedia IT - Intelligenza Artificiale (30 pagine)
+- **Wiki Pubbliche di Test**: Aggiunte 4 wiki pronte all'uso
+  - 🌐 Wikipedia IT - Intelligenza Artificiale (30 pagine)
   - 🌎 Wikipedia EN - Artificial Intelligence (20 pagine)
   - ✈️ Wikivoyage IT - Guide viaggio Italia (15 pagine)
   - 📚 Wikibooks IT - Manuali Informatica (20 pagine)
 
 ### 🔧 Miglioramenti
 
-- Cambiato `default_source` da wiki non esistente a `wikipedia_it`
 - Aggiunti script di test: `test_wiki.py` e `test_all_wikis.py`
 - Migliorata documentazione setup venv e dipendenze
 
-### 📚 Documentazione
-
-- README aggiornato con sezione "Setup Virtual Environment"
-- Istruzioni chiare per installazione dipendenze wiki
-- Esempi di utilizzo wiki pubbliche per test
-
 ---
 
-## [1.5.0] - 2025-01-11
+## [1.5.0] - 2026-01-11
 
 ### ✨ Novità
 
-- **File Upload in Chat**: Possibilità di allegare file direttamente nella chat
-  - 📄 Documenti supportati: PDF, TXT, MD, DOCX
-  - 🖼️ Immagini supportate: PNG, JPG, JPEG, GIF, WEBP (richiede modello Vision)
-  - Anteprima file prima dell'invio
-  - Contenuto documenti estratto e aggiunto automaticamente al prompt
+- **File Upload in Chat**: Allegare file direttamente nella chat
+  - 📄 Documenti: PDF, TXT, MD, DOCX
+  - 🖼️ Immagini: PNG, JPG, JPEG, GIF, WEBP (richiede modello Vision)
 
-- **Privacy-First Upload**: Upload automaticamente disabilitato con Cloud provider
+- **Privacy-First Upload**: Upload disabilitato con Cloud provider
   - Protegge i documenti sensibili dall'invio a servizi esterni
-  - Disponibile solo con Ollama locale e Remote host
 
-- **Rilevamento Modelli Vision**: Riconoscimento automatico modelli con supporto immagini
-  - LLaVA, Granite3.2-Vision, Moondream, BakLLaVA e altri
-  - Warning se si caricano immagini con modello non-Vision
-
-- **🔐 Privacy Dialog per passaggio Local→Cloud**: Protezione dati sensibili
-  - Warning automatico quando si passa a Cloud con documenti in memoria
-  - Due opzioni: Reset Chat (consigliato) o Procedi con conferma esplicita
-  - Banner di promemoria quando si usa Cloud con documenti in sessione
-
-### 🔧 Modifiche Tecniche
-
-- Aggiunto campo `attachments` nei messaggi per tracciare file allegati
-- Nuovi moduli: `core/file_processors.py`, `ui/file_upload.py`, `ui/privacy_warning.py`
-- Aggiornato `ui/chat.py` per mostrare allegati nei messaggi utente
+- **🔐 Privacy Dialog**: Warning automatico passaggio Local→Cloud
 
 ### 📦 Dipendenze
 
@@ -115,168 +138,55 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
-## [1.4.1] - 2025-01-09
+## [1.4.1] - 2026-01-09
 
 ### ✨ Nuove Funzionalità
 
-- **Supporto Multi-Wiki**: Oltre a MediaWiki, ora supporta anche **DokuWiki**
-- **Nuovo formato `wiki_sources.yaml`**: Campo `type` per specificare il tipo di sorgente
-- **UI Multi-Tipo**: Selezione sorgenti con icone e raggruppamento per tipo
-- **Configurazione YAML estendibile**: Pronto per futuri tipi wiki (Confluence, BookStack)
-
-### Aggiunto
-
-- **rag/adapters/dokuwiki.py** - Nuovo adapter per wiki DokuWiki
-  - Connessione via XML-RPC
-  - Download pagine con filtro namespace
-  - Parsing DokuWiki syntax → testo pulito
-  - Cache locale sync info
-
-- **config/constants.py**
-  - `WIKI_TYPES` - Dizionario tipi wiki supportati con metadata
-
-- **config/settings.py** - Nuove funzioni:
-  - `get_available_sources()` - Lista tutte le sorgenti
-  - `get_sources_by_type()` - Filtra per tipo
-  - `get_source_adapter_config()` - Config generica
-  - `is_source_type_available()` - Verifica dipendenze
-  - `get_missing_package()` - Pacchetto mancante
-
-### Modificato
-
-- **wiki_sources.yaml** - Nuovo formato con:
-  - `sources:` invece di `wikis:` (retrocompatibile)
-  - Campo `type:` obbligatorio (mediawiki, dokuwiki, local)
-  - Campo `icon:` per personalizzazione UI
-  
-- **ui/sidebar/knowledge_base.py** - Riscritto per supporto multi-tipo
-  - Fix: Cartella locale da YAML ora mostra tutti i campi configurazione
+- **Supporto Multi-Wiki**: MediaWiki + DokuWiki
+- **Nuovo formato `wiki_sources.yaml`** con campo `type`
+- **UI Multi-Tipo** con icone
 
 ### 📦 Nuove Dipendenze
 
-- `dokuwiki>=0.1.0` - Client Python per DokuWiki XML-RPC
+- `dokuwiki>=0.1.0`
 
 ---
 
-## [1.4.0] - 2025-01-08
+## [1.4.0] - 2026-01-08
 
 ### ♻️ Refactoring Completo - Architettura Modulare
 
-Il file monolitico v1.3.3 (2287 righe) è stato completamente riorganizzato in una struttura pulita di packages Python.
-
-### ✨ Nuova Struttura
-
-```
-datapizza-streamlit-interface/
-├── app.py                    # Entry point principale
-├── config/                   # Configurazione (constants, settings)
-├── core/                     # LLM client, persistenza, conversazioni
-├── rag/                      # RAG: models, chunker, vector_store, adapters
-├── export/                   # Export: MD, JSON, TXT, PDF, ZIP
-├── ui/                       # Streamlit UI: styles, chat, sidebar
-└── old/                      # Versioni archiviate (v1.0 → v1.3.3)
-```
-
-### 🔧 Miglioramenti
-
-- **Separazione responsabilità**: Ogni modulo ha un compito specifico
-- **Testabilità**: Componenti isolati e facilmente testabili
-- **Manutenibilità**: Modifiche localizzate senza impatti globali
-- **Riusabilità**: Componenti importabili in altri progetti
-- **Import puliti**: Ogni package espone API chiare via `__init__.py`
+Da monolite (2287 righe) a packages Python strutturati.
 
 ---
 
-## [1.3.3] - 2025-01-07
+## [1.3.x] - 2026-01-05/07
 
-### 🐛 Bug Fix
-
-- **Ripristino Export Conversazioni**: La sezione export era stata persa nella v1.3.0+
-
-### ✨ Funzionalità Ripristinate
-
-- **📤 Export Conversazione** nella sidebar
-- **👁️ Anteprima Export**: Preview del contenuto prima del download
-- **🗂️ Batch Export**: Esportazione di tutte le conversazioni in ZIP
+- Knowledge Base RAG completo
+- MediaWiki Adapter
+- Export multi-formato (MD, JSON, TXT, PDF, ZIP)
 
 ---
 
-## [1.3.2] - 2025-01-07
+## [1.2.0] - 2026-01-04
 
-### ✨ Nuove Funzionalità
-
-- **MediaWikiAdapter**: Nuovo adapter per sincronizzare wiki MediaWiki
-- **Configurazione YAML** (`wiki_sources.yaml`)
-- **UI MediaWiki in Sidebar**
-
-### 📦 Nuove Dipendenze
-
-- `mwclient>=0.10.0` - Client Python per MediaWiki API
-- `pyyaml>=6.0` - Parser YAML per configurazione
+- Export conversazioni multi-formato
 
 ---
 
-## [1.3.1] - 2025-01-06
+## [1.1.x] - 2026-01-02/03
 
-### 🐛 Bug Fix
-
-- **Fix Modelli Ollama** (CRITICO): Ora mostra tutti i modelli Ollama installati
-- **Fix Persistenza KB**: Le impostazioni Knowledge Base vengono salvate
-- **Fix Ricarica KB**: Ricaricamento automatico della KB
-
-### ✨ Nuove Funzionalità
-
-- **Parametri Chunking Configurabili**
-- **Chunking Intelligente**
+- Conversazioni multi-turno
+- Persistenza su file JSON
 
 ---
 
-## [1.3.0] - 2025-01-05
-
-### ✨ Nuove Funzionalità
-
-- **📚 Knowledge Base RAG**: Sistema completo di Retrieval-Augmented Generation
-- **📁 LocalFolderAdapter**: File locali (MD, TXT, HTML, PDF)
-- **🔒 Privacy Mode**: Blocco automatico provider cloud quando KB attiva
-
-### 📦 Nuove Dipendenze
-
-- `chromadb>=0.4.0`
-- `beautifulsoup4>=4.12.0`
-- `PyPDF2>=3.0.0`
-
----
-
-## [1.2.0] - 2025-01-04
-
-### ✨ Nuove Funzionalità
-
-- **📥 Export Multi-Formato**: MD, JSON, TXT, PDF
-- **🗂️ Batch Export ZIP**
-
-### 📦 Nuove Dipendenze
-
-- `reportlab>=4.0.0`
-
----
-
-## [1.1.x] - 2025-01-02/03
-
-### ✨ Nuove Funzionalità
-
-- **💬 Conversazioni Multi-Turno**
-- **💾 Persistenza Conversazioni**
-- **🔄 Auto-Save**
-
----
-
-## [1.0.0] - 2025-01-01
+## [1.0.0] - 2026-01-01
 
 ### 🎉 Release Iniziale
 
-- **🤖 Multi-Provider**: Ollama, Remote, Cloud
-- **☁️ Cloud Provider**: OpenAI, Anthropic, Google
-- **🎨 UI Streamlit**
+- Multi-Provider: Ollama, Remote, Cloud
+- UI Streamlit moderna
 
 ---
 
@@ -287,7 +197,8 @@ datapizza-streamlit-interface/
 - 🔧 **Miglioramenti**
 - ♻️ **Refactoring**
 - 📦 **Dipendenze**
+- 🧠 **Approccio Socratico**
 
 ---
 
-*Datapizza Streamlit Interface - DeepAiUG © 2025*
+*Datapizza Streamlit Interface - DeepAiUG © 2026*

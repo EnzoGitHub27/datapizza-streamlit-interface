@@ -3,7 +3,7 @@
 > Interfaccia Streamlit modulare per interagire con LLM locali (Ollama), remoti e cloud.
 > Progetto Open Source della community **DeepAiUG**.
 
-[![Version](https://img.shields.io/badge/version-1.6.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.6.0)
+[![Version](https://img.shields.io/badge/version-1.6.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.6.1)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -13,7 +13,8 @@
 ## ✨ Features
 
 - 🤖 **Multi-provider**: Ollama (locale), Remote host, Cloud (OpenAI, Anthropic, Google)
-- 🌊 **Streaming Responses** - Risposte token-by-token in tempo reale! ⭐ NEW
+- 🧠 **Approccio Socratico** - Bottoni per esplorare prospettive alternative! ⭐ NEW
+- 🌊 **Streaming Responses** - Risposte token-by-token in tempo reale!
 - 💬 **Conversazioni multi-turno** con memoria del contesto
 - 💾 **Persistenza** delle conversazioni su file JSON
 - 📥 **Export** in Markdown, JSON, TXT, PDF + Batch ZIP
@@ -26,34 +27,48 @@
 
 ---
 
-## 🆕 Novità v1.6.0
+## 🆕 Novità v1.6.1 - Approccio Socratico 🧠
+
+### La Filosofia
+DeepAiUG evolve da semplice chat a **strumento socratico**. Ispirato al concetto di "capitale semantico" (Floridi/Quartarone):
+
+> **L'AI produce significato plausibile, ma il SENSO lo costruisce l'umano.**
+
+### 🔄 Bottone "Genera alternative"
+Sotto ogni risposta AI appare un nuovo bottone che genera **3 interpretazioni alternative** dello stesso problema.
+
+**Perché è utile?**
+- Stimola il pensiero critico
+- Mostra che ogni risposta ha assunzioni implicite
+- Aiuta a costruire comprensione, non solo ottenere risposte
+
+**Le 4 capacità che DeepAiUG vuole allenare:**
+1. **Costruzione di senso** - collegare informazioni
+2. **Valutazione semantica** - capire cosa conta
+3. **Contestualizzazione** - collocare nel contesto giusto
+4. **Resistenza alla plausibilità** - non fidarsi del "suona giusto"
+
+### 🔮 Prossime Feature Socratiche
+- **v1.7.0**: Bottoni "🤔 Assunzioni" + "⚠️ Limiti"
+- **v1.8.0**: Toggle modalità (Veloce/Standard/Socratico)
+
+---
+
+## Novità v1.6.0
 
 ### 🌊 Streaming Responses
 Le risposte dell'AI ora appaiono **token-by-token in tempo reale**, come in ChatGPT!
 
-**Come funziona:**
-- Le parole appaiono progressivamente durante la generazione
-- Sensazione di maggiore reattività e velocità
-- Esperienza utente fluida e moderna
-
 **Provider supportati:**
 - ✅ **Ollama locale**: Streaming perfetto
 - ✅ **Remote host**: Streaming perfetto
-- ⚠️ **Cloud (OpenAI, etc)**: In arrivo con v1.6.1
+- ⚠️ **Cloud (OpenAI, etc)**: In arrivo
 
 **Footer aggiornato:** 🤖 DeepAiUG by Gilles
 
 ---
 
-## Novità v1.5.1
-
-### 🐛 Critical Bugfix
-- **RISOLTO**: Wiki non funzionavano per pacchetti `mwclient` e `dokuwiki` mancanti
-- Aggiunte 4 wiki pubbliche pronte all'uso per test immediato del RAG
-
----
-
-## Novità v1.5.0
+## Novità v1.5.x
 
 ### 📎 File Upload in Chat
 Allega file direttamente nella chat, come in ChatGPT/Claude.ai!
@@ -71,11 +86,10 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 | 🔒 **Upload bloccato su Cloud** | I file possono essere caricati solo con Ollama locale o Remote host |
 | ⚠️ **Privacy Dialog** | Warning automatico quando passi da Local→Cloud con documenti in memoria |
 | 📢 **Banner promemoria** | Ricorda che la sessione contiene dati estratti da documenti |
-| ✅ **Conferma esplicita** | Due opzioni: Reset chat (consigliato) o Procedi con conferma |
 
 ---
 
-## 🏗️ Architettura v1.5.0
+## 🏗️ Architettura v1.6.1
 
 ```
 datapizza-streamlit-interface/
@@ -90,7 +104,7 @@ datapizza-streamlit-interface/
 │   ├── llm_client.py         # Factory client LLM
 │   ├── conversation.py       # Gestione messaggi
 │   ├── persistence.py        # Salvataggio/caricamento
-│   └── file_processors.py    # ⭐ NEW - Estrazione testo da file
+│   └── file_processors.py    # Estrazione testo da file
 │
 ├── rag/                      # 📁 Sistema RAG
 │   ├── models.py             # Document, Chunk
@@ -105,14 +119,15 @@ datapizza-streamlit-interface/
 ├── export/                   # 📁 Sistema export
 │   └── exporters.py          # MD, JSON, TXT, PDF, ZIP
 │
-├── ui/                       # 📁 Interfaccia utente
-│   ├── styles.py             # CSS
-│   ├── chat.py               # Rendering chat
-│   ├── file_upload.py        # ⭐ NEW - Widget upload file
-│   ├── privacy_warning.py    # ⭐ NEW - Dialog privacy
-│   └── sidebar/              # Componenti sidebar
-│
-└── old/                      # 📁 Versioni archiviate
+└── ui/                       # 📁 Interfaccia utente
+    ├── styles.py             # CSS
+    ├── chat.py               # Rendering chat
+    ├── file_upload.py        # Widget upload file
+    ├── privacy_warning.py    # Dialog privacy
+    ├── socratic/             # 🧠 NEW - Modulo socratico
+    │   ├── prompts.py        # Template prompt
+    │   └── buttons.py        # Bottoni UI
+    └── sidebar/              # Componenti sidebar
 ```
 
 ---
@@ -136,8 +151,6 @@ ollama list  # verifica modelli installati
 
 ### Metodo 1: Script Automatico (Consigliato) ⭐
 
-Questo metodo gestisce automaticamente l'ordine di installazione dei pacchetti.
-
 #### Linux/Mac
 ```bash
 git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
@@ -146,22 +159,16 @@ chmod +x install.sh
 ./install.sh
 ```
 
-> ⚠️ Se lo script non funziona, usa il **Metodo 2** (installazione manuale).
-
-#### Windows (da testare)
+#### Windows
 ```bash
 git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
 cd datapizza-streamlit-interface
 install.bat
 ```
 
-Lo script ti chiederà quali provider cloud installare.
-
 ---
 
 ### Metodo 2: Installazione Manuale Passo-Passo
-
-Se lo script automatico non funziona o preferisci installare manualmente:
 
 #### 1. Clona il repository
 ```bash
@@ -169,17 +176,15 @@ git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
 cd datapizza-streamlit-interface
 ```
 
-#### 2. Crea un ambiente virtuale (FORTEMENTE consigliato)
+#### 2. Crea un ambiente virtuale
 ```bash
-python3 -m venv deepaiug-interface
-source deepaiug-interface/bin/activate  # Su Linux/Mac
+python3 -m venv venv
+source venv/bin/activate  # Linux/Mac
 # oppure
-deepaiug-interface\Scripts\activate  # Su Windows
+venv\Scripts\activate  # Windows
 ```
 
 #### 3. Installa le dipendenze nell'ordine corretto
-
-**⚠️ IMPORTANTE: L'ordine di installazione è cruciale!**
 
 ```bash
 # 3.1 - Dipendenze base
@@ -188,118 +193,29 @@ pip install streamlit python-dotenv reportlab pyyaml
 # 3.2 - Datapizza AI core (PRIMA dei client!)
 pip install datapizza-ai
 
-# 3.3 - Client provider cloud (DOPO datapizza-ai)
-# Installa solo quelli che ti servono:
-
-# Per Ollama in Locale
-pip install datapizza-ai-clients-openai-like
-
-# Per OpenAI (GPT-4, GPT-3.5, ecc.)
-pip install datapizza-ai-clients-openai
-
-# Per Anthropic Claude
-pip install datapizza-ai-clients-anthropic
-
-# Per Google Gemini
-pip install datapizza-ai-clients-google
+# 3.3 - Client provider (DOPO datapizza-ai)
+pip install datapizza-ai-clients-openai-like  # Per Ollama
+pip install datapizza-ai-clients-openai       # Per OpenAI
+pip install datapizza-ai-clients-anthropic    # Per Anthropic
+pip install datapizza-ai-clients-google       # Per Google
 ```
 
-#### 4. Dipendenze per Wiki RAG (v1.3.0+)
+#### 4. Dipendenze aggiuntive
 ```bash
-pip install chromadb beautifulsoup4 PyPDF2
-```
-
-#### 5. Dipendenze per Wiki Adapters (v1.3.2+)
-```bash
-pip install mwclient      # MediaWiki
-pip install dokuwiki      # DokuWiki (v1.4.1+)
-```
-
-#### 6. Dipendenze per File Upload (v1.5.0+)
-```bash
-pip install python-docx   # Estrazione testo DOCX
-pip install Pillow        # Processamento immagini
+pip install chromadb beautifulsoup4 PyPDF2    # RAG
+pip install mwclient dokuwiki                  # Wiki
+pip install python-docx Pillow                 # File Upload
 ```
 
 ---
 
-### Metodo 3: Usando requirements.txt
-
-⚠️ **Nota**: Alcuni utenti hanno riscontrato problemi con questo metodo. Se fallisce, usa il **Metodo 2**.
-
-```bash
-pip install -r requirements.txt
-```
-
-Se riscontri errori, segui le istruzioni nel Metodo 2.
-
----
-
-### Metodo 4: Usando Poetry 
-Installa poetry [qui](https://python-poetry.org/docs/#installing-with-the-official-installer)
-
-Crea un virtual environment con python 3.12 o 3.13 
+### Metodo 3: Poetry
 
 ```bash
 poetry env use python3.12
-```
-
-Installa le dipendenze dal file pyproject.toml
-
-```bash
 poetry install
-```
-
-attiva l'ambiente virtuale
-
-```bash
 poetry shell
 ```
-
-
-
-
-## 🔧 Configurazione API Keys
-
-### Opzione A: File .env (Consigliata per sviluppo)
-
-Crea un file `.env` nella root del progetto:
-
-```env
-OPENAI_API_KEY=sk-your-openai-key-here
-ANTHROPIC_API_KEY=sk-ant-your-anthropic-key-here
-GOOGLE_API_KEY=your-google-gemini-key-here
-```
-
-### Opzione B: File secrets (Consigliata per produzione)
-
-```bash
-# Crea la cartella secrets se non esiste
-mkdir -p secrets
-
-# Crea i file per ogni provider
-echo "sk-your-openai-key" > secrets/openai_key.txt
-echo "sk-ant-your-anthropic-key" > secrets/anthropic_key.txt
-echo "your-gemini-key" > secrets/google_key.txt
-```
-
-### Opzione C: Variabili d'ambiente di sistema
-
-```bash
-# Linux/Mac
-export OPENAI_API_KEY="sk-your-key-here"
-export ANTHROPIC_API_KEY="sk-ant-your-key-here"
-export GOOGLE_API_KEY="your-key-here"
-
-# Windows PowerShell
-$env:OPENAI_API_KEY="sk-your-key-here"
-$env:ANTHROPIC_API_KEY="sk-ant-your-key-here"
-$env:GOOGLE_API_KEY="your-key-here"
-```
-
-### Opzione D: Interfaccia Web
-
-Puoi anche inserire e salvare le API keys direttamente dall'interfaccia Streamlit!
 
 ---
 
@@ -311,73 +227,23 @@ streamlit run app.py
 
 ---
 
-## 📎 File Upload in Chat (v1.5.0+)
+## 🔧 Configurazione API Keys
 
-### Come Funziona
+### Opzione A: File .env
+```env
+OPENAI_API_KEY=sk-your-openai-key-here
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-key-here
+GOOGLE_API_KEY=your-google-gemini-key-here
+```
 
-1. **Seleziona** Ollama locale o Remote host (upload bloccato su Cloud)
-2. **Carica** file tramite il widget sotto la chat
-3. **Anteprima** automatica del contenuto
-4. **Invia** il messaggio - il contenuto viene aggiunto al contesto
-
-### Formati Supportati
-
-| Formato | Estensione | Estrazione |
-|---------|------------|------------|
-| PDF | `.pdf` | Testo da tutte le pagine |
-| Word | `.docx` | Paragrafi e tabelle |
-| Testo | `.txt`, `.md` | Contenuto completo |
-| Immagini | `.png`, `.jpg`, `.gif`, `.webp` | Base64 per modelli Vision |
-
-### Modelli Vision Supportati
-
-Per analizzare immagini, usa uno di questi modelli:
-- `llava`, `llava-llama3`, `llava-phi3`
-- `granite3.2-vision`
-- `moondream`, `bakllava`
-
+### Opzione B: File secrets
 ```bash
-# Installa un modello Vision
-ollama pull llava
-ollama pull granite3.2-vision
+mkdir -p secrets
+echo "sk-your-key" > secrets/openai_key.txt
 ```
 
----
-
-## 🔐 Privacy Protection (v1.5.0+)
-
-### Filosofia Privacy-First
-
-I tuoi documenti sensibili **non devono mai** finire su server esterni senza il tuo consenso esplicito.
-
-### Come Funziona
-
-```
-┌─────────────────────────────────────────────────────┐
-│ 1. Carichi documento con Local/Remote               │
-│                    ↓                                │
-│ 2. Sistema traccia: "documenti in sessione"         │
-│                    ↓                                │
-│ 3. Provi a passare a Cloud provider                 │
-│                    ↓                                │
-│ ┌─────────────────────────────────────────────────┐ │
-│ │  ⚠️ PRIVACY DIALOG                              │ │
-│ │                                                 │ │
-│ │  La cronologia contiene dati dai documenti.    │ │
-│ │                                                 │ │
-│ │  [🔄 Reset Chat]  [✅ Procedi con conferma]    │ │
-│ └─────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────┘
-```
-
-### Protezioni Attive
-
-| Situazione | Protezione |
-|------------|------------|
-| Upload su Cloud | ❌ Bloccato automaticamente |
-| KB attiva + Cloud | ❌ Bloccato automaticamente |
-| Local→Cloud con documenti | ⚠️ Dialog conferma |
-| Cloud con documenti in memoria | 📢 Banner warning |
+### Opzione C: Interfaccia Web
+Puoi inserire le API keys direttamente dall'interfaccia Streamlit!
 
 ---
 
@@ -391,66 +257,12 @@ I tuoi documenti sensibili **non devono mai** finire su server esterni senza il 
 | 🌐 **MediaWiki** | Wikipedia-like wikis | `mwclient` |
 | 📘 **DokuWiki** | Wiki per documentazione | `dokuwiki` |
 
-### Configurazione `wiki_sources.yaml`
-
-```yaml
-mode: "selectable"  # fixed | selectable | custom
-default_source: "mia_wiki"
-
-sources:
-  mia_wiki:
-    type: "mediawiki"
-    name: "Wiki Interna"
-    icon: "🌐"
-    url: "https://wiki.example.com"
-    api_path: "/w/api.php"
-    
-  docs_tecniche:
-    type: "dokuwiki"
-    name: "Documentazione"
-    icon: "📘"
-    url: "https://docs.example.com"
-    
-  file_locali:
-    type: "local"
-    name: "Documenti Locali"
-    icon: "📁"
-    folder_path: "/home/user/docs"
-    extensions: [".md", ".txt", ".pdf"]
-```
-
 ### Privacy Mode 🔒
 
 Quando la Knowledge Base è attiva:
 - ☁️ **Cloud provider BLOCCATO** automaticamente
 - 💻 Solo **Ollama locale** o **Remote host** permessi
 - 🔒 I tuoi documenti **non escono mai** dal tuo computer
-
-### 🧪 Wiki Pubbliche di Test (v1.5.1+)
-
-Vuoi provare subito il sistema RAG? Usa una delle wiki pubbliche preconfigurate!
-
-| Wiki | Categoria | Pagine | Descrizione |
-|------|-----------|--------|-------------|
-| 🌍 **Wikipedia IT** | Intelligenza Artificiale | 30 | Articoli italiani su AI |
-| 🌎 **Wikipedia EN** | Artificial Intelligence | 20 | Articoli inglesi su AI |
-| ✈️ **Wikivoyage IT** | Italia | 15 | Guide di viaggio |
-| 📚 **Wikibooks IT** | Informatica | 20 | Manuali liberi |
-
-**Come usare:**
-1. Nella sidebar: attiva "🔍 Usa Knowledge Base"
-2. Seleziona una wiki dal dropdown (es: "🌍 Wikipedia IT (Test)")
-3. Clicca "🔄 Sincronizza" e aspetta il download
-4. Fai domande! Es: "Cos'è l'intelligenza artificiale forte?"
-
-**Test veloce:**
-```bash
-# Test connessione Wikipedia
-python test_wiki.py
-
-# Test tutte le wiki configurate
-python test_all_wikis.py
-```
 
 ---
 
@@ -491,12 +303,12 @@ beautifulsoup4>=4.12.0
 PyPDF2>=3.0.0
 
 # Wiki Adapters
-mwclient>=0.10.0      # MediaWiki
-dokuwiki>=0.1.0       # DokuWiki
+mwclient>=0.10.0
+dokuwiki>=0.1.0
 
-# File Upload (v1.5.0+)
-python-docx>=0.8.0    # Estrazione DOCX
-Pillow>=10.0.0        # Processamento immagini
+# File Upload
+python-docx>=0.8.0
+Pillow>=10.0.0
 
 # Export
 reportlab>=4.0.0
@@ -510,11 +322,10 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
-| v1.4.1 | Multi-Wiki (DokuWiki) | ✅ |
-| v1.5.0 | File Upload + Privacy Protection | ✅ |
-| v1.6.0 | Streaming risposte | 📋 |
-| v1.7.0 | Confronto modelli side-by-side | 📋 |
-| v2.0.0 | Multimodal avanzato, Docker, API | 🎯 |
+| v1.6.1 | 🧠 Bottoni Socratici | ✅ |
+| v1.7.0 | 🧠 Assunzioni + Limiti | 📋 |
+| v1.8.0 | 🧠 Toggle modalità | 📋 |
+| v2.0.0 | Semantic Layer | 🎯 |
 
 ---
 
