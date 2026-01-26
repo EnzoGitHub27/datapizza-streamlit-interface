@@ -1,22 +1,30 @@
 # ui/chat.py
-# Datapizza v1.5.0 - Rendering Chat
+# Datapizza v1.6.1 - Rendering Chat + Socratic Buttons
 # ============================================================================
 # 🆕 v1.5.0: Aggiunto supporto per visualizzazione allegati nei messaggi
+# 🆕 v1.6.1: Aggiunto bottone "Genera alternative" (approccio socratico)
 # ============================================================================
 
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 import streamlit as st
 
+from ui.socratic import render_socratic_buttons
 
-def render_chat_message(message: Dict[str, Any], index: int):
+
+def render_chat_message(
+    message: Dict[str, Any], 
+    index: int,
+    llm_client: Optional[object] = None
+):
     """
     Renderizza un singolo messaggio della chat con stile bubble.
     
     Args:
         message: Dizionario con role, content, timestamp, model, sources, attachments
         index: Indice del messaggio nella conversazione
+        llm_client: Client LLM per le funzionalità socratiche (opzionale)
     """
     role = message["role"]
     content = message["content"]
@@ -64,15 +72,28 @@ def render_chat_message(message: Dict[str, Any], index: int):
                     st.caption(f"• {src}")
         
         st.markdown('</div>', unsafe_allow_html=True)
+        
+        # 🆕 v1.6.1 - Bottoni socratici (solo per risposte AI)
+        if role == "assistant" and content:
+            render_socratic_buttons(
+                message_content=content,
+                msg_index=index,
+                client=llm_client
+            )
+        
         st.write("")
 
 
-def render_chat_area(messages: List[Dict[str, Any]]):
+def render_chat_area(
+    messages: List[Dict[str, Any]],
+    llm_client: Optional[object] = None
+):
     """
     Renderizza l'intera area chat con tutti i messaggi.
     
     Args:
         messages: Lista di messaggi della conversazione
+        llm_client: Client LLM per le funzionalità socratiche (opzionale)
     """
     st.subheader("💬 Conversazione")
     
@@ -83,7 +104,7 @@ def render_chat_area(messages: List[Dict[str, Any]]):
             st.info("👋 Inizia una conversazione!")
     else:
         for idx, msg in enumerate(messages):
-            render_chat_message(msg, idx)
+            render_chat_message(msg, idx, llm_client)
 
 
 def render_empty_state():

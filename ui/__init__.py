@@ -1,5 +1,5 @@
 # ui/__init__.py
-# Datapizza v1.5.0 - UI Components Package
+# Datapizza v1.6.1 - UI Components Package
 # ============================================================================
 
 from ui.styles import (
@@ -44,6 +44,12 @@ from ui.privacy_warning import (
     mark_documents_uploaded,
 )
 
+# 🆕 v1.6.1 - Socratic Module
+from ui.socratic import (
+    render_socratic_buttons,
+    clear_socratic_cache,
+)
+
 __all__ = [
     # Styles
     "MAIN_CSS",
@@ -75,4 +81,7 @@ __all__ = [
     "reset_privacy_flags",
     "should_show_privacy_dialog",
     "mark_documents_uploaded",
+    # 🆕 v1.6.1 - Socratic
+    "render_socratic_buttons",
+    "clear_socratic_cache",
 ]

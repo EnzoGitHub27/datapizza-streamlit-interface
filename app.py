@@ -1,13 +1,15 @@
 # app.py
-# Datapizza v1.5.0 - Entry Point
+# Datapizza v1.6.1 - Entry Point
 # ============================================================================
 # Interfaccia Streamlit modulare per LLM con:
 # - Ollama locale / Remote / Cloud providers
 # - Knowledge Base RAG (LocalFolder + MediaWiki + DokuWiki)
 # - Export conversazioni (MD, JSON, TXT, PDF)
 # - Persistenza conversazioni
-# - 🆕 File Upload in Chat (Privacy-First)
-# - 🆕 Privacy Warning per passaggio Local→Cloud con documenti
+# - 🆕 v1.5.0: File Upload in Chat (Privacy-First)
+# - 🆕 v1.5.0: Privacy Warning per passaggio Local→Cloud con documenti
+# - 🆕 v1.6.0: Streaming responses
+# - 🆕 v1.6.1: Bottoni socratici (Genera alternative)
 # ============================================================================
 
 from datetime import datetime
@@ -91,6 +93,9 @@ from ui.privacy_warning import (
     reset_privacy_flags,
     should_show_privacy_dialog,
 )
+
+# 🆕 v1.6.1 - Socratic module
+from ui.socratic import clear_socratic_cache
 
 # ============================================================================
 # PAGE CONFIG
@@ -210,6 +215,33 @@ def reset_conversation():
     # 🆕 v1.5.0 - Pulisci anche file pending e flag privacy
     clear_pending_files()
     reset_privacy_flags()
+    # 🆕 v1.6.1 - Pulisci cache socratica
+    clear_socratic_cache()
+
+# ============================================================================
+# 🆕 v1.6.1 - SOCRATIC CLIENT HELPER
+# ============================================================================
+
+def get_socratic_client(connection_type, provider, api_key, model, base_url, temperature):
+    """
+    Crea un client LLM per i bottoni socratici.
+    Ritorna None se non è possibile crearlo.
+    """
+    if not model:
+        return None
+    
+    try:
+        return create_client(
+            connection_type,
+            provider,
+            api_key,
+            model,
+            "Sei un assistente che genera prospettive alternative e stimola la riflessione critica.",
+            base_url,
+            temperature
+        )
+    except Exception:
+        return None
 
 # ============================================================================
 # SIDEBAR
@@ -284,7 +316,7 @@ if st.session_state.get("use_knowledge_base"):
     else:
         st.warning("📚 Knowledge Base attivata ma non indicizzata. Configura una cartella nella sidebar.")
 else:
-    st.info(f"✨ **Novità {VERSION}**: File Upload + Privacy-First Cloud Protection!")
+    st.info(f"✨ **Novità {VERSION}**: Bottoni Socratici - Esplora prospettive alternative!")
 
 # ============================================================================
 # CONNECTION INDICATOR
@@ -318,10 +350,15 @@ if st.session_state.get("show_export_preview"):
 st.markdown("---")
 
 # ============================================================================
-# CHAT AREA
+# CHAT AREA - 🆕 v1.6.1 con supporto client socratico
 # ============================================================================
 
 st.subheader("💬 Conversazione")
+
+# 🆕 v1.6.1 - Prepara client per bottoni socratici
+socratic_client = get_socratic_client(
+    connection_type, provider, api_key, model, base_url, temperature
+)
 
 if not messages:
     if st.session_state.get("use_knowledge_base"):
@@ -329,8 +366,9 @@ if not messages:
     else:
         st.info("👋 Inizia una conversazione!")
 else:
+    # 🆕 v1.6.1 - Passa il client socratico a render_chat_message
     for idx, msg in enumerate(messages):
-        render_chat_message(msg, idx)
+        render_chat_message(msg, idx, socratic_client)
 
 st.markdown("---")
 
@@ -524,7 +562,7 @@ Cita sempre le fonti quando usi informazioni dai documenti.
 st.markdown("---")
 c1, c2, _ = st.columns([2, 8, 2])
 c1.caption("🤖 DeepAiUG by Gilles")
-c2.caption(f"{VERSION} - File Upload + Privacy-First | DeepAiUG © 2025")
+c2.caption(f"{VERSION} - Socratic Buttons | DeepAiUG © 2026")
 
 # Visual indicators
 if connection_type == "Cloud provider":
