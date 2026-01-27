@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.6.1"
+VERSION = "1.7.0"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Socratic Buttons"
+VERSION_DESCRIPTION = "Assumptions + Limits Buttons"
 
 # ============================================================================
 # PATHS

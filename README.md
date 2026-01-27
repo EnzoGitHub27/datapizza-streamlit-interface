@@ -3,7 +3,7 @@
 > Interfaccia Streamlit modulare per interagire con LLM locali (Ollama), remoti e cloud.
 > Progetto Open Source della community **DeepAiUG**.
 
-[![Version](https://img.shields.io/badge/version-1.6.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.6.1)
+[![Version](https://img.shields.io/badge/version-1.7.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.7.0)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -27,20 +27,31 @@
 
 ---
 
-## 🆕 Novità v1.6.1 - Approccio Socratico 🧠
+## 🆕 Novità v1.7.0 - 3 Bottoni Socratici 🧠
 
 ### La Filosofia
 DeepAiUG evolve da semplice chat a **strumento socratico**. Ispirato al concetto di "capitale semantico" (Floridi/Quartarone):
 
 > **L'AI produce significato plausibile, ma il SENSO lo costruisce l'umano.**
 
-### 🔄 Bottone "Genera alternative"
-Sotto ogni risposta AI appare un nuovo bottone che genera **3 interpretazioni alternative** dello stesso problema.
+### I 3 Bottoni Socratici
 
-**Perché è utile?**
-- Stimola il pensiero critico
-- Mostra che ogni risposta ha assunzioni implicite
-- Aiuta a costruire comprensione, non solo ottenere risposte
+Sotto ogni risposta AI ora appaiono 3 bottoni per stimolare riflessione critica:
+
+**🔄 Genera alternative**
+- 3 interpretazioni alternative dello stesso problema
+- Ogni alternativa basata su presupposti diversi
+- Stimola il pensiero laterale
+
+**🤔 Assunzioni** ⭐ NEW
+- Mostra le assunzioni implicite della risposta
+- Cosa si dà per scontato che potrebbe non esserlo?
+- Aiuta a valutare se la risposta si applica al tuo caso
+
+**⚠️ Limiti** ⭐ NEW
+- Identifica quando la risposta NON funziona
+- Casi limite ed eccezioni
+- Previene applicazioni errate
 
 **Le 4 capacità che DeepAiUG vuole allenare:**
 1. **Costruzione di senso** - collegare informazioni
@@ -49,8 +60,8 @@ Sotto ogni risposta AI appare un nuovo bottone che genera **3 interpretazioni al
 4. **Resistenza alla plausibilità** - non fidarsi del "suona giusto"
 
 ### 🔮 Prossime Feature Socratiche
-- **v1.7.0**: Bottoni "🤔 Assunzioni" + "⚠️ Limiti"
-- **v1.8.0**: Toggle modalità (Veloce/Standard/Socratico)
+- **v1.8.0**: Bottone "🎭 Confuta" (avvocato del diavolo)
+- **v1.9.0**: Toggle modalità (Veloce/Standard/Socratico)
 
 ---
 
@@ -89,7 +100,7 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.6.1
+## 🏗️ Architettura v1.7.0
 
 ```
 datapizza-streamlit-interface/
@@ -322,9 +333,9 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
-| v1.6.1 | 🧠 Bottoni Socratici | ✅ |
-| v1.7.0 | 🧠 Assunzioni + Limiti | 📋 |
-| v1.8.0 | 🧠 Toggle modalità | 📋 |
+| v1.7.0 | 🧠 Assunzioni + Limiti | ✅ |
+| v1.8.0 | 🧠 Bottone Confuta | 📋 |
+| v1.9.0 | 🧠 Toggle modalità | 📋 |
 | v2.0.0 | Semantic Layer | 🎯 |
 
 ---

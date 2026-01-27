@@ -7,6 +7,50 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.7.0] - 2026-01-27
+
+### 🧠 Espansione Approccio Socratico
+
+Aggiunti 2 nuovi bottoni socratici per stimolare pensiero critico e consapevolezza dei limiti.
+
+### ✨ Nuove Funzionalità
+
+- **🤔 Bottone "Assunzioni"**: Analizza le assunzioni implicite
+  - Mostra cosa la risposta dà per scontato
+  - Aiuta a identificare presupposti non esplicitati
+  - Stimola domande: "Questo vale anche nel mio caso?"
+
+- **⚠️ Bottone "Limiti"**: Identifica quando la risposta NON funziona
+  - Mostra i limiti di validità della soluzione
+  - Aiuta a capire i casi limite ed eccezioni
+  - Previene applicazioni errate della risposta
+
+### 🔧 Modifiche Tecniche
+
+- `ui/socratic/buttons.py`:
+  - Aggiunte funzioni `generate_assumptions()` e `generate_limits()`
+  - Esteso `render_socratic_buttons()` per 3 bottoni (era 1)
+  - Layout colonne: `[2, 2, 2, 4]` per ospitare i nuovi bottoni
+  - Cache indipendente per ogni tipo di analisi
+  - Spinner personalizzati per ogni bottone
+
+- `ui/socratic/prompts.py`:
+  - Template già presenti da v1.6.1, ora attivati
+
+### 🎯 Impatto UX
+
+I 3 bottoni socratici ora coprono:
+1. **🔄 Alternative** - Pensiero laterale (prospettive diverse)
+2. **🤔 Assunzioni** - Pensiero critico (cosa si dà per scontato)
+3. **⚠️ Limiti** - Pensiero prudente (quando NON usare la risposta)
+
+### 🔮 Prossime Feature Socratiche
+
+- **v1.8.0**: Bottone "🎭 Confuta" (avvocato del diavolo)
+- **v1.9.0**: Toggle modalità (Veloce / Standard / Socratico)
+
+---
+
 ## [1.6.1] - 2026-01-26
 
 ### 🧠 Novità - Approccio Socratico

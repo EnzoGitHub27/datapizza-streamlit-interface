@@ -51,9 +51,11 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    │
    ├─→ v1.6.1 ✅ (2026-01-26)   + 🧠 Socratic Buttons (Genera alternative)
    │
-   ├─→ v1.7.0 📋 (Q1 2026)      + 🧠 Bottoni "Assunzioni" + "Limiti"
+   ├─→ v1.7.0 ✅ (2026-01-27)   + 🧠 Bottoni "Assunzioni" + "Limiti"
    │
-   ├─→ v1.8.0 📋 (Q1 2026)      + 🧠 Toggle modalità (Veloce/Standard/Socratico)
+   ├─→ v1.8.0 📋 (Q1 2026)      + 🧠 Bottone "Confuta" (avvocato del diavolo)
+   │
+   ├─→ v1.9.0 📋 (Q1 2026)      + 🧠 Toggle modalità (Veloce/Standard/Socratico)
    │
    ├─→ v1.9.0 📋 (Q2 2026)      + Preparazione Semantic Layer (JSON-LD)
    │
@@ -69,6 +71,13 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 ---
 
 ## ✅ Completate
+
+### v1.7.0 - 🧠 Socratic Expansion (2026-01-27)
+- [x] Bottone "🤔 Assunzioni" - Mostra assunzioni implicite della risposta
+- [x] Bottone "⚠️ Limiti" - Mostra quando la risposta non funziona
+- [x] Layout 3 bottoni indipendenti con cache separata
+- [x] 3 expander con caption contestuali
+- [x] Funzioni generate_assumptions() e generate_limits()
 
 ### v1.6.1 - 🧠 Socratic Buttons (2026-01-26)
 - [x] Nuovo modulo `ui/socratic/`
@@ -111,19 +120,19 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 
 ## 📋 Pianificate
 
-### v1.7.0 - 🧠 Socratic Expansion
-- [ ] Bottone "🤔 Assunzioni" - Mostra assunzioni implicite della risposta
-- [ ] Bottone "⚠️ Limiti" - Mostra quando la risposta non funziona
-- [ ] Expander con spiegazione delle 4 capacità
-- [ ] Metriche: quante volte l'utente usa i bottoni socratici
+### v1.8.0 - 🧠 Bottone Confuta
+- [ ] Bottone "🎭 Confuta" - L'AI fa l'avvocato del diavolo
+- [ ] Template prompt già pronto in prompts.py
+- [ ] Trova punti deboli e falle logiche
+- [ ] Expander con caption "Pensiero critico rigoroso"
 
-### v1.8.0 - 🧠 Modalità Socratica
+### v1.9.0 - 🧠 Modalità Socratica
 - [ ] Toggle 3 livelli: Veloce / Standard / Socratico
   - **Veloce**: Solo risposte (come ChatGPT)
   - **Standard**: Risposte + bottoni socratici visibili
   - **Socratico**: Risposte + domande automatiche + inviti a riflettere
-- [ ] Bottone "🎭 Confuta" - L'AI confuta la propria risposta
 - [ ] Persistenza preferenza modalità
+- [ ] Metriche: quante volte l'utente usa i bottoni socratici
 
 ### v1.9.0 - Preparazione Semantic Layer
 - [ ] Metadati JSON-LD sui documenti
@@ -158,7 +167,7 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 
 ---
 
-## 🛠️ Architettura Attuale (v1.6.1)
+## 🛠️ Architettura Attuale (v1.7.0)
 
 ```
 datapizza-streamlit-interface/
@@ -193,10 +202,10 @@ datapizza-streamlit-interface/
     ├── chat.py               # ✨ Integrato con socratic
     ├── file_upload.py
     ├── privacy_warning.py
-    ├── socratic/             # 🧠 NEW v1.6.1
+    ├── socratic/             # 🧠 v1.7.0 - 3 bottoni
     │   ├── __init__.py
-    │   ├── prompts.py        # Template prompt socratici
-    │   └── buttons.py        # Rendering bottoni
+    │   ├── prompts.py        # 4 template (alternative, assumptions, limits, confute)
+    │   └── buttons.py        # 3 bottoni attivi (alternative, assumptions, limits)
     └── sidebar/
         ├── llm_config.py
         ├── knowledge_base.py
@@ -231,5 +240,5 @@ Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per dettagli.
 
 ---
 
-*Ultimo aggiornamento: 2026-01-26*
+*Ultimo aggiornamento: 2026-01-27*
 *Datapizza Streamlit Interface - DeepAiUG © 2026*
