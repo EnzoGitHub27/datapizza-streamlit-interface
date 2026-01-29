@@ -102,8 +102,8 @@ from ui.socratic import clear_socratic_cache
 # ============================================================================
 
 st.set_page_config(
-    page_title="Datapizza Chat",
-    page_icon="🍕",
+    page_title="DeepAiUG Chat",
+    page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -288,11 +288,11 @@ if st.session_state.get("show_privacy_dialog", False):
 # ============================================================================
 
 if connection_type == "Cloud provider":
-    st.title(f"🍕 Datapizza Chat → {provider} `{VERSION}`")
+    st.title(f"🧠 DeepAiUG Chat → {provider} `{VERSION}`")
 elif connection_type == "Remote host":
-    st.title(f"🍕 Datapizza Chat → Remote `{VERSION}`")
+    st.title(f"🧠 DeepAiUG Chat → Remote `{VERSION}`")
 else:
-    st.title(f"🍕 Datapizza Chat → Ollama `{VERSION}`")
+    st.title(f"🧠 DeepAiUG Chat → Ollama `{VERSION}`")
 
 # ============================================================================
 # 🆕 v1.5.0 - PRIVACY WARNING BANNER (se su Cloud con documenti)

@@ -1,0 +1,48 @@
+# remote_servers.yaml
+# Configurazione server LLM remoti per DeepAiUG
+# ============================================================================
+# Questo file permette di configurare server Ollama remoti predefiniti
+# per semplificare la connessione e il recupero dei modelli disponibili.
+# ============================================================================
+
+# Modalità selezione server:
+# - "fixed": Solo il default_server, nessuna scelta utente
+# - "selectable": L'utente sceglie dalla lista predefinita
+# - "custom_allowed": Lista + possibilità di inserire IP manuale (consigliato)
+mode: "custom_allowed"
+
+# Server predefinito (usato se mode=fixed o come default in selectable)
+default_server: "esempio_server"
+
+# Lista server disponibili
+servers:
+  esempio_server:
+    name: "Server Esempio"
+    icon: "🖥️"
+    host: "192.168.1.100"
+    port: 11434
+    description: "Server Ollama esempio - modifica questo file per i tuoi server"
+
+  # Puoi aggiungere altri server:
+  #
+  # server_lab:
+  #   name: "Lab Server"
+  #   icon: "🔬"
+  #   host: "192.168.1.200"
+  #   port: 11434
+  #   description: "Server del laboratorio AI"
+  #
+  # server_production:
+  #   name: "Production Server"
+  #   icon: "🚀"
+  #   host: "10.0.0.50"
+  #   port: 11434
+  #   description: "Server di produzione"
+
+# Impostazioni avanzate
+settings:
+  # Timeout connessione (secondi)
+  connection_timeout: 10
+
+  # Mostra bottone "🔄 Aggiorna modelli" per recuperare lista modelli dal server
+  show_refresh_button: true

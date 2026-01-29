@@ -5,6 +5,8 @@
 import subprocess
 from typing import List, Any
 
+import requests
+
 from datapizza.clients import ClientFactory
 from datapizza.clients.factory import Provider
 from datapizza.clients.openai_like import OpenAILikeClient
@@ -40,8 +42,44 @@ def get_local_ollama_models() -> List[str]:
                 models.append(parts[0])
         
         return models
-        
+
     except Exception:
+        return []
+
+
+def get_remote_ollama_models(base_url: str) -> List[str]:
+    """
+    Recupera lista modelli Ollama da server remoto via API HTTP.
+
+    Chiama l'endpoint /api/tags del server Ollama remoto per ottenere
+    la lista dei modelli disponibili.
+
+    Args:
+        base_url: URL completo del server (es. "http://192.168.1.10:11434/v1")
+
+    Returns:
+        Lista di nomi modelli disponibili sul server remoto
+    """
+    try:
+        # Rimuovi /v1 se presente, aggiungi /api/tags
+        api_url = base_url.replace("/v1", "").rstrip("/") + "/api/tags"
+
+        response = requests.get(api_url, timeout=10)
+        response.raise_for_status()
+
+        data = response.json()
+        models = []
+
+        # L'API Ollama ritorna: {"models": [{"name": "llama3.2:latest", ...}, ...]}
+        for model_info in data.get("models", []):
+            model_name = model_info.get("name", "")
+            if model_name:
+                models.append(model_name)
+
+        return models
+
+    except Exception as e:
+        print(f"⚠️ Errore recupero modelli remoti da {base_url}: {e}")
         return []
 
 

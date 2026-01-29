@@ -10,6 +10,10 @@ from dotenv import load_dotenv
 from .constants import (
     WIKI_CONFIG_FILE,
     WIKI_CONFIG_ALT,
+    REMOTE_SERVERS_CONFIG_FILE,
+    REMOTE_SERVERS_CONFIG_ALT,
+    SECURITY_SETTINGS_FILE,
+    SECURITY_SETTINGS_ALT,
     SECRETS_DIR,
     WIKI_TYPES,
 )
@@ -310,11 +314,11 @@ def load_api_key(provider_name: str, env_var_name: str) -> str:
 def save_api_key_to_file(provider_name: str, api_key: str) -> bool:
     """
     Salva API key in file secrets.
-    
+
     Args:
         provider_name: Nome provider
         api_key: API key da salvare
-        
+
     Returns:
         True se salvato con successo
     """
@@ -326,3 +330,194 @@ def save_api_key_to_file(provider_name: str, api_key: str) -> bool:
         return True
     except Exception:
         return False
+
+
+# ============================================================================
+# REMOTE SERVERS LOADER
+# ============================================================================
+
+def load_remote_servers_config() -> Optional[Dict[str, Any]]:
+    """
+    Carica configurazione server remoti da file YAML.
+
+    Cerca in ordine:
+    1. remote_servers.yaml nella root del progetto
+    2. config/remote_servers.yaml
+
+    Returns:
+        Dict con la configurazione o None se non trovata/errore
+    """
+    if not YAML_AVAILABLE:
+        return None
+
+    # Cerca file config
+    config_path = None
+    if REMOTE_SERVERS_CONFIG_FILE.exists():
+        config_path = REMOTE_SERVERS_CONFIG_FILE
+    elif REMOTE_SERVERS_CONFIG_ALT.exists():
+        config_path = REMOTE_SERVERS_CONFIG_ALT
+
+    if not config_path:
+        return None
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f)
+        return config
+    except Exception as e:
+        print(f"⚠️ Errore lettura config remote servers: {e}")
+        return None
+
+
+def get_remote_server_mode(config: Optional[Dict[str, Any]]) -> str:
+    """
+    Ritorna la modalità di selezione server.
+
+    Args:
+        config: Configurazione caricata da load_remote_servers_config()
+
+    Returns:
+        "fixed", "selectable", o "custom_allowed" (default se config None)
+    """
+    if not config:
+        return "custom_allowed"  # Comportamento legacy
+    return config.get("mode", "custom_allowed")
+
+
+def get_available_remote_servers(config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    Estrae lista server disponibili dalla config.
+
+    Args:
+        config: Configurazione caricata da load_remote_servers_config()
+
+    Returns:
+        Lista di dict con info server (id, name, icon, host, port, description)
+    """
+    servers = []
+    servers_config = config.get("servers", {})
+
+    for server_id, server_data in servers_config.items():
+        server_info = {
+            "id": server_id,
+            "name": server_data.get("name", server_id),
+            "icon": server_data.get("icon", "🖥️"),
+            "host": server_data.get("host", "localhost"),
+            "port": server_data.get("port", 11434),
+            "description": server_data.get("description", ""),
+            **server_data
+        }
+        servers.append(server_info)
+
+    return servers
+
+
+def get_default_remote_server(config: Dict[str, Any]) -> Optional[str]:
+    """
+    Ritorna l'ID del server predefinito.
+
+    Args:
+        config: Configurazione caricata da load_remote_servers_config()
+
+    Returns:
+        ID del server default o None
+    """
+    return config.get("default_server")
+
+
+def get_remote_servers_settings(config: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Ritorna le impostazioni avanzate per i server remoti.
+
+    Args:
+        config: Configurazione caricata da load_remote_servers_config()
+
+    Returns:
+        Dict con settings (connection_timeout, show_refresh_button)
+    """
+    return config.get("settings", {
+        "connection_timeout": 10,
+        "show_refresh_button": True
+    })
+
+
+# ============================================================================
+# SECURITY SETTINGS LOADER
+# ============================================================================
+
+def load_security_settings() -> Optional[Dict[str, Any]]:
+    """
+    Carica impostazioni di sicurezza da file YAML.
+
+    Cerca in ordine:
+    1. security_settings.yaml nella root del progetto
+    2. config/security_settings.yaml
+
+    Returns:
+        Dict con la configurazione o None se non trovata/errore
+    """
+    if not YAML_AVAILABLE:
+        return None
+
+    # Cerca file config
+    config_path = None
+    if SECURITY_SETTINGS_FILE.exists():
+        config_path = SECURITY_SETTINGS_FILE
+    elif SECURITY_SETTINGS_ALT.exists():
+        config_path = SECURITY_SETTINGS_ALT
+
+    if not config_path:
+        return None
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f)
+        return config
+    except Exception as e:
+        print(f"⚠️ Errore lettura security settings: {e}")
+        return None
+
+
+def should_show_saved_api_keys(config: Optional[Dict[str, Any]] = None) -> bool:
+    """
+    Verifica se le API key salvate devono essere mostrate in chiaro.
+
+    Args:
+        config: Configurazione caricata da load_security_settings() (opzionale)
+
+    Returns:
+        True se le key devono essere visibili, False altrimenti (default: False)
+    """
+    if config is None:
+        config = load_security_settings()
+
+    if not config:
+        return False  # Default sicuro: nascondi le key
+
+    return config.get("cloud_api_keys", {}).get("show_saved_keys", False)
+
+
+def get_api_key_message(config: Optional[Dict[str, Any]], key_visible: bool) -> str:
+    """
+    Ritorna il messaggio da mostrare per lo stato della API key.
+
+    Args:
+        config: Configurazione caricata da load_security_settings()
+        key_visible: Se True, usa messaggio per key visibile, altrimenti nascosta
+
+    Returns:
+        Messaggio da mostrare
+    """
+    if not config:
+        config = load_security_settings()
+
+    if not config:
+        # Default messages
+        return "✅ Key salvata (visibile)" if key_visible else "✅ Key salvata (nascosta per sicurezza)"
+
+    cloud_settings = config.get("cloud_api_keys", {})
+
+    if key_visible:
+        return cloud_settings.get("visible_message", "✅ Key salvata (visibile)")
+    else:
+        return cloud_settings.get("hidden_message", "✅ Key salvata (nascosta per sicurezza)")

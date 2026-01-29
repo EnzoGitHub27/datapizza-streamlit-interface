@@ -7,6 +7,67 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.7.1] - 2026-01-29
+
+### 🌐 Remote Servers + Sicurezza + Rebranding
+
+Miglioramenti significativi alla gestione dei server remoti, sicurezza API keys e rebranding UI.
+
+### ✨ Nuove Funzionalità
+
+- **📋 File `remote_servers.yaml`**: Configurazione centralizzata per server Ollama remoti
+  - 3 modalità: `fixed`, `selectable`, `custom_allowed`
+  - Server predefiniti con nome, icon, host, port, descrizione
+  - Settings avanzati (timeout, refresh button)
+  - Retrocompatibilità: se il file non esiste, comportamento legacy
+
+- **🔄 Lista modelli dinamica per Remote**: Bottone "Aggiorna modelli"
+  - Recupera modelli via API HTTP (`/api/tags`)
+  - Dropdown popolato automaticamente come per Local Ollama
+  - Metric con numero modelli trovati
+
+### 🐛 Bugfix
+
+- **🔑 API Key Cloud modificabile**: Fix bug che impediva modifica API key salvata
+  - Text input sempre visibile e modificabile (se configurato)
+  - Session state per gestire modifiche
+  - Bottone "💾 Salva modifiche" per aggiornare key esistente
+
+### 🔒 Sicurezza
+
+- **📋 File `security_settings.yaml`**: Configurazione visibilità API Keys
+  - Controllo visibilità API key salvate (default: nascoste per sicurezza)
+  - Impostazione `show_saved_keys: false` = key nascoste (default)
+  - Impostazione `show_saved_keys: true` = key visibili (solo se sistemista lo configura)
+  - Bottone "🔄 Usa altra key" per cambiare key senza vederla
+  - Messaggi personalizzabili per key visibili/nascoste
+  - Previene copia accidentale di credenziali sensibili
+
+### 🎨 Rebranding
+
+- **🧠 DeepAiUG Chat**: Nuovo titolo e identità visiva
+  - Titolo app: "🍕 Datapizza Chat" → "🧠 DeepAiUG Chat"
+  - Icon browser: 🍕 → 🧠
+  - Riflette il focus sull'approccio socratico e sul capitale semantico
+
+### 🔧 Modifiche Tecniche
+
+- `remote_servers.yaml`: Nuovo file di configurazione (opzionale)
+- `security_settings.yaml`: Nuovo file per impostazioni sicurezza (opzionale)
+- `config/constants.py`: +2 costanti (remote servers + security settings)
+- `config/settings.py`: +8 funzioni (5 remote servers, 3 security)
+- `core/llm_client.py`: Nuova funzione `get_remote_ollama_models(base_url)`
+- `ui/sidebar/llm_config.py`: Sezione Remote riscritta + Cloud con gestione sicurezza API key
+- `app.py`: Titolo "DeepAiUG Chat" + icon 🧠
+
+### 📝 Note
+
+- **Firewall/VPN**: Se il server remoto blocca endpoint `/v1/*`, le chat potrebbero fallire con 404
+  - Verifica che il server Ollama abbia OpenAI-compatible API attiva
+  - In alternativa usa server senza restrizioni firewall
+
+---
+
 ## [1.7.0] - 2026-01-27
 
 ### 🧠 Espansione Approccio Socratico

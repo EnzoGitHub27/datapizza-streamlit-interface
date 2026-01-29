@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.7.0"
+VERSION = "1.7.1"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Assumptions + Limits Buttons"
+VERSION_DESCRIPTION = "Remote Servers YAML + Bugfixes"
 
 # ============================================================================
 # PATHS
@@ -28,6 +28,10 @@ SECRETS_DIR = BASE_DIR / "secrets"
 # File di configurazione
 WIKI_CONFIG_FILE = BASE_DIR / "wiki_sources.yaml"
 WIKI_CONFIG_ALT = BASE_DIR / "config" / "wiki_sources.yaml"
+REMOTE_SERVERS_CONFIG_FILE = BASE_DIR / "remote_servers.yaml"
+REMOTE_SERVERS_CONFIG_ALT = BASE_DIR / "config" / "remote_servers.yaml"
+SECURITY_SETTINGS_FILE = BASE_DIR / "security_settings.yaml"
+SECURITY_SETTINGS_ALT = BASE_DIR / "config" / "security_settings.yaml"
 
 # ============================================================================
 # DEFAULTS - CONVERSAZIONE

@@ -8,7 +8,13 @@ import streamlit as st
 from typing import Tuple, Optional
 
 from config import CLOUD_PROVIDERS
-from config.settings import load_api_key, save_api_key_to_file
+from config.settings import (
+    load_api_key,
+    save_api_key_to_file,
+    load_security_settings,
+    should_show_saved_api_keys,
+    get_api_key_message
+)
 from core import get_local_ollama_models
 
 
@@ -96,15 +102,119 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int]:
     # ========== REMOTE HOST ==========
     elif connection_type == "Remote host":
         st.sidebar.markdown("### 🌐 Remote")
-        hosts_text = st.sidebar.text_area(
-            "Host", 
-            value="http://192.168.1.10:11434/v1", 
-            height=60
+
+        # Carica configurazione YAML
+        from config.settings import (
+            load_remote_servers_config,
+            get_remote_server_mode,
+            get_available_remote_servers,
+            get_remote_servers_settings
         )
-        hosts = [h.strip() for h in hosts_text.splitlines() if h.strip()] or [base_url]
-        base_url = st.sidebar.selectbox("Host", hosts)
-        api_key = st.sidebar.text_input("API Key", type="password")
-        model = st.sidebar.text_input("Modello", value="llama3.2")
+        from core import get_remote_ollama_models
+
+        remote_config = load_remote_servers_config()
+        mode = get_remote_server_mode(remote_config)
+
+        selected_server_url = None
+
+        # MODE: FIXED (solo server default, no scelta)
+        if mode == "fixed" and remote_config:
+            servers = get_available_remote_servers(remote_config)
+            default_id = remote_config.get("default_server")
+            default_server = next((s for s in servers if s["id"] == default_id), servers[0] if servers else None)
+
+            if default_server:
+                st.sidebar.info(f"{default_server['icon']} {default_server['name']}")
+                if default_server.get("description"):
+                    st.sidebar.caption(default_server["description"])
+                selected_server_url = f"http://{default_server['host']}:{default_server['port']}/v1"
+            else:
+                st.sidebar.error("⚠️ Nessun server configurato in remote_servers.yaml")
+                selected_server_url = "http://localhost:11434/v1"
+
+        # MODE: SELECTABLE (solo lista, no manuale)
+        elif mode == "selectable" and remote_config:
+            servers = get_available_remote_servers(remote_config)
+
+            if servers:
+                server_options = [f"{s['icon']} {s['name']}" for s in servers]
+                selected_idx = st.sidebar.selectbox(
+                    "Server",
+                    range(len(servers)),
+                    format_func=lambda i: server_options[i]
+                )
+                selected_server = servers[selected_idx]
+                if selected_server.get("description"):
+                    st.sidebar.caption(selected_server["description"])
+                selected_server_url = f"http://{selected_server['host']}:{selected_server['port']}/v1"
+            else:
+                st.sidebar.error("⚠️ Nessun server configurato in remote_servers.yaml")
+                selected_server_url = "http://localhost:11434/v1"
+
+        # MODE: CUSTOM_ALLOWED (lista + manuale) o legacy (no yaml)
+        else:
+            options = []
+            server_map = {}
+
+            # Se esiste YAML, aggiungi server configurati
+            if remote_config:
+                servers = get_available_remote_servers(remote_config)
+                for s in servers:
+                    label = f"{s['icon']} {s['name']}"
+                    url = f"http://{s['host']}:{s['port']}/v1"
+                    options.append(label)
+                    server_map[label] = (url, s.get("description", ""))
+
+            # Aggiungi opzione manuale
+            manual_option = "✏️ Inserisci manualmente..."
+            options.append(manual_option)
+
+            # Se non ci sono server YAML, default a manuale
+            if not options[:-1]:
+                selected_option = manual_option
+            else:
+                selected_option = st.sidebar.selectbox("Server", options)
+
+            # Se manuale, mostra text_input
+            if selected_option == manual_option:
+                selected_server_url = st.sidebar.text_input(
+                    "Host",
+                    value="http://192.168.1.10:11434/v1"
+                )
+            else:
+                selected_server_url, description = server_map[selected_option]
+                # Mostra descrizione se disponibile
+                if description:
+                    st.sidebar.caption(description)
+
+        base_url = selected_server_url
+        api_key = st.sidebar.text_input("API Key (opzionale)", type="password", value="")
+
+        # Bottone refresh modelli + dropdown
+        settings = get_remote_servers_settings(remote_config) if remote_config else {"show_refresh_button": True}
+
+        if settings.get("show_refresh_button", True):
+            col_r, col_c = st.sidebar.columns([3, 1])
+            with col_r:
+                if st.button("🔄 Aggiorna modelli", use_container_width=True, key="refresh_remote"):
+                    with st.spinner("Recupero modelli..."):
+                        st.session_state["models_remote"] = get_remote_ollama_models(base_url)
+
+            models_remote = st.session_state.get("models_remote", [])
+
+            with col_c:
+                if models_remote:
+                    st.metric("", len(models_remote))
+
+            if models_remote:
+                prev = st.session_state.get("model_select_remote")
+                idx = models_remote.index(prev) if prev in models_remote else 0
+                model = st.sidebar.selectbox("Modello", models_remote, index=idx, key="model_select_remote")
+            else:
+                model = st.sidebar.text_input("Modello", value="llama3.2")
+        else:
+            # Nessun bottone refresh, solo text_input
+            model = st.sidebar.text_input("Modello", value="llama3.2")
     
     # ========== CLOUD PROVIDER ==========
     else:
@@ -121,10 +231,76 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int]:
         db = config["base_url"]
         
         existing_key = load_api_key(pk, ev)
+
+        # Carica impostazioni sicurezza
+        security_config = load_security_settings()
+        show_keys = should_show_saved_api_keys(security_config)
+
+        # Se esiste una key salvata
         if existing_key:
-            st.sidebar.success("✅ Key trovata")
-            api_key = existing_key
+            # Se le key NON devono essere visibili (default sicuro)
+            if not show_keys:
+                # Mostra solo messaggio, non la key
+                message = get_api_key_message(security_config, key_visible=False)
+                st.sidebar.success(message)
+
+                # Flag per permettere cambio key
+                change_key_flag = f"change_key_{pk}"
+                if change_key_flag not in st.session_state:
+                    st.session_state[change_key_flag] = False
+
+                # Bottone per usare altra key
+                if not st.session_state[change_key_flag]:
+                    if st.sidebar.button("🔄 Usa altra key", key=f"btn_change_{pk}"):
+                        st.session_state[change_key_flag] = True
+                        st.rerun()
+                    # Usa la key esistente
+                    api_key = existing_key
+                else:
+                    # Modalità cambio key: mostra input
+                    api_key = st.sidebar.text_input("Nuova API Key", type="password", key=f"new_key_{pk}")
+                    col1, col2 = st.sidebar.columns(2)
+                    with col1:
+                        if st.button("💾 Salva", key=f"save_new_{pk}"):
+                            if api_key:
+                                save_api_key_to_file(pk, api_key)
+                                st.session_state[change_key_flag] = False
+                                st.sidebar.success("Key aggiornata!")
+                                st.rerun()
+                    with col2:
+                        if st.button("❌ Annulla", key=f"cancel_new_{pk}"):
+                            st.session_state[change_key_flag] = False
+                            api_key = existing_key
+                            st.rerun()
+
+            # Se le key DEVONO essere visibili (configurato dal sistemista)
+            else:
+                message = get_api_key_message(security_config, key_visible=True)
+                st.sidebar.success(message)
+
+                # Usa session_state per permettere modifica
+                session_key = f"api_key_{pk}"
+                if session_key not in st.session_state:
+                    st.session_state[session_key] = existing_key
+
+                api_key = st.sidebar.text_input(
+                    "API Key",
+                    type="password",
+                    value=st.session_state[session_key],
+                    key=f"input_api_key_{pk}"
+                )
+
+                # Aggiorna session_state se modificato
+                if api_key != st.session_state[session_key]:
+                    st.session_state[session_key] = api_key
+
+                # Bottone per salvare modifiche
+                if st.sidebar.button("💾 Salva modifiche"):
+                    save_api_key_to_file(pk, api_key)
+                    st.sidebar.success("Key aggiornata!")
+                    st.rerun()
         else:
+            # Nessuna key esistente, input vuoto
             api_key = st.sidebar.text_input("API Key", type="password")
             if api_key and st.sidebar.button("💾 Salva"):
                 save_api_key_to_file(pk, api_key)

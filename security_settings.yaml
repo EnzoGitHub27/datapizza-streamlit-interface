@@ -1,0 +1,23 @@
+# security_settings.yaml
+# Impostazioni di sicurezza per DeepAiUG
+# ============================================================================
+# Questo file controlla la visibilità e gestione delle credenziali sensibili.
+# ============================================================================
+
+# Impostazioni API Keys Cloud
+cloud_api_keys:
+  # Se true, le API key salvate sono visibili in chiaro (possono essere copiate)
+  # Se false, le API key salvate restano nascoste (campo password con asterischi)
+  # DEFAULT: false (sicurezza maggiore)
+  show_saved_keys: false
+
+  # Messaggio mostrato quando la key è nascosta
+  hidden_message: "✅ Key salvata (nascosta per sicurezza)"
+
+  # Messaggio mostrato quando la key è visibile
+  visible_message: "✅ Key salvata (visibile)"
+
+# Impostazioni future (placeholder)
+# remote_servers:
+#   require_authentication: false
+#   log_connections: false
