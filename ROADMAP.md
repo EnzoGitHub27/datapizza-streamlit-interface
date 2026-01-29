@@ -53,6 +53,8 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    │
    ├─→ v1.7.0 ✅ (2026-01-27)   + 🧠 Bottoni "Assunzioni" + "Limiti"
    │
+   ├─→ v1.7.1 ✅ (2026-01-29)   + 🖥️ Remote YAML + 🔐 Security Settings
+   │
    ├─→ v1.8.0 📋 (Q1 2026)      + 🧠 Bottone "Confuta" (avvocato del diavolo)
    │
    ├─→ v1.9.0 📋 (Q1 2026)      + 🧠 Toggle modalità (Veloce/Standard/Socratico)
@@ -71,6 +73,17 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 ---
 
 ## ✅ Completate
+
+### v1.7.1 - 🖥️ Remote Servers + Security (2026-01-29)
+- [x] `remote_servers.yaml` - Configurazione centralizzata server Ollama remoti
+- [x] 3 modalità operative: fixed, selectable, custom_allowed
+- [x] Lista modelli dinamica con bottone "🔄 Aggiorna modelli"
+- [x] Funzioni loader in `config/settings.py` (pattern wiki_sources)
+- [x] `security_settings.yaml` - Controllo visibilità API Keys Cloud
+- [x] Default sicuro: keys nascoste, non copiabili
+- [x] Bottone "🔄 Usa altra key" per cambio senza visualizzazione
+- [x] Rebranding: "🍕 Datapizza" → "🧠 DeepAiUG"
+- [x] Bugfix: Cloud API Key ora modificabile
 
 ### v1.7.0 - 🧠 Socratic Expansion (2026-01-27)
 - [x] Bottone "🤔 Assunzioni" - Mostra assunzioni implicite della risposta
@@ -167,12 +180,14 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 
 ---
 
-## 🛠️ Architettura Attuale (v1.7.0)
+## 🛠️ Architettura Attuale (v1.7.1)
 
 ```
 datapizza-streamlit-interface/
 ├── app.py                    # Entry point
 ├── wiki_sources.yaml         # Config sorgenti
+├── remote_servers.yaml       # ⭐ NEW: Config server remoti
+├── security_settings.yaml    # ⭐ NEW: Impostazioni sicurezza
 │
 ├── config/                   # Configurazione
 │   ├── constants.py          # VERSION, PATHS, WIKI_TYPES
@@ -240,5 +255,5 @@ Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per dettagli.
 
 ---
 
-*Ultimo aggiornamento: 2026-01-27*
+*Ultimo aggiornamento: 2026-01-29*
 *Datapizza Streamlit Interface - DeepAiUG © 2026*

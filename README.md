@@ -3,7 +3,7 @@
 > Interfaccia Streamlit modulare per interagire con LLM locali (Ollama), remoti e cloud.
 > Progetto Open Source della community **DeepAiUG**.
 
-[![Version](https://img.shields.io/badge/version-1.7.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.7.0)
+[![Version](https://img.shields.io/badge/version-1.7.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.7.1)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -27,7 +27,57 @@
 
 ---
 
-## 🆕 Novità v1.7.0 - 3 Bottoni Socratici 🧠
+## 🆕 Novità v1.7.1 - Remote Servers + Security 🖥️🔐
+
+### 🖥️ Remote Servers YAML
+Gestisci server Ollama remoti con configurazione centralizzata:
+
+**3 modalità operative:**
+- **📌 Fixed**: Solo server predefinito (ideale per ambienti enterprise controllati)
+- **📋 Selectable**: Scelta tra server configurati (multi-sede, multi-ambiente)
+- **✏️ Custom Allowed**: Lista + inserimento manuale (massima flessibilità)
+
+**Vantaggi:**
+- Lista modelli dinamica con bottone "🔄 Aggiorna modelli"
+- File `remote_servers.yaml` opzionale (retrocompatibile)
+- Icone e descrizioni personalizzabili per ogni server
+- Impostazioni avanzate (timeout, visibilità bottone refresh)
+
+**Esempio configurazione:**
+```yaml
+mode: "custom_allowed"
+servers:
+  server_principale:
+    name: "Server Principale"
+    icon: "🖥️"
+    host: "192.168.1.100"
+    port: 11434
+    description: "Server Ollama aziendale"
+```
+
+### 🔐 Security Settings
+Controllo sistemista sulla visibilità delle API Keys Cloud:
+
+- **Default sicuro**: Keys nascoste (non visibili, non copiabili)
+- **Configurabile**: Sistemista può abilitare visibilità se necessario
+- **Bottone "🔄 Usa altra key"**: Cambia credenziali senza vedere quella corrente
+- **Previene copia accidentale** di chiavi sensibili
+
+**Esempio configurazione:**
+```yaml
+cloud_api_keys:
+  show_saved_keys: false  # Default sicuro
+  hidden_message: "✅ Key salvata (nascosta per sicurezza)"
+```
+
+### 🧠 Rebranding
+**"🍕 Datapizza Chat" → "🧠 DeepAiUG Chat"**
+- Nuovo branding con focus su intelligenza semantica
+- Icon 🧠 rappresenta l'approccio socratico
+
+---
+
+## Novità v1.7.0 - 3 Bottoni Socratici 🧠
 
 ### La Filosofia
 DeepAiUG evolve da semplice chat a **strumento socratico**. Ispirato al concetto di "capitale semantico" (Floridi/Quartarone):
@@ -100,12 +150,14 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.7.0
+## 🏗️ Architettura v1.7.1
 
 ```
 datapizza-streamlit-interface/
 ├── app.py                    # ⭐ Entry point principale
 ├── wiki_sources.yaml         # Configurazione sorgenti wiki
+├── remote_servers.yaml       # ⭐ NEW: Config server remoti
+├── security_settings.yaml    # ⭐ NEW: Impostazioni sicurezza
 │
 ├── config/                   # 📁 Configurazione
 │   ├── constants.py          # Costanti, WIKI_TYPES, VISION_MODELS
@@ -333,6 +385,7 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
+| v1.7.1 | 🖥️ Remote YAML + 🔐 Security | ✅ |
 | v1.7.0 | 🧠 Assunzioni + Limiti | ✅ |
 | v1.8.0 | 🧠 Bottone Confuta | 📋 |
 | v1.9.0 | 🧠 Toggle modalità | 📋 |
