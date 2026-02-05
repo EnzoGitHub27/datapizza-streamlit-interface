@@ -1,5 +1,5 @@
 # ui/__init__.py
-# Datapizza v1.6.1 - UI Components Package
+# DeepAiUG v1.6.1 - UI Components Package
 # ============================================================================
 
 from ui.styles import (

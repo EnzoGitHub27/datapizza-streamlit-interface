@@ -1,5 +1,5 @@
 # ui/file_upload.py
-# Datapizza v1.5.0 - Componente File Upload per Chat
+# DeepAiUG v1.5.0 - Componente File Upload per Chat
 # ============================================================================
 #
 # Widget per upload file nella chat con:

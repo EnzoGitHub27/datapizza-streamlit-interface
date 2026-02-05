@@ -1,5 +1,5 @@
 # rag/manager.py
-# Datapizza v1.4.0 - Knowledge Base Manager
+# DeepAiUG v1.4.0 - Knowledge Base Manager
 # ============================================================================
 
 from datetime import datetime

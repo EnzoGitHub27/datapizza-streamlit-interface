@@ -1,5 +1,5 @@
 # rag/vector_store.py
-# Datapizza v1.4.0 - Vector Store per RAG
+# DeepAiUG v1.4.0 - Vector Store per RAG
 # ============================================================================
 
 from pathlib import Path

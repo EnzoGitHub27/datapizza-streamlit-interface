@@ -1,5 +1,5 @@
 # ui/sidebar/conversations.py
-# Datapizza v1.4.0 - Sidebar: Gestione conversazioni salvate
+# DeepAiUG v1.4.0 - Sidebar: Gestione conversazioni salvate
 # ============================================================================
 
 from pathlib import Path

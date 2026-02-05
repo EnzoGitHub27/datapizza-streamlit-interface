@@ -1,5 +1,5 @@
 # export/__init__.py
-# Datapizza v1.4.0 - Modulo export
+# DeepAiUG v1.4.0 - Modulo export
 # ============================================================================
 
 from .exporters import (

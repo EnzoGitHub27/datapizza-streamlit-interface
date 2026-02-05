@@ -1,5 +1,5 @@
 # ui/sidebar/__init__.py
-# Datapizza v1.4.0 - Modulo sidebar
+# DeepAiUG v1.4.0 - Modulo sidebar
 # ============================================================================
 
 from .llm_config import render_llm_config

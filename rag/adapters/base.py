@@ -1,5 +1,5 @@
 # rag/adapters/base.py
-# Datapizza v1.4.0 - Adapter base per sorgenti documenti
+# DeepAiUG v1.4.0 - Adapter base per sorgenti documenti
 # ============================================================================
 
 from abc import ABC, abstractmethod

@@ -1,5 +1,5 @@
 # config/settings.py
-# Datapizza v1.4.1 - Funzioni gestione configurazioni
+# DeepAiUG v1.4.1 - Funzioni gestione configurazioni
 # ============================================================================
 
 import os

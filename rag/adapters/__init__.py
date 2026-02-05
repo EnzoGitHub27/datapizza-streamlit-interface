@@ -1,5 +1,5 @@
 # rag/adapters/__init__.py
-# Datapizza v1.4.1 - Modulo adapters
+# DeepAiUG v1.4.1 - Modulo adapters
 # ============================================================================
 
 from .base import WikiAdapter

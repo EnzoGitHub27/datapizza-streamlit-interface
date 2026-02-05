@@ -1,5 +1,5 @@
 # rag/__init__.py
-# Datapizza v1.4.1 - Modulo RAG (Retrieval-Augmented Generation)
+# DeepAiUG v1.4.1 - Modulo RAG (Retrieval-Augmented Generation)
 # ============================================================================
 
 from .models import Document, Chunk

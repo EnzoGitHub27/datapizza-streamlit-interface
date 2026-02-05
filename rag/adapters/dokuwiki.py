@@ -1,5 +1,5 @@
 # rag/adapters/dokuwiki.py
-# Datapizza v1.4.1 - Adapter per wiki DokuWiki
+# DeepAiUG v1.4.1 - Adapter per wiki DokuWiki
 # ============================================================================
 
 import re

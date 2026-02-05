@@ -1,5 +1,5 @@
 # core/llm_client.py
-# Datapizza v1.4.0 - Client LLM
+# DeepAiUG v1.4.0 - Client LLM
 # ============================================================================
 
 import subprocess

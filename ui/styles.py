@@ -1,5 +1,5 @@
 # ui/styles.py
-# Datapizza v1.4.0 - Stili CSS
+# DeepAiUG v1.4.0 - Stili CSS
 # ============================================================================
 
 # CSS principale dell'applicazione

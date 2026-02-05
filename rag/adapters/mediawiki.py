@@ -1,5 +1,5 @@
 # rag/adapters/mediawiki.py
-# Datapizza v1.4.0 - Adapter per wiki MediaWiki
+# DeepAiUG v1.4.0 - Adapter per wiki MediaWiki
 # ============================================================================
 
 import re

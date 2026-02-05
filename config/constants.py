@@ -1,5 +1,5 @@
 # config/constants.py
-# Datapizza v1.5.0 - Costanti globali
+# DeepAiUG v1.5.0 - Costanti globali
 # ============================================================================
 
 from pathlib import Path
@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.7.1"
+VERSION = "1.8.0"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Remote Servers YAML + Bugfixes"
+VERSION_DESCRIPTION = "Socratic Expansion - Confuta + Rifletti + Toggle Mode"
 
 # ============================================================================
 # PATHS
@@ -122,7 +122,7 @@ CLOUD_PROVIDERS = {
 # MEDIAWIKI DEFAULTS
 # ============================================================================
 
-MEDIAWIKI_DEFAULT_USER_AGENT = f"DatapizzaBot/{VERSION}"
+MEDIAWIKI_DEFAULT_USER_AGENT = f"DeepAiUGBot/{VERSION}"
 MEDIAWIKI_DEFAULT_REQUEST_DELAY = 0.5
 MEDIAWIKI_DEFAULT_BATCH_SIZE = 50
 MEDIAWIKI_DEFAULT_TIMEOUT = 30
@@ -177,3 +177,33 @@ VISION_MODEL_PATTERNS = [
 # Limiti upload
 MAX_FILE_SIZE_MB = 10
 MAX_DOCUMENT_CHARS = 50000
+
+# ============================================================================
+# SOCRATIC MODES - v1.8.0
+# ============================================================================
+
+SOCRATIC_MODES = {
+    "fast": {
+        "name": "Veloce",
+        "icon": "🚀",
+        "description": "Nessun bottone socratico - risposte immediate",
+        "show_buttons": False,
+        "show_reflection_invite": False,
+    },
+    "standard": {
+        "name": "Standard",
+        "icon": "⚖️",
+        "description": "Bottoni socratici visibili sotto le risposte",
+        "show_buttons": True,
+        "show_reflection_invite": False,
+    },
+    "socratic": {
+        "name": "Socratico",
+        "icon": "🧠",
+        "description": "Bottoni + invito esplicito a riflettere",
+        "show_buttons": True,
+        "show_reflection_invite": True,
+    },
+}
+
+DEFAULT_SOCRATIC_MODE = "standard"

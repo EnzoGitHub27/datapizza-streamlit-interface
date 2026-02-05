@@ -1,5 +1,5 @@
 # =============================================================================
-# Datapizza Streamlit Interface - .gitignore
+# DeepAiUG Streamlit Interface - .gitignore
 # =============================================================================
 
 # =============================================================================
@@ -52,7 +52,7 @@ datapizza-env/
 *.sublime-workspace
 
 # =============================================================================
-# Datapizza - Dati Generati (NON committare)
+# DeepAiUG - Dati Generati (NON committare)
 # =============================================================================
 
 # Conversazioni salvate (dati utente)

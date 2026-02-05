@@ -1,5 +1,5 @@
 # ui/sidebar/export_ui.py
-# Datapizza v1.4.0 - Sidebar: Export conversazioni
+# DeepAiUG v1.4.0 - Sidebar: Export conversazioni
 # ============================================================================
 
 from datetime import datetime

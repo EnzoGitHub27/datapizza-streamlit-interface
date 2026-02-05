@@ -1,5 +1,5 @@
 # export/exporters.py
-# Datapizza v1.4.0 - Funzioni export conversazioni
+# DeepAiUG v1.4.0 - Funzioni export conversazioni
 # ============================================================================
 
 import io
@@ -79,7 +79,7 @@ def export_to_markdown(
                 "",
             ])
     
-    lines.append(f"*Generato con Datapizza v{VERSION} - {datetime.now().strftime('%Y-%m-%d %H:%M')}*")
+    lines.append(f"*Generato con DeepAiUG v{VERSION} - {datetime.now().strftime('%Y-%m-%d %H:%M')}*")
     return "\n".join(lines)
 
 

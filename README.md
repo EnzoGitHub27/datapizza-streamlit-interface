@@ -1,9 +1,9 @@
-# 🍕 Datapizza Streamlit LLM Interface
+# 🧠 DeepAiUG Streamlit LLM Interface
 
 > Interfaccia Streamlit modulare per interagire con LLM locali (Ollama), remoti e cloud.
 > Progetto Open Source della community **DeepAiUG**.
 
-[![Version](https://img.shields.io/badge/version-1.7.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.7.1)
+[![Version](https://img.shields.io/badge/version-1.8.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.8.0)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -27,76 +27,76 @@
 
 ---
 
-## 🆕 Novità v1.7.1 - Remote Servers + Security 🖥️🔐
+## 🆕 Novità v1.8.0 - UI Socratica Completa 🧠
 
-### 🖥️ Remote Servers YAML
-Gestisci server Ollama remoti con configurazione centralizzata:
+### 5 Bottoni Socratici + Toggle Modalità
 
-**3 modalità operative:**
-- **📌 Fixed**: Solo server predefinito (ideale per ambienti enterprise controllati)
-- **📋 Selectable**: Scelta tra server configurati (multi-sede, multi-ambiente)
-- **✏️ Custom Allowed**: Lista + inserimento manuale (massima flessibilità)
+DeepAiUG completa l'approccio socratico con **5 bottoni** organizzati in 2 sezioni:
 
-**Vantaggi:**
-- Lista modelli dinamica con bottone "🔄 Aggiorna modelli"
-- File `remote_servers.yaml` opzionale (retrocompatibile)
-- Icone e descrizioni personalizzabili per ogni server
-- Impostazioni avanzate (timeout, visibilità bottone refresh)
-
-**Esempio configurazione:**
-```yaml
-mode: "custom_allowed"
-servers:
-  server_principale:
-    name: "Server Principale"
-    icon: "🖥️"
-    host: "192.168.1.100"
-    port: 11434
-    description: "Server Ollama aziendale"
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Analizza la risposta:                                       │
+│ [🔄 Alternative] [🤔 Assunzioni] [⚠️ Limiti] [🎭 Confuta]   │
+├─────────────────────────────────────────────────────────────┤
+│ Sfida la domanda:                                           │
+│ [🪞 Rifletti]                                               │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### 🔐 Security Settings
-Controllo sistemista sulla visibilità delle API Keys Cloud:
+### 🎭 Bottone "Confuta" (NUOVO)
+Avvocato del diavolo sulla risposta:
+- Punti deboli del ragionamento
+- Falle logiche e semplificazioni
+- Controesempi concreti
 
-- **Default sicuro**: Keys nascoste (non visibili, non copiabili)
-- **Configurabile**: Sistemista può abilitare visibilità se necessario
-- **Bottone "🔄 Usa altra key"**: Cambia credenziali senza vedere quella corrente
-- **Previene copia accidentale** di chiavi sensibili
+### 🪞 Bottone "Rifletti" (NUOVO)
+Sfida la TUA DOMANDA (non la risposta!):
+- Perimetro decisionale: su cosa stai davvero decidendo?
+- Assunzioni non dette nella domanda stessa
+- Cosa NON stai chiedendo che dovresti?
 
-**Esempio configurazione:**
-```yaml
-cloud_api_keys:
-  show_saved_keys: false  # Default sicuro
-  hidden_message: "✅ Key salvata (nascosta per sicurezza)"
-```
-
-### 🧠 Rebranding
-**"🍕 Datapizza Chat" → "🧠 DeepAiUG Chat"**
-- Nuovo branding con focus su intelligenza semantica
-- Icon 🧠 rappresenta l'approccio socratico
+### 🧠 Toggle Modalità (sidebar)
+Scegli la profondità di analisi:
+- 🚀 **Veloce**: Nessun bottone (risposte immediate)
+- ⚖️ **Standard**: Bottoni visibili (default)
+- 🧠 **Socratico**: Bottoni + invito a riflettere
 
 ---
 
-## Novità v1.7.0 - 3 Bottoni Socratici 🧠
+## Novità v1.7.x - Remote Servers + Security 🖥️🔐
+
+### Remote Servers YAML
+- 3 modalità: fixed, selectable, custom_allowed
+- Lista modelli dinamica
+- File `remote_servers.yaml` opzionale
+
+### Security Settings
+- API Keys nascoste per default
+- File `security_settings.yaml`
+
+---
+
+## I 5 Bottoni Socratici 🧠
 
 ### La Filosofia
-DeepAiUG evolve da semplice chat a **strumento socratico**. Ispirato al concetto di "capitale semantico" (Floridi/Quartarone):
-
 > **L'AI produce significato plausibile, ma il SENSO lo costruisce l'umano.**
 
-### I 3 Bottoni Socratici
+Ispirato al "capitale semantico" (Floridi/Quartarone).
 
-Sotto ogni risposta AI ora appaiono 3 bottoni per stimolare riflessione critica:
+**Sezione 1 - Analizza la risposta:**
 
-**🔄 Genera alternative**
-- 3 interpretazioni alternative dello stesso problema
-- Ogni alternativa basata su presupposti diversi
-- Stimola il pensiero laterale
+| Bottone | Funzione |
+|---------|----------|
+| 🔄 Alternative | 3 interpretazioni diverse |
+| 🤔 Assunzioni | Cosa si dà per scontato |
+| ⚠️ Limiti | Quando non funziona |
+| 🎭 Confuta | Avvocato del diavolo |
 
-**🤔 Assunzioni** ⭐ NEW
-- Mostra le assunzioni implicite della risposta
-- Cosa si dà per scontato che potrebbe non esserlo?
-- Aiuta a valutare se la risposta si applica al tuo caso
+**Sezione 2 - Sfida la domanda:**
+
+| Bottone | Funzione |
+|---------|----------|
+| 🪞 Rifletti | Meta-riflessione sulla domanda stessa |
 
 **⚠️ Limiti** ⭐ NEW
 - Identifica quando la risposta NON funziona

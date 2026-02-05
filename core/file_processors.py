@@ -1,5 +1,5 @@
 # core/file_processors.py
-# Datapizza v1.5.0 - Processori per file uploadati in chat
+# DeepAiUG v1.5.0 - Processori per file uploadati in chat
 # ============================================================================
 #
 # Questo modulo gestisce l'estrazione di testo da documenti e la

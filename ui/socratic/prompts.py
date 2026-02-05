@@ -1,5 +1,5 @@
 # ui/socratic/prompts.py
-# Datapizza v1.6.1 - Template Prompt Socratici
+# DeepAiUG v1.8.0 - Template Prompt Socratici
 # ============================================================================
 # Prompt per stimolare il "lavoro semantico" dell'utente.
 # Ispirati al concetto di capitale semantico (Floridi/Quartarone).
@@ -44,15 +44,40 @@ Quali sono i limiti di validità di questa spiegazione?
 
 Sii specifico e concreto.""",
 
-    # v1.8.0 - Future feature (placeholder)
+    # v1.8.0 - Confuta (avvocato del diavolo)
     "confute": """Agisci come avvocato del diavolo.
 
 Confuta questa risposta:
 
 \"\"\"{response}\"\"\"
 
-Trova i punti deboli, le falle logiche, le semplificazioni eccessive.
-Non essere gentile, sii rigoroso ma costruttivo.""",
+Analizza criticamente:
+1. **Punti deboli**: Dove il ragionamento è fragile?
+2. **Falle logiche**: Ci sono salti logici o semplificazioni eccessive?
+3. **Controesempi**: In quali casi concreti questa risposta sarebbe sbagliata?
+
+Sii rigoroso ma costruttivo. L'obiettivo è rafforzare il pensiero critico, non demolire.""",
+
+    # v1.8.0 - Rifletti (sfida la DOMANDA, non la risposta)
+    "reflect": """L'utente ha fatto questa domanda:
+
+\"\"\"{user_question}\"\"\"
+
+E ha ricevuto questa risposta:
+
+\"\"\"{response}\"\"\"
+
+Invece di analizzare la risposta, SFIDA LA DOMANDA dell'utente.
+Genera 3 domande provocatorie che aiutino a riflettere su:
+
+1. **Perimetro decisionale**: Su cosa sta davvero decidendo? La domanda nasconde una decisione più grande?
+
+2. **Assunzioni non dette**: Cosa sta dando per scontato senza accorgersene? Quali vincoli impliciti ha nella mente?
+
+3. **Giustificabilità**: Quale parte della risposta non saprebbe giustificare se qualcuno glielo chiedesse?
+
+Non dare risposte. Fai solo domande che mettano in crisi costruttivamente.
+Sii diretto ma rispettoso. L'obiettivo è migliorare il DIALOGO, non l'output.""",
 }
 
 
@@ -82,3 +107,20 @@ def get_limits_prompt(response: str) -> str:
 def get_confute_prompt(response: str) -> str:
     """Genera il prompt per confutare la risposta. (v1.8.0)"""
     return SOCRATIC_PROMPTS["confute"].format(response=response)
+
+
+def get_reflect_prompt(response: str, user_question: str) -> str:
+    """
+    Genera il prompt per riflettere sulla DOMANDA dell'utente. (v1.8.0)
+
+    Args:
+        response: La risposta dell'AI
+        user_question: La domanda originale dell'utente
+
+    Returns:
+        Il prompt formattato per stimolare riflessione critica sulla domanda
+    """
+    return SOCRATIC_PROMPTS["reflect"].format(
+        response=response,
+        user_question=user_question
+    )

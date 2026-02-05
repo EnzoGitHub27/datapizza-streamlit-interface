@@ -1,5 +1,5 @@
 # rag/adapters/local_folder.py
-# Datapizza v1.4.0 - Adapter per cartelle locali
+# DeepAiUG v1.4.0 - Adapter per cartelle locali
 # ============================================================================
 
 from pathlib import Path

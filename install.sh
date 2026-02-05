@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Script di Installazione per Datapizza Streamlit LLM Interface
+# Script di Installazione per DeepAiUG Streamlit LLM Interface
 # =============================================================================
 # Questo script installa le dipendenze nell'ordine corretto per evitare
 # conflitti tra i pacchetti datapizza-ai
@@ -8,7 +8,7 @@
 
 set -e  # Exit on error
 
-echo "🍕 Installazione Datapizza Streamlit LLM Interface"
+echo "🧠 Installazione DeepAiUG Streamlit LLM Interface"
 echo "=================================================="
 echo ""
 
@@ -70,8 +70,8 @@ $PIP_CMD install streamlit python-dotenv
 print_status "streamlit e python-dotenv installati"
 echo ""
 
-# Installa Datapizza AI core
-echo "📦 Installazione Datapizza AI (core)..."
+# Installa datapizza AI core (libreria)
+echo "📦 Installazione datapizza AI (libreria)..."
 $PIP_CMD install datapizza-ai
 print_status "datapizza-ai installato"
 echo ""

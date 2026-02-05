@@ -1,5 +1,5 @@
 # core/conversation.py
-# Datapizza v1.4.0 - Gestione conversazione in memoria
+# DeepAiUG v1.4.0 - Gestione conversazione in memoria
 # ============================================================================
 
 from datetime import datetime

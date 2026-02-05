@@ -1,4 +1,4 @@
-# 🗺️ ROADMAP - Datapizza Streamlit Interface
+# 🗺️ ROADMAP - DeepAiUG Streamlit Interface
 
 Piano di sviluppo del progetto.
 
@@ -55,13 +55,11 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    │
    ├─→ v1.7.1 ✅ (2026-01-29)   + 🖥️ Remote YAML + 🔐 Security Settings
    │
-   ├─→ v1.8.0 📋 (Q1 2026)      + 🧠 Bottone "Confuta" (avvocato del diavolo)
+   ├─→ v1.8.0 ✅ (2026-02-05)   + 🧠 UI Socratica Completa (5 bottoni + Toggle)
    │
-   ├─→ v1.9.0 📋 (Q1 2026)      + 🧠 Toggle modalità (Veloce/Standard/Socratico)
+   ├─→ v1.9.0 📋 (Q1 2026)      + Preparazione Semantic Layer (JSON-LD)
    │
-   ├─→ v1.9.0 📋 (Q2 2026)      + Preparazione Semantic Layer (JSON-LD)
-   │
-   └─→ v2.0.0 🎯 (Q3-Q4 2026)   + Semantic Layer + Knowledge Graph
+   └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
 
 ✅ = Completata
 🚧 = In sviluppo
@@ -73,6 +71,15 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 ---
 
 ## ✅ Completate
+
+### v1.8.0 - 🧠 UI Socratica Completa (2026-02-05)
+- [x] Bottone "🎭 Confuta" - Avvocato del diavolo (punti deboli, falle logiche, controesempi)
+- [x] Bottone "🪞 Rifletti" - Sfida la DOMANDA utente (perimetro decisionale, assunzioni non dette)
+- [x] Toggle Modalità Socratica (sidebar): Veloce / Standard / Socratico
+- [x] UI raggruppata in 2 sezioni: "Analizza la risposta" + "Sfida la domanda"
+- [x] SOCRATIC_MODES dict in config/constants.py
+- [x] Passaggio user_question a render_socratic_buttons per "Rifletti"
+- [x] Rebranding completo: "Datapizza" → "DeepAiUG" in tutti i commenti
 
 ### v1.7.1 - 🖥️ Remote Servers + Security (2026-01-29)
 - [x] `remote_servers.yaml` - Configurazione centralizzata server Ollama remoti

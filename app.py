@@ -1,15 +1,16 @@
 # app.py
-# Datapizza v1.6.1 - Entry Point
+# DeepAiUG v1.8.0 - Entry Point
 # ============================================================================
 # Interfaccia Streamlit modulare per LLM con:
 # - Ollama locale / Remote / Cloud providers
 # - Knowledge Base RAG (LocalFolder + MediaWiki + DokuWiki)
 # - Export conversazioni (MD, JSON, TXT, PDF)
 # - Persistenza conversazioni
-# - 🆕 v1.5.0: File Upload in Chat (Privacy-First)
-# - 🆕 v1.5.0: Privacy Warning per passaggio Local→Cloud con documenti
-# - 🆕 v1.6.0: Streaming responses
-# - 🆕 v1.6.1: Bottoni socratici (Genera alternative)
+# - v1.5.0: File Upload in Chat (Privacy-First)
+# - v1.5.0: Privacy Warning per passaggio Local→Cloud con documenti
+# - v1.6.0: Streaming responses
+# - v1.6.1: Bottoni socratici (Genera alternative)
+# - v1.8.0: UI Socratica completa (Confuta, Rifletti, Toggle Mode)
 # ============================================================================
 
 from datetime import datetime
@@ -24,6 +25,7 @@ from config import (
     DEFAULT_CHUNK_SIZE,
     DEFAULT_CHUNK_OVERLAP,
     DEFAULT_TOP_K_RESULTS,
+    DEFAULT_SOCRATIC_MODE,  # v1.8.0
 )
 
 # ============================================================================
@@ -140,11 +142,13 @@ def initialize_session_state():
         "pending_files": [],
         "pending_has_images": False,
         "pending_warning": None,
-        # 🆕 v1.5.0 - Privacy tracking
+        # v1.5.0 - Privacy tracking
         "documents_uploaded_this_session": False,
         "uploaded_files_history": [],
         "privacy_acknowledged_for_cloud": False,
         "show_privacy_dialog": False,
+        # v1.8.0 - Socratic mode
+        "socratic_mode": DEFAULT_SOCRATIC_MODE,
     }
     
     for key, value in defaults.items():
@@ -256,7 +260,8 @@ def get_socratic_client(connection_type, provider, api_key, model, base_url, tem
     base_url,
     system_prompt,
     temperature,
-    max_messages
+    max_messages,
+    socratic_mode  # v1.8.0
 ) = render_llm_config()
 
 # Knowledge Base Configuration
@@ -316,7 +321,7 @@ if st.session_state.get("use_knowledge_base"):
     else:
         st.warning("📚 Knowledge Base attivata ma non indicizzata. Configura una cartella nella sidebar.")
 else:
-    st.info(f"✨ **Novità {VERSION}**: Bottoni Socratici - Esplora prospettive alternative!")
+    st.info(f"✨ **Novità {VERSION}**: Modalità Socratica - Scegli la profondità di analisi!")
 
 # ============================================================================
 # CONNECTION INDICATOR
@@ -366,9 +371,15 @@ if not messages:
     else:
         st.info("👋 Inizia una conversazione!")
 else:
-    # 🆕 v1.6.1 - Passa il client socratico a render_chat_message
+    # v1.8.0 - Passa messages_list e socratic_mode a render_chat_message
     for idx, msg in enumerate(messages):
-        render_chat_message(msg, idx, socratic_client)
+        render_chat_message(
+            msg,
+            idx,
+            socratic_client,
+            messages_list=messages,
+            socratic_mode=socratic_mode
+        )
 
 st.markdown("---")
 
@@ -562,7 +573,7 @@ Cita sempre le fonti quando usi informazioni dai documenti.
 st.markdown("---")
 c1, c2, _ = st.columns([2, 8, 2])
 c1.caption("🤖 DeepAiUG by Gilles")
-c2.caption(f"{VERSION} - Socratic Buttons | DeepAiUG © 2026")
+c2.caption(f"{VERSION} - Socratic Mode | DeepAiUG © 2026")
 
 # Visual indicators
 if connection_type == "Cloud provider":

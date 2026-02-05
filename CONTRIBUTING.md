@@ -1,4 +1,4 @@
-# 🤝 Contributing to Datapizza Streamlit LLM Interface
+# 🤝 Contributing to DeepAiUG Streamlit LLM Interface
 
 Grazie per l'interesse nel contribuire a questo progetto! Questo documento fornisce linee guida per contribuire in modo efficace.
 
@@ -524,6 +524,6 @@ Se hai domande su come contribuire:
 
 ---
 
-**Grazie per contribuire a Datapizza Streamlit LLM Interface! 🍕**
+**Grazie per contribuire a DeepAiUG Streamlit LLM Interface! 🧠**
 
 Il tuo contributo, grande o piccolo, rende questo progetto migliore per tutti! 🚀

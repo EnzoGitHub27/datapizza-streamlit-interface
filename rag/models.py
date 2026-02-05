@@ -1,5 +1,5 @@
 # rag/models.py
-# Datapizza v1.4.0 - Modelli dati RAG
+# DeepAiUG v1.4.0 - Modelli dati RAG
 # ============================================================================
 
 from pathlib import Path

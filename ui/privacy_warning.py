@@ -1,5 +1,5 @@
 # ui/privacy_warning.py
-# Datapizza v1.5.0 - Privacy Warning Dialog
+# DeepAiUG v1.5.0 - Privacy Warning Dialog
 # ============================================================================
 #
 # Gestisce gli avvisi di privacy quando l'utente tenta di passare a un

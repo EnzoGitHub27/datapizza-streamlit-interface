@@ -1,5 +1,5 @@
 # rag/chunker.py
-# Datapizza v1.4.0 - Text Chunking intelligente
+# DeepAiUG v1.4.0 - Text Chunking intelligente
 # ============================================================================
 
 import re

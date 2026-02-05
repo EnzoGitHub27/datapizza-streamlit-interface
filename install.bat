@@ -1,11 +1,11 @@
 @echo off
 REM =============================================================================
-REM Script di Installazione per Datapizza Streamlit LLM Interface (Windows)
+REM Script di Installazione per DeepAiUG Streamlit LLM Interface (Windows)
 REM =============================================================================
 
 echo.
 echo ============================================================
-echo    Installazione Datapizza Streamlit LLM Interface
+echo    Installazione DeepAiUG Streamlit LLM Interface
 echo ============================================================
 echo.
 
@@ -37,8 +37,8 @@ if errorlevel 1 (
 echo [OK] streamlit e python-dotenv installati
 echo.
 
-REM Installa Datapizza AI core
-echo [2/4] Installazione Datapizza AI (core)...
+REM Installa datapizza AI core (libreria)
+echo [2/4] Installazione datapizza AI (libreria)...
 python -m pip install datapizza-ai
 if errorlevel 1 (
     echo [ERRORE] Installazione datapizza-ai fallita!

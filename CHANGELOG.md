@@ -7,6 +7,57 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.8.0] - 2026-02-05
+
+### 🧠 UI Socratica Completa
+
+Release che completa l'approccio socratico con 5 bottoni e toggle modalità.
+
+### ✨ Nuove Funzionalità
+
+- **🎭 Bottone "Confuta"**: Avvocato del diavolo
+  - Analizza punti deboli del ragionamento
+  - Identifica falle logiche e semplificazioni eccessive
+  - Propone controesempi concreti
+  - Critica costruttiva per rafforzare il pensiero
+
+- **🪞 Bottone "Rifletti"**: Sfida la DOMANDA (non la risposta!)
+  - Analizza il perimetro decisionale dell'utente
+  - Svela assunzioni non dette nella domanda stessa
+  - Chiede: "Cosa NON stai chiedendo che dovresti?"
+  - Stimola meta-riflessione sul dialogo
+
+- **🧠 Toggle Modalità Socratica** (sidebar):
+  - 🚀 **Veloce**: Nessun bottone socratico (risposte immediate)
+  - ⚖️ **Standard**: Bottoni visibili sotto le risposte (default)
+  - 🧠 **Socratico**: Bottoni + invito esplicito a riflettere
+
+- **📊 UI Raggruppata**: Bottoni organizzati in 2 sezioni
+  - "Analizza la risposta:" → 4 bottoni (Alternative, Assunzioni, Limiti, Confuta)
+  - "Sfida la domanda:" → 1 bottone (Rifletti)
+
+### 🔧 Modifiche Tecniche
+
+- `config/constants.py`: +SOCRATIC_MODES dict, +DEFAULT_SOCRATIC_MODE
+- `ui/socratic/prompts.py`: +template "confute" e "reflect", +get_reflect_prompt()
+- `ui/socratic/buttons.py`: +generate_confute(), +generate_reflect(), UI raggruppata
+- `ui/sidebar/llm_config.py`: +sezione toggle modalità, return con 9° valore
+- `ui/chat.py`: Passaggio user_question e socratic_mode a render_socratic_buttons
+- `app.py`: Gestione completa socratic_mode
+
+### 🎨 Rebranding Completo
+
+- Tutti i commenti header aggiornati: "Datapizza" → "DeepAiUG"
+- User-Agent MediaWiki: "DatapizzaBot" → "DeepAiUGBot"
+
+### 📝 Note
+
+- Il bottone "Rifletti" richiede la domanda utente precedente
+- Se non c'è domanda (es. primo messaggio), il bottone non appare
+- Retrocompatibilità: se socratic_mode non esiste, default = "standard"
+
+---
+
 ## [1.7.1] - 2026-01-29
 
 ### 🌐 Remote Servers + Sicurezza + Rebranding
@@ -306,4 +357,4 @@ Da monolite (2287 righe) a packages Python strutturati.
 
 ---
 
-*Datapizza Streamlit Interface - DeepAiUG © 2026*
+*DeepAiUG Streamlit Interface © 2026*

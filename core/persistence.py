@@ -1,5 +1,5 @@
 # core/persistence.py
-# Datapizza v1.4.0 - Persistenza conversazioni
+# DeepAiUG v1.4.0 - Persistenza conversazioni
 # ============================================================================
 
 import json

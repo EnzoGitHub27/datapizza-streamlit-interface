@@ -1,13 +1,14 @@
 # ui/sidebar/llm_config.py
-# Datapizza v1.5.0 - Sidebar: Configurazione LLM
+# DeepAiUG v1.8.0 - Sidebar: Configurazione LLM
 # ============================================================================
 # 🆕 v1.5.0: Aggiunto controllo privacy per passaggio a Cloud con documenti
+# 🆕 v1.8.0: Aggiunto toggle modalità socratica
 # ============================================================================
 
 import streamlit as st
 from typing import Tuple, Optional
 
-from config import CLOUD_PROVIDERS
+from config import CLOUD_PROVIDERS, SOCRATIC_MODES, DEFAULT_SOCRATIC_MODE
 from config.settings import (
     load_api_key,
     save_api_key_to_file,
@@ -18,10 +19,10 @@ from config.settings import (
 from core import get_local_ollama_models
 
 
-def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int]:
+def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
     """
     Renderizza la sezione configurazione LLM nella sidebar.
-    
+
     Returns:
         Tupla con:
         - connection_type: Tipo connessione
@@ -32,6 +33,7 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int]:
         - system_prompt: System prompt
         - temperature: Temperatura
         - max_messages: Max messaggi in context
+        - socratic_mode: Modalità socratica (v1.8.0)
     """
     st.sidebar.header("⚙️ Configurazione")
     
@@ -328,17 +330,49 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int]:
     )
     
     max_messages = st.sidebar.slider(
-        "Max messaggi", 
+        "Max messaggi",
         10, 100, 50, 10
     )
-    
+
+    # ========== MODALITA SOCRATICA - v1.8.0 ==========
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 🧠 Modalità Socratica")
+
+    # Ottieni modalità corrente da session_state (default = standard)
+    current_mode = st.session_state.get("socratic_mode", DEFAULT_SOCRATIC_MODE)
+
+    # Costruisci opzioni per selectbox
+    mode_options = list(SOCRATIC_MODES.keys())
+    mode_labels = [
+        f"{SOCRATIC_MODES[m]['icon']} {SOCRATIC_MODES[m]['name']}"
+        for m in mode_options
+    ]
+
+    # Trova indice corrente
+    current_idx = mode_options.index(current_mode) if current_mode in mode_options else 1
+
+    selected_idx = st.sidebar.selectbox(
+        "Profondità analisi",
+        range(len(mode_options)),
+        index=current_idx,
+        format_func=lambda i: mode_labels[i],
+        help="Veloce: niente bottoni | Standard: bottoni visibili | Socratico: bottoni + inviti riflessione"
+    )
+
+    socratic_mode = mode_options[selected_idx]
+    st.session_state["socratic_mode"] = socratic_mode
+
+    # Mostra descrizione modalità selezionata
+    st.sidebar.caption(SOCRATIC_MODES[socratic_mode]["description"])
+
     return (
-        connection_type, 
-        provider, 
-        api_key, 
-        model, 
-        base_url, 
-        system_prompt, 
-        temperature, 
-        max_messages
+        connection_type,
+        provider,
+        api_key,
+        model,
+        base_url,
+        system_prompt,
+        temperature,
+        max_messages,
+        socratic_mode  # v1.8.0
     )

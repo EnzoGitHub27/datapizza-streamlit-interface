@@ -1,5 +1,5 @@
 # ui/sidebar/knowledge_base.py
-# Datapizza v1.4.1 - Sidebar: Configurazione Knowledge Base Multi-Tipo
+# DeepAiUG v1.4.1 - Sidebar: Configurazione Knowledge Base Multi-Tipo
 # ============================================================================
 
 from pathlib import Path

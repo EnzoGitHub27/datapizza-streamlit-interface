@@ -1,5 +1,5 @@
 # core/__init__.py
-# Datapizza v1.4.0 - Modulo core
+# DeepAiUG v1.4.0 - Modulo core
 # ============================================================================
 
 from .llm_client import (
