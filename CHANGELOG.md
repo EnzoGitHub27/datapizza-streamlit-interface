@@ -7,6 +7,58 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.9.0] - 2026-02-06
+
+### 📋 Storia Esplorazioni Socratiche + Persistenza
+
+Release che aggiunge il tracciamento completo delle esplorazioni socratiche con persistenza nelle conversazioni salvate.
+
+### ✨ Nuove Funzionalità
+
+- **📋 Storia Esplorazioni Socratiche** (sidebar widget):
+  - Contatore totale esplorazioni della sessione
+  - Breakdown per tipo di bottone (emoji + conteggio)
+  - Lista ultime 10 esplorazioni con expander
+  - Ogni esplorazione mostra: domanda originale + risultato socratico
+  - Cancellazione storico con checkbox di conferma
+  - Visibile solo in modalità Standard e Socratico
+
+- **💾 Persistenza Esplorazioni**:
+  - Le esplorazioni socratiche vengono salvate nel JSON della conversazione
+  - Al caricamento di una conversazione, esplorazioni ripristinate
+  - Auto-save dopo ogni esplorazione (dirty flag pattern)
+  - Retrocompatibile: conversazioni senza socratic_history funzionano normalmente
+
+- **🔄 Sync Cache UI**:
+  - Al caricamento conversazione: pulizia cache vecchia + ricostruzione cache expander
+  - Gli expander socratici si ripristinano correttamente dopo reload
+
+### 📁 Nuovi File
+
+```
+ui/socratic/
+├── history.py         # SocraticExploration dataclass + SocraticHistory class
+└── history_widget.py  # Widget sidebar storico esplorazioni
+```
+
+### 🔧 Modifiche Tecniche
+
+- `ui/socratic/history.py`: Dataclass `SocraticExploration` (7 campi), classe `SocraticHistory` (8 metodi statici)
+- `ui/socratic/history_widget.py`: `render_socratic_history_sidebar()` con conteggi, breakdown, expander, cancellazione
+- `ui/socratic/buttons.py`: +3 helper (`_get_last_user_question`, `_get_session_id`, `_record_exploration`), registrazione in tutti i 5 `generate_*`, dirty flag
+- `ui/socratic/__init__.py`: +4 export (SocraticExploration, SocraticHistory, HISTORY_KEY, render_socratic_history_sidebar)
+- `core/persistence.py`: +parametro `socratic_history` in `save_conversation()`
+- `app.py`: Import SocraticHistory, auto-save socratico, clear su reset, widget sidebar
+- `ui/sidebar/conversations.py`: Import + `clear_socratic_cache()` + `load_from_data()` su caricamento
+
+### 📝 Note
+
+- **Privacy-first**: tutti i dati restano in session_state + file locale JSON
+- Il widget è nascosto in modalità "Veloce" (fast)
+- `msg_index` nell'esplorazione permette ricostruzione esatta della cache UI
+
+---
+
 ## [1.8.0] - 2026-02-05
 
 ### 🧠 UI Socratica Completa

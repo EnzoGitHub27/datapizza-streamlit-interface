@@ -1,8 +1,9 @@
 # ui/socratic/__init__.py
-# DeepAiUG v1.8.0 - Modulo Socratico
+# DeepAiUG v1.9.0 - Modulo Socratico
 # ============================================================================
 # Strumenti per costruire "capitale semantico" (Floridi/Quartarone)
 # L'AI non è un oracolo, ma uno strumento per costruire SENSO.
+# v1.9.0: Aggiunto storico esplorazioni socratiche.
 # ============================================================================
 
 from .prompts import (
@@ -24,6 +25,16 @@ from .buttons import (
     clear_socratic_cache,
 )
 
+# v1.9.0 - History
+from .history import (
+    SocraticExploration,
+    SocraticHistory,
+    HISTORY_KEY,
+)
+
+# v1.9.0 - History Widget
+from .history_widget import render_socratic_history_sidebar
+
 __all__ = [
     # Prompts
     "SOCRATIC_PROMPTS",
@@ -40,4 +51,9 @@ __all__ = [
     "generate_confute",        # v1.8.0
     "generate_reflect",        # v1.8.0
     "clear_socratic_cache",
+    # History - v1.9.0
+    "SocraticExploration",
+    "SocraticHistory",
+    "HISTORY_KEY",
+    "render_socratic_history_sidebar",
 ]

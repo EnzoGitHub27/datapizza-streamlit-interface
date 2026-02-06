@@ -40,11 +40,12 @@ def save_conversation(
     model: str,
     provider: str,
     tokens_estimate: int,
-    kb_settings: Dict[str, Any] = None
+    kb_settings: Dict[str, Any] = None,
+    socratic_history: List[Dict[str, Any]] = None  # v1.9.0
 ) -> bool:
     """
     Salva una conversazione su file.
-    
+
     Args:
         conversation_id: ID univoco conversazione
         created_at: Timestamp creazione
@@ -53,13 +54,14 @@ def save_conversation(
         provider: Provider/connection type
         tokens_estimate: Stima token usati
         kb_settings: Impostazioni Knowledge Base (opzionale)
-        
+        socratic_history: Esplorazioni socratiche serializzate (v1.9.0, opzionale)
+
     Returns:
         True se salvato con successo
     """
     try:
         ensure_conversations_dir()
-        
+
         conversation_data = {
             "conversation_id": conversation_id,
             "created_at": created_at,
@@ -71,7 +73,8 @@ def save_conversation(
                 "total_messages": len(messages),
                 "tokens_estimate": tokens_estimate
             },
-            "knowledge_base": kb_settings or {}
+            "knowledge_base": kb_settings or {},
+            "socratic_history": socratic_history or []  # v1.9.0
         }
         
         filename = get_conversation_filename(conversation_id)

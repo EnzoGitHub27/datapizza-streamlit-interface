@@ -13,6 +13,7 @@ from core import (
     extract_kb_settings,
 )
 from rag import KnowledgeBaseManager, TextChunker, LocalFolderAdapter
+from ui.socratic import SocraticHistory, clear_socratic_cache  # v1.9.0
 
 
 def render_conversations_manager():
@@ -83,7 +84,11 @@ def _load_conversation(conversation_id: str):
     st.session_state["conversation_created_at"] = data.get("created_at")
     st.session_state["messages"] = data.get("messages", [])
     st.session_state["total_tokens_estimate"] = data.get("stats", {}).get("tokens_estimate", 0)
-    
+
+    # v1.9.0 - Pulisci cache socratica della sessione precedente, poi ripristina
+    clear_socratic_cache()
+    SocraticHistory.load_from_data(data.get("socratic_history", []))
+
     # Ripristina impostazioni Knowledge Base
     kb_settings = extract_kb_settings(data)
     

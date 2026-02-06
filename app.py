@@ -1,5 +1,5 @@
 # app.py
-# DeepAiUG v1.8.0 - Entry Point
+# DeepAiUG v1.9.0 - Entry Point
 # ============================================================================
 # Interfaccia Streamlit modulare per LLM con:
 # - Ollama locale / Remote / Cloud providers
@@ -97,7 +97,8 @@ from ui.privacy_warning import (
 )
 
 # 🆕 v1.6.1 - Socratic module
-from ui.socratic import clear_socratic_cache
+# 🆕 v1.9.0 - Aggiunto render_socratic_history_sidebar, SocraticHistory
+from ui.socratic import clear_socratic_cache, render_socratic_history_sidebar, SocraticHistory
 
 # ============================================================================
 # PAGE CONFIG
@@ -207,7 +208,8 @@ def _save_current_conversation():
             "kb_chunk_size": st.session_state.get("kb_chunk_size", DEFAULT_CHUNK_SIZE),
             "kb_chunk_overlap": st.session_state.get("kb_chunk_overlap", DEFAULT_CHUNK_OVERLAP),
             "rag_top_k": st.session_state.get("rag_top_k", DEFAULT_TOP_K_RESULTS),
-        }
+        },
+        socratic_history=SocraticHistory.to_serializable()  # v1.9.0
     )
 
 def reset_conversation():
@@ -221,6 +223,8 @@ def reset_conversation():
     reset_privacy_flags()
     # 🆕 v1.6.1 - Pulisci cache socratica
     clear_socratic_cache()
+    # 🆕 v1.9.0 - Pulisci storico socratico
+    SocraticHistory.clear_history()
 
 # ============================================================================
 # 🆕 v1.6.1 - SOCRATIC CLIENT HELPER
@@ -263,6 +267,9 @@ def get_socratic_client(connection_type, provider, api_key, model, base_url, tem
     max_messages,
     socratic_mode  # v1.8.0
 ) = render_llm_config()
+
+# v1.9.0 - Widget storico socratico nella sidebar
+render_socratic_history_sidebar(socratic_mode)
 
 # Knowledge Base Configuration
 render_knowledge_base_config(connection_type)
@@ -380,6 +387,10 @@ else:
             messages_list=messages,
             socratic_mode=socratic_mode
         )
+
+# v1.9.0 - Auto-save dopo esplorazione socratica
+if st.session_state.pop("_socratic_save_needed", False):
+    _save_current_conversation()
 
 st.markdown("---")
 

@@ -3,7 +3,7 @@
 > Interfaccia Streamlit modulare per interagire con LLM locali (Ollama), remoti e cloud.
 > Progetto Open Source della community **DeepAiUG**.
 
-[![Version](https://img.shields.io/badge/version-1.8.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.8.0)
+[![Version](https://img.shields.io/badge/version-1.9.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.9.0)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -27,39 +27,20 @@
 
 ---
 
-## 🆕 Novità v1.8.0 - UI Socratica Completa 🧠
+## 🆕 Novità v1.9.0 - Storia Esplorazioni Socratiche 📋
 
-### 5 Bottoni Socratici + Toggle Modalità
+### Tracciamento + Persistenza delle Esplorazioni
 
-DeepAiUG completa l'approccio socratico con **5 bottoni** organizzati in 2 sezioni:
+Le esplorazioni socratiche vengono ora **tracciate, visualizzate e salvate** con le conversazioni:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Analizza la risposta:                                       │
-│ [🔄 Alternative] [🤔 Assunzioni] [⚠️ Limiti] [🎭 Confuta]   │
-├─────────────────────────────────────────────────────────────┤
-│ Sfida la domanda:                                           │
-│ [🪞 Rifletti]                                               │
-└─────────────────────────────────────────────────────────────┘
-```
+- **📋 Widget Sidebar** - Contatore, breakdown per tipo, ultime 10 esplorazioni espandibili
+- **💾 Persistenza** - Le esplorazioni sono salvate nel JSON e ripristinate al caricamento
+- **🔄 Auto-save** - Ogni esplorazione viene salvata automaticamente su disco
+- **🧹 Cache Sync** - Gli expander si ripristinano correttamente dopo reload
 
-### 🎭 Bottone "Confuta" (NUOVO)
-Avvocato del diavolo sulla risposta:
-- Punti deboli del ragionamento
-- Falle logiche e semplificazioni
-- Controesempi concreti
+### Novità v1.8.0 - UI Socratica Completa 🧠
 
-### 🪞 Bottone "Rifletti" (NUOVO)
-Sfida la TUA DOMANDA (non la risposta!):
-- Perimetro decisionale: su cosa stai davvero decidendo?
-- Assunzioni non dette nella domanda stessa
-- Cosa NON stai chiedendo che dovresti?
-
-### 🧠 Toggle Modalità (sidebar)
-Scegli la profondità di analisi:
-- 🚀 **Veloce**: Nessun bottone (risposte immediate)
-- ⚖️ **Standard**: Bottoni visibili (default)
-- 🧠 **Socratico**: Bottoni + invito a riflettere
+5 bottoni socratici organizzati in 2 sezioni + toggle modalità (Veloce/Standard/Socratico)
 
 ---
 
@@ -110,8 +91,7 @@ Ispirato al "capitale semantico" (Floridi/Quartarone).
 4. **Resistenza alla plausibilità** - non fidarsi del "suona giusto"
 
 ### 🔮 Prossime Feature Socratiche
-- **v1.8.0**: Bottone "🎭 Confuta" (avvocato del diavolo)
-- **v1.9.0**: Toggle modalità (Veloce/Standard/Socratico)
+- **v2.0.0**: Semantic Layer + Knowledge Graph
 
 ---
 
@@ -150,14 +130,14 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.7.1
+## 🏗️ Architettura v1.9.0
 
 ```
 datapizza-streamlit-interface/
 ├── app.py                    # ⭐ Entry point principale
 ├── wiki_sources.yaml         # Configurazione sorgenti wiki
-├── remote_servers.yaml       # ⭐ NEW: Config server remoti
-├── security_settings.yaml    # ⭐ NEW: Impostazioni sicurezza
+├── remote_servers.yaml       # Config server remoti
+├── security_settings.yaml    # Impostazioni sicurezza
 │
 ├── config/                   # 📁 Configurazione
 │   ├── constants.py          # Costanti, WIKI_TYPES, VISION_MODELS
@@ -166,7 +146,7 @@ datapizza-streamlit-interface/
 ├── core/                     # 📁 Logica core
 │   ├── llm_client.py         # Factory client LLM
 │   ├── conversation.py       # Gestione messaggi
-│   ├── persistence.py        # Salvataggio/caricamento
+│   ├── persistence.py        # Salvataggio/caricamento (+ socratic_history)
 │   └── file_processors.py    # Estrazione testo da file
 │
 ├── rag/                      # 📁 Sistema RAG
@@ -187,9 +167,11 @@ datapizza-streamlit-interface/
     ├── chat.py               # Rendering chat
     ├── file_upload.py        # Widget upload file
     ├── privacy_warning.py    # Dialog privacy
-    ├── socratic/             # 🧠 NEW - Modulo socratico
+    ├── socratic/             # 🧠 Modulo socratico
     │   ├── prompts.py        # Template prompt
-    │   └── buttons.py        # Bottoni UI
+    │   ├── buttons.py        # Bottoni UI + registrazione esplorazioni
+    │   ├── history.py        # ⭐ NEW: SocraticExploration + SocraticHistory
+    │   └── history_widget.py # ⭐ NEW: Widget sidebar storico
     └── sidebar/              # Componenti sidebar
 ```
 
@@ -385,11 +367,10 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
+| v1.9.0 | 📋 Socratic History + Persistence | ✅ |
+| v1.8.0 | 🧠 UI Socratica Completa (5 bottoni + Toggle) | ✅ |
 | v1.7.1 | 🖥️ Remote YAML + 🔐 Security | ✅ |
-| v1.7.0 | 🧠 Assunzioni + Limiti | ✅ |
-| v1.8.0 | 🧠 Bottone Confuta | 📋 |
-| v1.9.0 | 🧠 Toggle modalità | 📋 |
-| v2.0.0 | Semantic Layer | 🎯 |
+| v2.0.0 | Semantic Layer + Knowledge Graph | 🎯 |
 
 ---
 

@@ -57,7 +57,7 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    │
    ├─→ v1.8.0 ✅ (2026-02-05)   + 🧠 UI Socratica Completa (5 bottoni + Toggle)
    │
-   ├─→ v1.9.0 📋 (Q1 2026)      + Preparazione Semantic Layer (JSON-LD)
+   ├─→ v1.9.0 ✅ (2026-02-06)   + 📋 Socratic History + Persistence
    │
    └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
 
@@ -71,6 +71,16 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 ---
 
 ## ✅ Completate
+
+### v1.9.0 - 📋 Socratic History + Persistence (2026-02-06)
+- [x] `SocraticExploration` dataclass (7 campi: timestamp, button_type, original_question, ai_response_snippet, socratic_result, session_id, msg_index)
+- [x] `SocraticHistory` classe con 8 metodi statici (add, get, stats, clear, serialize, load)
+- [x] Widget sidebar: conteggi, breakdown per tipo, ultime 10 esplorazioni, cancellazione con conferma
+- [x] Persistenza esplorazioni nel JSON conversazione (save/load/restore)
+- [x] Auto-save dopo ogni esplorazione socratica (dirty flag pattern)
+- [x] Sync cache UI: pulizia + ricostruzione cache expander al caricamento
+- [x] Retrocompatibilità con conversazioni senza socratic_history
+- [x] Privacy-first: dati in session_state + file locale JSON
 
 ### v1.8.0 - 🧠 UI Socratica Completa (2026-02-05)
 - [x] Bottone "🎭 Confuta" - Avvocato del diavolo (punti deboli, falle logiche, controesempi)
@@ -140,21 +150,7 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 
 ## 📋 Pianificate
 
-### v1.8.0 - 🧠 Bottone Confuta
-- [ ] Bottone "🎭 Confuta" - L'AI fa l'avvocato del diavolo
-- [ ] Template prompt già pronto in prompts.py
-- [ ] Trova punti deboli e falle logiche
-- [ ] Expander con caption "Pensiero critico rigoroso"
-
-### v1.9.0 - 🧠 Modalità Socratica
-- [ ] Toggle 3 livelli: Veloce / Standard / Socratico
-  - **Veloce**: Solo risposte (come ChatGPT)
-  - **Standard**: Risposte + bottoni socratici visibili
-  - **Socratico**: Risposte + domande automatiche + inviti a riflettere
-- [ ] Persistenza preferenza modalità
-- [ ] Metriche: quante volte l'utente usa i bottoni socratici
-
-### v1.9.0 - Preparazione Semantic Layer
+### v2.0.0 - Preparazione Semantic Layer
 - [ ] Metadati JSON-LD sui documenti
 - [ ] Export RDF base
 - [ ] Template ontologie per settore
@@ -187,23 +183,23 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 
 ---
 
-## 🛠️ Architettura Attuale (v1.7.1)
+## 🛠️ Architettura Attuale (v1.9.0)
 
 ```
 datapizza-streamlit-interface/
 ├── app.py                    # Entry point
 ├── wiki_sources.yaml         # Config sorgenti
-├── remote_servers.yaml       # ⭐ NEW: Config server remoti
-├── security_settings.yaml    # ⭐ NEW: Impostazioni sicurezza
+├── remote_servers.yaml       # Config server remoti
+├── security_settings.yaml    # Impostazioni sicurezza
 │
 ├── config/                   # Configurazione
-│   ├── constants.py          # VERSION, PATHS, WIKI_TYPES
+│   ├── constants.py          # VERSION, PATHS, WIKI_TYPES, SOCRATIC_MODES
 │   └── settings.py           # Loaders, API keys
 │
 ├── core/                     # Logica core
 │   ├── llm_client.py         # Factory LLM
 │   ├── conversation.py       # Messaggi
-│   ├── persistence.py        # Salvataggio
+│   ├── persistence.py        # Salvataggio (+ socratic_history)
 │   └── file_processors.py    # File upload extraction
 │
 ├── rag/                      # Sistema RAG
@@ -221,17 +217,19 @@ datapizza-streamlit-interface/
 │
 └── ui/                       # Interfaccia
     ├── styles.py
-    ├── chat.py               # ✨ Integrato con socratic
+    ├── chat.py               # Integrato con socratic
     ├── file_upload.py
     ├── privacy_warning.py
-    ├── socratic/             # 🧠 v1.7.0 - 3 bottoni
+    ├── socratic/             # 🧠 v1.9.0 - 5 bottoni + history
     │   ├── __init__.py
-    │   ├── prompts.py        # 4 template (alternative, assumptions, limits, confute)
-    │   └── buttons.py        # 3 bottoni attivi (alternative, assumptions, limits)
+    │   ├── prompts.py        # 5 template (alternative, assumptions, limits, confute, reflect)
+    │   ├── buttons.py        # 5 bottoni + registrazione esplorazioni
+    │   ├── history.py        # ⭐ SocraticExploration + SocraticHistory
+    │   └── history_widget.py # ⭐ Widget sidebar storico esplorazioni
     └── sidebar/
         ├── llm_config.py
         ├── knowledge_base.py
-        ├── conversations.py
+        ├── conversations.py  # + load socratic history
         └── export_ui.py
 ```
 
@@ -262,5 +260,5 @@ Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per dettagli.
 
 ---
 
-*Ultimo aggiornamento: 2026-01-29*
-*Datapizza Streamlit Interface - DeepAiUG © 2026*
+*Ultimo aggiornamento: 2026-02-06*
+*DeepAiUG Streamlit Interface © 2026*

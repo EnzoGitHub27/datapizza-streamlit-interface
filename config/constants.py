@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.8.0"
+VERSION = "1.9.0"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Socratic Expansion - Confuta + Rifletti + Toggle Mode"
+VERSION_DESCRIPTION = "Socratic History + Persistence"
 
 # ============================================================================
 # PATHS

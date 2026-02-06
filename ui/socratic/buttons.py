@@ -1,13 +1,17 @@
 # ui/socratic/buttons.py
-# DeepAiUG v1.8.0 - Bottoni Socratici
+# DeepAiUG v1.9.0 - Bottoni Socratici
 # ============================================================================
 # UI per le funzionalità socratiche.
 # I bottoni appaiono sotto le risposte AI per stimolare riflessione.
+# v1.9.0: Integrazione con SocraticHistory per tracciare esplorazioni.
 # ============================================================================
+
+from datetime import datetime
 
 import streamlit as st
 from typing import Optional, Callable
 
+from .history import SocraticExploration, SocraticHistory
 from .prompts import (
     get_alternatives_prompt,
     get_assumptions_prompt,
@@ -25,6 +29,44 @@ def _get_socratic_cache_key(msg_index: int, action: str) -> str:
 def _get_loading_key(msg_index: int, action: str) -> str:
     """Genera la chiave per lo stato di loading."""
     return f"socratic_loading_{action}_{msg_index}"
+
+
+def _get_last_user_question() -> str:
+    """Recupera l'ultima domanda utente dal session_state."""
+    messages = st.session_state.get("messages", [])
+    for msg in reversed(messages):
+        if msg.get("role") == "user":
+            return msg.get("content", "")
+    return ""
+
+
+def _get_session_id() -> str:
+    """Recupera o genera l'ID sessione."""
+    if "session_id" not in st.session_state:
+        st.session_state["session_id"] = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return st.session_state["session_id"]
+
+
+def _record_exploration(
+    button_type: str,
+    response: str,
+    socratic_result: str,
+    msg_index: int,
+    user_question: str | None = None
+) -> None:
+    """Registra un'esplorazione socratica nella history."""
+    exploration = SocraticExploration(
+        timestamp=datetime.now(),
+        button_type=button_type,
+        original_question=user_question or _get_last_user_question(),
+        ai_response_snippet=response[:200],
+        socratic_result=socratic_result,
+        session_id=_get_session_id(),
+        msg_index=msg_index
+    )
+    SocraticHistory.add_exploration(exploration)
+    # Flag per triggerare auto-save su disco al prossimo rerun
+    st.session_state["_socratic_save_needed"] = True
 
 
 def generate_alternatives(
@@ -63,8 +105,12 @@ def generate_alternatives(
         
         # Salva in cache
         st.session_state[cache_key] = alternatives_text
+
+        # v1.9.0 - Registra esplorazione
+        _record_exploration("alternatives", response, alternatives_text, msg_index)
+
         return alternatives_text
-        
+
     except Exception as e:
         return f"❌ Errore nella generazione: {str(e)}"
 
@@ -105,6 +151,10 @@ def generate_assumptions(
 
         # Salva in cache
         st.session_state[cache_key] = assumptions_text
+
+        # v1.9.0 - Registra esplorazione
+        _record_exploration("assumptions", response, assumptions_text, msg_index)
+
         return assumptions_text
 
     except Exception as e:
@@ -147,6 +197,10 @@ def generate_limits(
 
         # Salva in cache
         st.session_state[cache_key] = limits_text
+
+        # v1.9.0 - Registra esplorazione
+        _record_exploration("limits", response, limits_text, msg_index)
+
         return limits_text
 
     except Exception as e:
@@ -189,6 +243,10 @@ def generate_confute(
 
         # Salva in cache
         st.session_state[cache_key] = confute_text
+
+        # v1.9.0 - Registra esplorazione
+        _record_exploration("confute", response, confute_text, msg_index)
+
         return confute_text
 
     except Exception as e:
@@ -233,6 +291,10 @@ def generate_reflect(
 
         # Salva in cache
         st.session_state[cache_key] = reflect_text
+
+        # v1.9.0 - Registra esplorazione (con user_question esplicita)
+        _record_exploration("reflect", response, reflect_text, msg_index, user_question)
+
         return reflect_text
 
     except Exception as e:
