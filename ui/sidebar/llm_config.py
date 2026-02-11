@@ -50,7 +50,7 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
     # 🆕 v1.5.0: Rileva cambio verso Cloud con documenti in memoria
     docs_uploaded = st.session_state.get("documents_uploaded_this_session", False)
     privacy_acknowledged = st.session_state.get("privacy_acknowledged_for_cloud", False)
-    
+
     if connection_type == "Cloud provider" and docs_uploaded and not privacy_acknowledged:
         # Segnala che serve il dialog di privacy (gestito in app.py)
         st.session_state["show_privacy_dialog"] = True
@@ -60,7 +60,33 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
         )
     else:
         st.session_state["show_privacy_dialog"] = False
-    
+
+    # 🆕 v1.9.1: Warn when switching to cloud with sensitive loaded conversation
+    if connection_type == "Cloud provider":
+        from core.persistence import conversation_has_sensitive_content
+        session_data = {
+            "knowledge_base": {
+                "use_knowledge_base": st.session_state.get("use_knowledge_base", False),
+                "kb_folder_path": st.session_state.get("kb_folder_path", ""),
+            },
+            "messages": st.session_state.get("messages", []),
+        }
+        sensitivity = conversation_has_sensitive_content(session_data)
+        # Only warn for attachments/sources; KB is hard-blocked below
+        if sensitivity["is_sensitive"] and not sensitivity["has_knowledge_base"]:
+            icons: list[str] = []
+            if sensitivity["has_documents"]:
+                icons.append("📎")
+            if sensitivity["has_sources"]:
+                icons.append("📎")
+            icon_str = "🔒" + "".join(dict.fromkeys(icons))  # deduplicate
+            st.sidebar.warning(
+                f"⚠️ La conversazione attuale contiene **{sensitivity['reason']}** "
+                f"({icon_str}).\n\n"
+                "I messaggi con contenuti locali non verranno inviati al provider cloud. "
+                "Per sicurezza, avvia una nuova conversazione oppure torna a un server locale."
+            )
+
     st.session_state["connection_type"] = connection_type
     
     # Blocco Cloud se Knowledge Base attiva (PRIVACY)

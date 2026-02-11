@@ -127,6 +127,7 @@ def list_saved_conversations() -> List[Dict[str, Any]]:
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
+                sensitivity = conversation_has_sensitive_content(data)
                 conversations.append({
                     "id": data.get("conversation_id"),
                     "created_at": data.get("created_at"),
@@ -134,6 +135,11 @@ def list_saved_conversations() -> List[Dict[str, Any]]:
                     "model": data.get("model"),
                     "provider": data.get("provider"),
                     "message_count": data.get("stats", {}).get("total_messages", 0),
+                    "is_sensitive": sensitivity["is_sensitive"],
+                    "reason": sensitivity["reason"],
+                    "has_wiki": sensitivity["has_wiki"],
+                    "has_folder": sensitivity["has_folder"],
+                    "has_documents": sensitivity["has_documents"],
                 })
             except Exception:
                 continue
@@ -201,15 +207,15 @@ def get_conversation_preview(conversation_id: str, max_messages: int = 3) -> str
 def extract_kb_settings(data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Estrae impostazioni Knowledge Base da dati conversazione.
-    
+
     Args:
         data: Dati conversazione caricati
-        
+
     Returns:
         Dizionario con impostazioni KB
     """
     kb_settings = data.get("knowledge_base", {})
-    
+
     return {
         "use_knowledge_base": kb_settings.get("use_knowledge_base", False),
         "kb_folder_path": kb_settings.get("kb_folder_path", ""),
@@ -218,4 +224,63 @@ def extract_kb_settings(data: Dict[str, Any]) -> Dict[str, Any]:
         "kb_chunk_size": kb_settings.get("kb_chunk_size", DEFAULT_CHUNK_SIZE),
         "kb_chunk_overlap": kb_settings.get("kb_chunk_overlap", DEFAULT_CHUNK_OVERLAP),
         "rag_top_k": kb_settings.get("rag_top_k", DEFAULT_TOP_K_RESULTS),
+    }
+
+
+def conversation_has_sensitive_content(conversation_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Verifica se la conversazione contiene contenuti sensibili per la privacy.
+
+    Distingue il tipo di Knowledge Base tramite euristica:
+    - kb_folder_path non vuoto → cartella locale (📁)
+    - kb_folder_path vuoto con KB attiva → wiki MediaWiki/DokuWiki (📚)
+
+    Args:
+        conversation_data: Dati conversazione (JSON caricato)
+
+    Returns:
+        Dict con chiavi: has_documents, has_knowledge_base, has_wiki,
+        has_folder, has_sources, is_sensitive, reason
+    """
+    kb_data = conversation_data.get("knowledge_base", {})
+    has_kb = kb_data.get("use_knowledge_base", False)
+
+    # Distinguish wiki from local folder via kb_folder_path heuristic:
+    # wiki adapters don't set kb_folder_path, local folder adapter does
+    kb_folder_path = kb_data.get("kb_folder_path", "")
+    has_folder = has_kb and bool(kb_folder_path)
+    has_wiki = has_kb and not kb_folder_path
+
+    has_docs = False
+    has_sources = False
+    for msg in conversation_data.get("messages", []):
+        if not has_docs and msg.get("attachments"):
+            has_docs = True
+        if not has_sources and msg.get("sources"):
+            has_sources = True
+        if has_docs and has_sources:
+            break  # no need to scan further
+
+    is_sensitive = has_kb or has_docs or has_sources
+
+    # Build human-readable reason with specific labels
+    parts: list[str] = []
+    if has_wiki:
+        parts.append("KB Wiki")
+    if has_folder:
+        parts.append("Cartella locale")
+    if has_docs:
+        parts.append("File allegati")
+    if has_sources and not has_kb:
+        parts.append("Fonti RAG")
+    reason = " + ".join(parts) if parts else ""
+
+    return {
+        "has_documents": has_docs,
+        "has_knowledge_base": has_kb,
+        "has_wiki": has_wiki,
+        "has_folder": has_folder,
+        "has_sources": has_sources,
+        "is_sensitive": is_sensitive,
+        "reason": reason,
     }
