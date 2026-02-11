@@ -381,24 +381,22 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
     st.session_state["current_model"] = model
     
     # ========== PARAMETRI LLM ==========
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🎛️ Parametri")
-    
-    system_prompt = st.sidebar.text_area(
-        "System Prompt", 
-        value="Sei un assistente utile. Rispondi in modo chiaro e preciso.", 
-        height=80
-    )
-    
-    temperature = st.sidebar.slider(
-        "Temperature", 
-        0.0, 2.0, 0.7, 0.1
-    )
-    
-    max_messages = st.sidebar.slider(
-        "Max messaggi",
-        10, 100, 50, 10
-    )
+    with st.sidebar.expander("⚙️ Parametri", expanded=False):
+        system_prompt = st.text_area(
+            "System Prompt",
+            value="Sei un assistente utile. Rispondi in modo chiaro e preciso.",
+            height=80,
+        )
+
+        temperature = st.slider(
+            "Temperature",
+            0.0, 2.0, 0.7, 0.1,
+        )
+
+        max_messages = st.slider(
+            "Max messaggi",
+            10, 100, 50, 10,
+        )
 
     # ========== MODALITA SOCRATICA - v1.8.0 ==========
     st.sidebar.markdown("---")
