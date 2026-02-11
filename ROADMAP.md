@@ -59,6 +59,8 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    │
    ├─→ v1.9.0 ✅ (2026-02-06)   + 📋 Socratic History + Persistence
    │
+   ├─→ v1.9.1 ✅ (2026-02-11)   + 🎨 UI Polish + ☁️ Cloud Config + 🔒 Privacy Granulare
+   │
    └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
 
 ✅ = Completata
@@ -71,6 +73,18 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 ---
 
 ## ✅ Completate
+
+### v1.9.1 - 🎨 UI Polish + Cloud Config + Privacy Granulare (2026-02-11)
+- [x] Chat bubble rendering unificato: singola `st.markdown()` con `markdown-it-py`
+- [x] Colori dark/light professionali: dark default, light via `@media (prefers-color-scheme: light)`
+- [x] Tipografia HTML completa dentro bolle (p, strong, a, code, pre, table, ul/ol)
+- [x] `cloud_models.yaml`: config modelli cloud YAML-based (pattern `remote_servers.yaml`)
+- [x] Sezione Cloud riscritta: YAML-first con selectbox modelli + fallback hardcoded
+- [x] Parametri LLM in `st.expander` collassabile
+- [x] `conversation_has_sensitive_content()` con euristica wiki/folder/attachments
+- [x] Icone granulari conversazioni: 📚 Wiki, 📁 Cartella, 📎 Allegati, 🔒 su cloud
+- [x] Warning cambio provider: avviso quando si passa a Cloud con dati sensibili in sessione
+- [x] 3 livelli protezione privacy: Dialog → Warning → Hard block
 
 ### v1.9.0 - 📋 Socratic History + Persistence (2026-02-06)
 - [x] `SocraticExploration` dataclass (7 campi: timestamp, button_type, original_question, ai_response_snippet, socratic_result, session_id, msg_index)
@@ -183,13 +197,14 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 
 ---
 
-## 🛠️ Architettura Attuale (v1.9.0)
+## 🛠️ Architettura Attuale (v1.9.1)
 
 ```
 datapizza-streamlit-interface/
 ├── app.py                    # Entry point
 ├── wiki_sources.yaml         # Config sorgenti
 ├── remote_servers.yaml       # Config server remoti
+├── cloud_models.yaml         # Config modelli cloud (NEW v1.9.1)
 ├── security_settings.yaml    # Impostazioni sicurezza
 │
 ├── config/                   # Configurazione
@@ -199,7 +214,7 @@ datapizza-streamlit-interface/
 ├── core/                     # Logica core
 │   ├── llm_client.py         # Factory LLM
 │   ├── conversation.py       # Messaggi
-│   ├── persistence.py        # Salvataggio (+ socratic_history)
+│   ├── persistence.py        # Salvataggio (+ socratic_history + sensitivity detection)
 │   └── file_processors.py    # File upload extraction
 │
 ├── rag/                      # Sistema RAG
@@ -220,7 +235,7 @@ datapizza-streamlit-interface/
     ├── chat.py               # Integrato con socratic
     ├── file_upload.py
     ├── privacy_warning.py
-    ├── socratic/             # 🧠 v1.9.0 - 5 bottoni + history
+    ├── socratic/             # 🧠 5 bottoni + history
     │   ├── __init__.py
     │   ├── prompts.py        # 5 template (alternative, assumptions, limits, confute, reflect)
     │   ├── buttons.py        # 5 bottoni + registrazione esplorazioni
@@ -260,5 +275,5 @@ Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per dettagli.
 
 ---
 
-*Ultimo aggiornamento: 2026-02-06*
+*Ultimo aggiornamento: 2026-02-11*
 *DeepAiUG Streamlit Interface © 2026*

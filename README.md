@@ -3,7 +3,7 @@
 > Interfaccia Streamlit modulare per interagire con LLM locali (Ollama), remoti e cloud.
 > Progetto Open Source della community **DeepAiUG**.
 
-[![Version](https://img.shields.io/badge/version-1.9.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.9.0)
+[![Version](https://img.shields.io/badge/version-1.9.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.9.1)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -27,16 +27,16 @@
 
 ---
 
-## 🆕 Novità v1.9.0 - Storia Esplorazioni Socratiche 📋
+## 🆕 Novità v1.9.1 - UI Polish + Cloud Config + Privacy Granulare 🎨
 
-### Tracciamento + Persistenza delle Esplorazioni
+- **🎨 Chat Bubbles** - Rendering unificato con `markdown-it-py`, colori dark/light professionali
+- **☁️ Cloud Models YAML** - File `cloud_models.yaml` per configurare provider e modelli senza toccare il codice
+- **🔒 Privacy Granulare** - Icone specifiche (📚 Wiki, 📁 Cartella, 📎 Allegati) + warning cambio provider
+- **⚙️ Parametri Collassabili** - System Prompt, Temperature, Max messaggi in expander
 
-Le esplorazioni socratiche vengono ora **tracciate, visualizzate e salvate** con le conversazioni:
+### Novità v1.9.0 - Socratic History + Persistence 📋
 
-- **📋 Widget Sidebar** - Contatore, breakdown per tipo, ultime 10 esplorazioni espandibili
-- **💾 Persistenza** - Le esplorazioni sono salvate nel JSON e ripristinate al caricamento
-- **🔄 Auto-save** - Ogni esplorazione viene salvata automaticamente su disco
-- **🧹 Cache Sync** - Gli expander si ripristinano correttamente dopo reload
+Tracciamento, visualizzazione e persistenza delle esplorazioni socratiche nelle conversazioni salvate.
 
 ### Novità v1.8.0 - UI Socratica Completa 🧠
 
@@ -130,13 +130,14 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.9.0
+## 🏗️ Architettura v1.9.1
 
 ```
 datapizza-streamlit-interface/
 ├── app.py                    # ⭐ Entry point principale
 ├── wiki_sources.yaml         # Configurazione sorgenti wiki
 ├── remote_servers.yaml       # Config server remoti
+├── cloud_models.yaml         # ⭐ NEW: Config modelli cloud
 ├── security_settings.yaml    # Impostazioni sicurezza
 │
 ├── config/                   # 📁 Configurazione
@@ -367,6 +368,7 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
+| v1.9.1 | 🎨 UI Polish + ☁️ Cloud Config + 🔒 Privacy Granulare | ✅ |
 | v1.9.0 | 📋 Socratic History + Persistence | ✅ |
 | v1.8.0 | 🧠 UI Socratica Completa (5 bottoni + Toggle) | ✅ |
 | v1.7.1 | 🖥️ Remote YAML + 🔐 Security | ✅ |

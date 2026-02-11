@@ -7,6 +7,63 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.9.1] - 2026-02-11
+
+### 🎨 UI Polish + Cloud Config + Privacy Granulare
+
+Release di miglioramento UI, configurabilità modelli cloud e rilevamento granulare contenuti sensibili.
+
+### ✨ Nuove Funzionalità
+
+- **🎨 Chat Bubble Rendering Unificato**:
+  - Sostituito pattern a 3 chiamate (st.markdown open + st.write + st.markdown close) con singola `st.markdown()`
+  - Conversione Markdown→HTML via `markdown-it-py` (tabelle, code blocks, liste)
+  - Colori professionali dark/light: dark come default, light via `@media (prefers-color-scheme: light)`
+  - Tipografia completa per elementi HTML dentro le bolle (p, strong, a, code, pre, table, ul/ol)
+
+- **☁️ Cloud Models YAML** (`cloud_models.yaml`):
+  - Configurazione modelli cloud senza modificare codice (pattern `remote_servers.yaml`)
+  - 4 provider preconfigurati: OpenAI, Anthropic, Google Gemini, Custom
+  - Ogni provider con lista modelli (id + nome), default_model, base_url
+  - Opzione "✏️ Altro..." per modelli custom (configurabile `allow_custom_models`)
+  - Fallback automatico a costanti hardcoded se YAML assente
+
+- **🔒 Rilevamento Sensibilità Granulare**:
+  - Icone specifiche per tipo: 📚 (KB Wiki), 📁 (Cartella locale), 📎 (File allegati)
+  - Combinazioni: 📚📎, 📁📎, etc.
+  - Prefisso 🔒 su cloud provider (es. 🔒📁📎)
+  - Caption dettagliata sotto selectbox conversazioni
+  - Euristica wiki/folder: `kb_folder_path` vuoto = wiki, non vuoto = cartella locale
+
+- **⚠️ Warning Cambio Provider**:
+  - Avviso quando si passa a Cloud con conversazione sensibile caricata
+  - Copre gap: conversazioni caricate con attachments/sources non rilevate dal check v1.5.0
+  - Non blocca il cambio (l'utente può iniziare nuova chat), solo warning informativo
+
+### 🔧 Modifiche Tecniche
+
+- `ui/chat.py`: Import `markdown_it`, creazione converter `_md`, singola `st.markdown()` per bolla
+- `ui/styles.py`: CSS dark default + light override, tipografia HTML completa dentro bolle
+- `cloud_models.yaml`: Nuovo file configurazione (opzionale)
+- `config/settings.py`: +4 funzioni cloud models (`load_cloud_models_config`, `get_cloud_providers`, `get_cloud_provider_models`, `get_cloud_models_settings`)
+- `ui/sidebar/llm_config.py`: Sezione Cloud riscritta (YAML-first + fallback), parametri in `st.expander`, warning sensibilità v1.9.1
+- `core/persistence.py`: `conversation_has_sensitive_content()` con `has_wiki`, `has_folder`, reason granulari
+- `ui/sidebar/conversations.py`: `_get_conversation_icon()` helper, selectbox con icone, blocco cloud con dettaglio
+
+### 📁 Nuovi File
+
+```
+cloud_models.yaml    # Configurazione modelli cloud (opzionale)
+```
+
+### 📝 Note
+
+- **Parametri collassabili**: System Prompt, Temperature, Max messaggi ora in expander chiuso
+- **3 livelli protezione privacy**: Dialog (docs sessione) → Warning (conversazione caricata) → Hard block (KB attiva)
+- `markdown-it-py` è già dipendenza transitiva di Streamlit, nessun `pip install` aggiuntivo
+
+---
+
 ## [1.9.0] - 2026-02-06
 
 ### 📋 Storia Esplorazioni Socratiche + Persistenza
