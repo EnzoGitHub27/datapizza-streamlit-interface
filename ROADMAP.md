@@ -63,6 +63,8 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    │
    ├─→ v1.9.2 ✅ (2026-02-20)   + 🧠 Prompt Epistemologici Potenziati
    │
+   ├─→ v1.10.0 ✅ (2026-02-23)  + 📊 Mappa Sessione (F2) — Attrito sul pensiero
+   │
    └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
 
 ✅ = Completata
@@ -75,6 +77,26 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 ---
 
 ## ✅ Completate
+
+### v1.10.0 — Mappa Sessione (F2) ✅
+**Data:** 2026-02-23
+**Filosofia:** Attrito sul pensiero, non sulla risposta.
+La Mappa Sessione rende visibile la cornice interpretativa invisibile
+che si costruisce domanda dopo domanda (sovrascopo — Ligas).
+Generata solo su richiesta esplicita dell'utente (delega consapevole — Quartarone).
+
+**Nuovi file:**
+- `ui/socratic/session_map.py`: SessionMapEntry, SessionMap, SessionMapAnalyzer
+- `ui/sidebar/session_map_widget.py`: settings, nudge, display, tooltip
+
+**Modifiche:**
+- [x] `config/constants.py`: +SESSION_MAP_MODES, +3 costanti, VERSION → 1.10.0
+- [x] `ui/socratic/__init__.py`: +6 export F2
+- [x] `app.py`: +4 session_state keys, logica post-risposta, nudge sidebar, reset
+- [x] 3 modalità: Progressiva / A soglia (default) / Disattivata
+- [x] Nudge una sola volta per sessione
+- [x] Tooltip "?" con crediti filosofici
+- [x] Privacy-first: stesso client LLM, nessuna rete esterna aggiuntiva
 
 ### v1.9.2 — Prompt Epistemologici Potenziati ✅
 **Data:** Febbraio 2026
@@ -215,7 +237,7 @@ Nessun altro file modificato.
 
 ---
 
-## 🛠️ Architettura Attuale (v1.9.1)
+## 🛠️ Architettura Attuale (v1.10.0)
 
 ```
 datapizza-streamlit-interface/
@@ -253,17 +275,19 @@ datapizza-streamlit-interface/
     ├── chat.py               # Integrato con socratic
     ├── file_upload.py
     ├── privacy_warning.py
-    ├── socratic/             # 🧠 5 bottoni + history
+    ├── socratic/             # 🧠 5 bottoni + history + session map
     │   ├── __init__.py
     │   ├── prompts.py        # 5 template (alternative, assumptions, limits, confute, reflect)
     │   ├── buttons.py        # 5 bottoni + registrazione esplorazioni
-    │   ├── history.py        # ⭐ SocraticExploration + SocraticHistory
-    │   └── history_widget.py # ⭐ Widget sidebar storico esplorazioni
+    │   ├── history.py        # SocraticExploration + SocraticHistory
+    │   ├── history_widget.py # Widget sidebar storico esplorazioni
+    │   └── session_map.py    # ⭐ SessionMap + SessionMapAnalyzer (F2)
     └── sidebar/
         ├── llm_config.py
         ├── knowledge_base.py
         ├── conversations.py  # + load socratic history
-        └── export_ui.py
+        ├── export_ui.py
+        └── session_map_widget.py  # ⭐ Widget mappa sessione (F2)
 ```
 
 ---
@@ -293,5 +317,5 @@ Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per dettagli.
 
 ---
 
-*Ultimo aggiornamento: 2026-02-11*
+*Ultimo aggiornamento: 2026-02-23*
 *DeepAiUG Streamlit Interface © 2026*

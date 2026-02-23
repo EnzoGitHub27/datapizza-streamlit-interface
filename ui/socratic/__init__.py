@@ -35,6 +35,16 @@ from .history import (
 # v1.9.0 - History Widget
 from .history_widget import render_socratic_history_sidebar
 
+# v1.10.0 - Session Map (F2)
+from .session_map import (
+    SessionMapEntry,
+    SessionMap,
+    SessionMapAnalyzer,
+    SESSION_MAP_KEY,
+    extract_user_questions,
+    get_nudge_text,
+)
+
 __all__ = [
     # Prompts
     "SOCRATIC_PROMPTS",
@@ -56,4 +66,11 @@ __all__ = [
     "SocraticHistory",
     "HISTORY_KEY",
     "render_socratic_history_sidebar",
+    # Session Map - v1.10.0
+    "SessionMapEntry",
+    "SessionMap",
+    "SessionMapAnalyzer",
+    "SESSION_MAP_KEY",
+    "extract_user_questions",
+    "get_nudge_text",
 ]

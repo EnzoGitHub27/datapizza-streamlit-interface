@@ -26,6 +26,9 @@ from config import (
     DEFAULT_CHUNK_OVERLAP,
     DEFAULT_TOP_K_RESULTS,
     DEFAULT_SOCRATIC_MODE,  # v1.8.0
+    DEFAULT_SESSION_MAP_MODE,           # v1.10.0
+    SESSION_MAP_NUDGE_THRESHOLD,        # v1.10.0
+    SESSION_MAP_PROGRESSIVE_VISIBLE_AFTER,  # v1.10.0
 )
 
 # ============================================================================
@@ -100,6 +103,14 @@ from ui.privacy_warning import (
 # 🆕 v1.9.0 - Aggiunto render_socratic_history_sidebar, SocraticHistory
 from ui.socratic import clear_socratic_cache, render_socratic_history_sidebar, SocraticHistory
 
+# 🆕 v1.10.0 - Session Map (F2)
+from ui.socratic import SessionMapAnalyzer, get_nudge_text
+from ui.sidebar.session_map_widget import (
+    render_session_map_settings,
+    render_session_map_display,
+    render_nudge_sidebar,
+)
+
 # ============================================================================
 # PAGE CONFIG
 # ============================================================================
@@ -150,6 +161,11 @@ def initialize_session_state():
         "show_privacy_dialog": False,
         # v1.8.0 - Socratic mode
         "socratic_mode": DEFAULT_SOCRATIC_MODE,
+        # v1.10.0 - Session Map (F2)
+        "session_map_mode": DEFAULT_SESSION_MAP_MODE,
+        "session_map_data": None,
+        "n_domande_sessione": 0,
+        "nudge_mostrato": False,
     }
     
     for key, value in defaults.items():
@@ -225,6 +241,10 @@ def reset_conversation():
     clear_socratic_cache()
     # 🆕 v1.9.0 - Pulisci storico socratico
     SocraticHistory.clear_history()
+    # 🆕 v1.10.0 - Reset mappa sessione
+    st.session_state["session_map_data"] = None
+    st.session_state["n_domande_sessione"] = 0
+    st.session_state["nudge_mostrato"] = False
 
 # ============================================================================
 # 🆕 v1.6.1 - SOCRATIC CLIENT HELPER
@@ -270,6 +290,14 @@ def get_socratic_client(connection_type, provider, api_key, model, base_url, tem
 
 # v1.9.0 - Widget storico socratico nella sidebar
 render_socratic_history_sidebar(socratic_mode)
+
+# 🆕 v1.10.0 - Mappa sessione: settings + display in sidebar
+session_map_mode = render_session_map_settings()
+st.session_state["session_map_mode"] = session_map_mode
+
+# Display mappa se già calcolata
+if st.session_state.get("session_map_data") is not None:
+    render_session_map_display(st.session_state["session_map_data"])
 
 # Knowledge Base Configuration
 render_knowledge_base_config(connection_type)
@@ -392,6 +420,25 @@ else:
 if st.session_state.pop("_socratic_save_needed", False):
     _save_current_conversation()
 
+# 🆕 v1.10.0 - Nudge mappa sessione (modalità threshold)
+if (
+    st.session_state.get("session_map_mode") == "threshold"
+    and st.session_state.get("nudge_mostrato", False)
+    and st.session_state.get("session_map_data") is None
+):
+    nudge_text = get_nudge_text(st.session_state["n_domande_sessione"])
+    if render_nudge_sidebar(nudge_text):
+        if socratic_client is not None:
+            with st.spinner("📊 Costruendo mappa sessione..."):
+                session_map = SessionMapAnalyzer.analyze(
+                    st.session_state["messages"],
+                    socratic_client.invoke,
+                    st.session_state["conversation_id"],
+                )
+                if session_map is not None:
+                    st.session_state["session_map_data"] = session_map
+                    st.rerun()
+
 st.markdown("---")
 
 # ============================================================================
@@ -476,6 +523,9 @@ if submit and user_input.strip():
             
             # Add user message (mostra testo originale, non enriched)
             add_message("user", user_input.strip(), attachments=attachment_names)
+
+            # 🆕 v1.10.0 - Incrementa contatore domande sessione
+            st.session_state["n_domande_sessione"] += 1
             
             # Prepare RAG context if active
             context_text = ""
@@ -571,7 +621,25 @@ Cita sempre le fonti quando usi informazioni dai documenti.
             
             # 🆕 v1.5.0 - Pulisci file pending dopo invio
             clear_pending_files()
-            
+
+            # 🆕 v1.10.0 - Session Map: logica post-risposta
+            map_mode = st.session_state.get("session_map_mode", "off")
+            n_domande = st.session_state["n_domande_sessione"]
+
+            if map_mode == "progressive" and n_domande >= SESSION_MAP_PROGRESSIVE_VISIBLE_AFTER:
+                # Modalità progressiva: aggiorna mappa dopo ogni risposta
+                session_map = SessionMapAnalyzer.analyze(
+                    st.session_state["messages"],
+                    client.invoke,
+                    st.session_state["conversation_id"],
+                )
+                if session_map is not None:
+                    st.session_state["session_map_data"] = session_map
+
+            elif map_mode == "threshold" and not st.session_state["nudge_mostrato"]:
+                if n_domande >= SESSION_MAP_NUDGE_THRESHOLD:
+                    st.session_state["nudge_mostrato"] = True
+
             st.rerun()
             
         except Exception as e:

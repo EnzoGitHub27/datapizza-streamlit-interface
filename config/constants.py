@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.9.2"
+VERSION = "1.10.0"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "UI Polish + Cloud Config + Privacy Granulare"
+VERSION_DESCRIPTION = "Mappa Sessione — Attrito sul pensiero"
 
 # ============================================================================
 # PATHS
@@ -207,3 +207,29 @@ SOCRATIC_MODES = {
 }
 
 DEFAULT_SOCRATIC_MODE = "standard"
+
+# ============================================================================
+# SESSION MAP - v1.10.0
+# ============================================================================
+
+SESSION_MAP_MODES = {
+    "progressive": {
+        "name": "Progressiva",
+        "icon": "🔄",
+        "description": "La mappa si aggiorna dopo ogni risposta, visibile dopo N domande",
+    },
+    "threshold": {
+        "name": "A soglia",
+        "icon": "🔔",
+        "description": "Nudge dopo N domande — l'utente decide se aprire la mappa",
+    },
+    "off": {
+        "name": "Disattivata",
+        "icon": "⏹️",
+        "description": "Nessuna mappa, nessun nudge",
+    },
+}
+
+DEFAULT_SESSION_MAP_MODE = "threshold"
+SESSION_MAP_NUDGE_THRESHOLD = 5
+SESSION_MAP_PROGRESSIVE_VISIBLE_AFTER = 4

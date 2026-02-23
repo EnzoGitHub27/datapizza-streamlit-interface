@@ -7,6 +7,64 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.10.0] - 2026-02-23 — Mappa Sessione (F2)
+
+### Filosofia
+I bottoni socratici (v1.8.0) restituiscono attrito sulla singola risposta.
+La Mappa Sessione restituisce attrito sul **pensiero**: rende visibile la
+cornice interpretativa invisibile che si costruisce domanda dopo domanda.
+
+Indirizza il concetto di **sovrascopo** (Cinzia Ligas, AI Semiology):
+la direzione simbolica in cui, risposta dopo risposta, viene condotta
+la semiosfera dell'utente — spesso senza che se ne accorga.
+
+La mappa non si costruisce in background. Viene generata **solo su
+richiesta esplicita** dell'utente, coerentemente con il principio di
+delega consapevole (Quartarone): il momento della delega resta in mano
+all'umano.
+
+### ✨ Nuove Funzionalità
+
+- **📊 Mappa Sessione** — Analisi della cornice interpretativa della sessione:
+  - **Frame dominante**: la cornice implicita emersa dalle domande
+  - **Connessione domande → frame**: come ogni domanda ha costruito/rinforzato il frame
+  - **Frame non esplorati**: prospettive alternative non percorse (solo domande, non risposte)
+
+- **🔄 Modalità Progressiva**: la mappa si aggiorna dopo ogni risposta,
+  visibile dopo 4 domande
+
+- **🔔 Modalità A soglia** (default): nudge dopo 5 domande —
+  l'utente decide se aprire la mappa. Il nudge appare una sola volta per sessione.
+
+- **⏹️ Modalità Disattivata**: nessuna mappa, nessun nudge
+
+- **❓ Tooltip "Cos'è la Mappa Sessione?"**: spiegazione in-app con
+  crediti filosofici (Ligas, Quartarone, Floridi)
+
+### 📁 Nuovi File
+
+```
+ui/socratic/
+└── session_map.py            # SessionMapEntry, SessionMap, SessionMapAnalyzer
+
+ui/sidebar/
+└── session_map_widget.py     # Widget sidebar: settings, nudge, display, tooltip
+```
+
+### 🔧 Modifiche Tecniche
+
+- `config/constants.py`: +SESSION_MAP_MODES, +DEFAULT_SESSION_MAP_MODE, +SESSION_MAP_NUDGE_THRESHOLD, +SESSION_MAP_PROGRESSIVE_VISIBLE_AFTER, VERSION → 1.10.0
+- `ui/socratic/__init__.py`: +6 export (SessionMapEntry, SessionMap, SessionMapAnalyzer, SESSION_MAP_KEY, extract_user_questions, get_nudge_text)
+- `app.py`: +4 session_state keys (session_map_mode, session_map_data, n_domande_sessione, nudge_mostrato), logica post-risposta, nudge sidebar, reset su nuova conversazione
+
+### 📝 Note
+
+- **Privacy-first**: la mappa usa lo stesso client LLM già configurato, nessuna chiamata esterna aggiuntiva
+- **Su richiesta**: modalità "off" → nessuna analisi; "threshold" → solo se utente clicca; "progressive" → automatica dopo N domande
+- **Moduli HSCI coperti**: M2 (Gestione ambiguità), M8 (Pianificazione controllata)
+
+---
+
 ## [1.9.2] - 2026-02-20 — Prompt Epistemologici Potenziati
 
 ### Filosofia

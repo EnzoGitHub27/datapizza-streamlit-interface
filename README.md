@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.9.2-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.9.2)
+[![Version](https://img.shields.io/badge/version-1.10.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.10.0)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -30,22 +30,29 @@
 
 ---
 
+### 📊 Novità v1.10.0 — Mappa Sessione (F2)
+
+> *"I bottoni socratici restituiscono attrito sulla risposta.*
+> *La Mappa Sessione restituisce attrito sul pensiero."*
+
+La Mappa Sessione rende visibile la **cornice interpretativa invisibile**
+che si costruisce domanda dopo domanda. Mostra:
+- **Frame dominante** — la cornice implicita emersa
+- **Connessione domande → frame** — come ogni domanda ha costruito il frame
+- **Frame non esplorati** — prospettive alternative non percorse
+
+| Modalità | Comportamento |
+|---|---|
+| 🔄 Progressiva | Mappa si aggiorna dopo ogni risposta (dopo 4 domande) |
+| 🔔 A soglia (default) | Nudge dopo 5 domande — l'utente decide se aprire |
+| ⏹️ Disattivata | Nessuna mappa, nessun nudge |
+
+> **Filosofia:** la mappa non si costruisce in background. Viene generata solo
+> su richiesta esplicita dell'utente. *(Ispirato a Ligas, Quartarone, Floridi)*
+
 ### 🧠 Novità v1.9.2 — Prompt Epistemologici Potenziati
-I 5 prompt socratici sono stati riscritti con un framework epistemologico
-esplicito. Nessuna nuova funzionalità visibile: cambia la **profondità
-del lavoro semantico** restituito all'utente.
 
-| Bottone | Prima | Dopo |
-|---|---|---|
-| 🔄 Alternative | 3 varianti generiche | 3 tipi distinti: Soluzione / Framing / Assunzione |
-| 🤔 Assunzioni | Lista assunzioni implicite | Tri-classificazione: Fatti / Inferenze / Valutazioni + Test della Premessa |
-| ⚠️ Limiti | Situazioni in cui non funziona | Dominio / Contesto / Modello (Lettore Implicito) |
-| 🎭 Confuta | Avvocato del diavolo generico | 2 livelli: Conclusioni + Struttura argomentativa |
-| 🪞 Rifletti | 3 domande provocatorie | Presupposizioni / Destinatario Implicito / Domanda sotto la Domanda |
-
-> **Filosofia:** DeepAiUG non implementa validatori automatici AI-su-AI.
-> Il test epistemologico è l'umano. I prompt restituiscono attrito strutturato,
-> non punteggi delegati alla macchina. *(Ispirato a Floridi, Eco, Quartarone)*
+I 5 prompt socratici riscritti con framework epistemologico esplicito (Floridi/Eco/Quartarone).
 
 ## 🆕 Novità v1.9.1 - UI Polish + Cloud Config + Privacy Granulare 🎨
 
@@ -150,7 +157,7 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.9.1
+## 🏗️ Architettura v1.10.0
 
 ```
 datapizza-streamlit-interface/
@@ -191,9 +198,11 @@ datapizza-streamlit-interface/
     ├── socratic/             # 🧠 Modulo socratico
     │   ├── prompts.py        # Template prompt
     │   ├── buttons.py        # Bottoni UI + registrazione esplorazioni
-    │   ├── history.py        # ⭐ NEW: SocraticExploration + SocraticHistory
-    │   └── history_widget.py # ⭐ NEW: Widget sidebar storico
+    │   ├── history.py        # SocraticExploration + SocraticHistory
+    │   ├── history_widget.py # Widget sidebar storico
+    │   └── session_map.py    # ⭐ NEW: SessionMap + SessionMapAnalyzer (F2)
     └── sidebar/              # Componenti sidebar
+        ├── session_map_widget.py # ⭐ NEW: Widget mappa sessione (F2)
 ```
 
 ---
@@ -388,6 +397,7 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
+| v1.10.0 | 📊 Mappa Sessione — Attrito sul pensiero | ✅ |
 | v1.9.1 | 🎨 UI Polish + ☁️ Cloud Config + 🔒 Privacy Granulare | ✅ |
 | v1.9.0 | 📋 Socratic History + Persistence | ✅ |
 | v1.8.0 | 🧠 UI Socratica Completa (5 bottoni + Toggle) | ✅ |
