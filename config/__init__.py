@@ -47,6 +47,11 @@ from .constants import (
     # v1.8.0 - Socratic Modes
     SOCRATIC_MODES,
     DEFAULT_SOCRATIC_MODE,
+    # v1.10.0 - Session Map (F2)
+    SESSION_MAP_MODES,
+    DEFAULT_SESSION_MAP_MODE,
+    SESSION_MAP_NUDGE_THRESHOLD,
+    SESSION_MAP_PROGRESSIVE_VISIBLE_AFTER,
 )
 
 __all__ = [
@@ -86,4 +91,9 @@ __all__ = [
     # v1.8.0 - Socratic Modes
     "SOCRATIC_MODES",
     "DEFAULT_SOCRATIC_MODE",
+    # v1.10.0 - Session Map (F2)
+    "SESSION_MAP_MODES",
+    "DEFAULT_SESSION_MAP_MODE",
+    "SESSION_MAP_NUDGE_THRESHOLD",
+    "SESSION_MAP_PROGRESSIVE_VISIBLE_AFTER",
 ]
