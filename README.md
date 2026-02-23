@@ -3,6 +3,9 @@
 > Interfaccia Streamlit modulare per interagire con LLM locali (Ollama), remoti e cloud.
 > Progetto Open Source della community **DeepAiUG**.
 
+> *"Non semplifica il pensare, ma lo allena."*
+> — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
+
 [![Version](https://img.shields.io/badge/version-1.9.2-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.9.2)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)

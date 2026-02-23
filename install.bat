@@ -37,15 +37,15 @@ if errorlevel 1 (
 echo [OK] streamlit e python-dotenv installati
 echo.
 
-REM Installa datapizza AI core (libreria)
-echo [2/4] Installazione datapizza AI (libreria)...
-python -m pip install datapizza-ai
+REM Installa datapizza AI core + openai-like (richiesto per Ollama e API OpenAI-compatibili)
+echo [2/4] Installazione datapizza AI (libreria + client openai-like)...
+python -m pip install datapizza-ai datapizza-ai-clients-openai-like
 if errorlevel 1 (
     echo [ERRORE] Installazione datapizza-ai fallita!
     pause
     exit /b 1
 )
-echo [OK] datapizza-ai installato
+echo [OK] datapizza-ai e datapizza-ai-clients-openai-like installati
 echo.
 
 REM Chiedi quali provider installare
@@ -73,29 +73,39 @@ python -m pip install datapizza-ai-clients-anthropic
 echo [OK] Anthropic client installato
 python -m pip install datapizza-ai-clients-google
 echo [OK] Google client installato
-goto done
+goto fix_deps
 
 :install_openai
 echo [3/4] Installazione OpenAI client...
 python -m pip install datapizza-ai-clients-openai
 echo [OK] OpenAI client installato
-goto done
+goto fix_deps
 
 :install_anthropic
 echo [3/4] Installazione Anthropic client...
 python -m pip install datapizza-ai-clients-anthropic
 echo [OK] Anthropic client installato
-goto done
+goto fix_deps
 
 :install_google
 echo [3/4] Installazione Google client...
 python -m pip install datapizza-ai-clients-google
 echo [OK] Google client installato
-goto done
+goto fix_deps
 
 :install_none
 echo [AVVISO] Nessun provider cloud installato.
 echo Solo modalita Ollama disponibile.
+goto fix_deps
+
+:fix_deps
+echo [4/4] Risoluzione conflitti dipendenze (fastapi/starlette)...
+python -m pip install --upgrade "fastapi>=0.120"
+if errorlevel 1 (
+    echo [AVVISO] Aggiornamento fastapi non riuscito - il conflitto potrebbe persistere.
+) else (
+    echo [OK] Dipendenze allineate
+)
 goto done
 
 :invalid_choice
@@ -110,7 +120,7 @@ echo    Installazione completata con successo!
 echo ============================================================
 echo.
 echo Per avviare l'applicazione:
-echo   streamlit run 00_interfaccia_dinamica_datapizza_Streamlit.py
+echo   streamlit run app.py
 echo.
 echo Per configurare le API keys:
 echo   - Crea un file .env nella directory del progetto
