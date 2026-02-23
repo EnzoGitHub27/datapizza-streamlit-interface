@@ -109,6 +109,7 @@ from ui.sidebar.session_map_widget import (
     render_session_map_settings,
     render_session_map_display,
     render_nudge_sidebar,
+    render_generate_map_button,
 )
 
 # ============================================================================
@@ -291,13 +292,70 @@ def get_socratic_client(connection_type, provider, api_key, model, base_url, tem
 # v1.9.0 - Widget storico socratico nella sidebar
 render_socratic_history_sidebar(socratic_mode)
 
-# 🆕 v1.10.0 - Mappa sessione: settings + display in sidebar
+# 🆕 v1.10.0 - Mappa sessione: settings + nudge + display in sidebar
 session_map_mode = render_session_map_settings()
 st.session_state["session_map_mode"] = session_map_mode
 
-# Display mappa se già calcolata
+# Nudge mappa sessione (modalità threshold) — dentro la sezione
+if (
+    session_map_mode == "threshold"
+    and st.session_state.get("nudge_mostrato", False)
+    and st.session_state.get("session_map_data") is None
+):
+    nudge_text = get_nudge_text(st.session_state["n_domande_sessione"])
+    if render_nudge_sidebar(nudge_text):
+        socratic_client_nudge = get_socratic_client(
+            connection_type, provider, api_key, model, base_url, temperature
+        )
+        if socratic_client_nudge is not None:
+            with st.sidebar.spinner("📊 Costruendo mappa sessione..."):
+                session_map = SessionMapAnalyzer.analyze(
+                    st.session_state["messages"],
+                    socratic_client_nudge.invoke,
+                    st.session_state["conversation_id"],
+                )
+                if session_map is not None:
+                    st.session_state["session_map_data"] = session_map
+                    st.rerun()
+
+# Bottone genera mappa su conversazione caricata (nessuna mappa, messaggi presenti, mode != off)
+if (
+    st.session_state.get("session_map_data") is None
+    and len(st.session_state.get("messages", [])) > 0
+    and session_map_mode != "off"
+):
+    if render_generate_map_button():
+        socratic_client_gen = get_socratic_client(
+            connection_type, provider, api_key, model, base_url, temperature
+        )
+        if socratic_client_gen is not None:
+            with st.sidebar.spinner("📊 Generando mappa sessione..."):
+                session_map = SessionMapAnalyzer.analyze(
+                    st.session_state["messages"],
+                    socratic_client_gen.invoke,
+                    st.session_state["conversation_id"],
+                )
+                if session_map is not None:
+                    st.session_state["session_map_data"] = session_map
+                    st.rerun()
+
+# Display mappa se già calcolata + bottone rigenera
 if st.session_state.get("session_map_data") is not None:
-    render_session_map_display(st.session_state["session_map_data"])
+    rigenera = render_session_map_display(st.session_state["session_map_data"])
+    if rigenera:
+        socratic_client_regen = get_socratic_client(
+            connection_type, provider, api_key, model, base_url, temperature
+        )
+        if socratic_client_regen is not None:
+            with st.sidebar.spinner("📊 Rigenerando mappa sessione..."):
+                session_map = SessionMapAnalyzer.analyze(
+                    st.session_state["messages"],
+                    socratic_client_regen.invoke,
+                    st.session_state["conversation_id"],
+                )
+                if session_map is not None:
+                    st.session_state["session_map_data"] = session_map
+                    st.rerun()
 
 # Knowledge Base Configuration
 render_knowledge_base_config(connection_type)
@@ -419,25 +477,6 @@ else:
 # v1.9.0 - Auto-save dopo esplorazione socratica
 if st.session_state.pop("_socratic_save_needed", False):
     _save_current_conversation()
-
-# 🆕 v1.10.0 - Nudge mappa sessione (modalità threshold)
-if (
-    st.session_state.get("session_map_mode") == "threshold"
-    and st.session_state.get("nudge_mostrato", False)
-    and st.session_state.get("session_map_data") is None
-):
-    nudge_text = get_nudge_text(st.session_state["n_domande_sessione"])
-    if render_nudge_sidebar(nudge_text):
-        if socratic_client is not None:
-            with st.spinner("📊 Costruendo mappa sessione..."):
-                session_map = SessionMapAnalyzer.analyze(
-                    st.session_state["messages"],
-                    socratic_client.invoke,
-                    st.session_state["conversation_id"],
-                )
-                if session_map is not None:
-                    st.session_state["session_map_data"] = session_map
-                    st.rerun()
 
 st.markdown("---")
 

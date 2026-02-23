@@ -183,24 +183,45 @@ def _parse_llm_response(
         if current_section == "frame" and not dominant_frame:
             dominant_frame = stripped.strip('"').strip("'")
         elif current_section == "connections":
-            # Match lines like: 1. "question" → contribution
-            contribution = stripped
-            # Try to associate with a question by index
-            for q_idx, (msg_idx, q_text) in enumerate(questions):
-                marker = f"{q_idx + 1}."
-                if stripped.startswith(marker):
-                    contribution = stripped[len(marker):].strip()
+            # Match numbered lines (1. / 1) ) or bulleted (- / •)
+            import re
+            num_match = re.match(r'^(\d+)[.\)]\s*(.*)', stripped)
+            dash_match = re.match(r'^[-•]\s*(.*)', stripped) if not num_match else None
+
+            line_content = None
+            q_number = None
+            if num_match:
+                q_number = int(num_match.group(1))
+                line_content = num_match.group(2)
+            elif dash_match:
+                line_content = dash_match.group(1)
+
+            if line_content is not None:
+                # Split on arrow or colon to extract contribution
+                contribution = line_content
+                for sep in ["→", "->", ":"]:
+                    if sep in line_content:
+                        contribution = line_content.split(sep, 1)[1].strip()
+                        break
+
+                # Associate with question by number or sequential order
+                target_idx = None
+                if q_number and 1 <= q_number <= len(questions):
+                    target_idx = q_number - 1
+                else:
+                    target_idx = len(entries)
+
+                if target_idx is not None and target_idx < len(questions):
+                    msg_idx, q_text = questions[target_idx]
                     entries.append(SessionMapEntry(
                         message_index=msg_idx,
                         question_summary=q_text[:120],
                         frame_contribution=contribution,
                         timestamp=now,
                     ))
-                    break
-            else:
-                # Line doesn't start with a number, check if it's a continuation
-                if entries:
-                    entries[-1].frame_contribution += " " + stripped
+            elif entries:
+                # Continuation line
+                entries[-1].frame_contribution += " " + stripped
         elif current_section == "unexplored":
             # Strip leading markers like →, -, *
             clean = stripped.lstrip("→-*• ").strip()

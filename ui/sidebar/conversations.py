@@ -137,6 +137,11 @@ def _load_conversation(conversation_id: str):
     clear_socratic_cache()
     SocraticHistory.load_from_data(data.get("socratic_history", []))
 
+    # v1.10.0 - Reset mappa sessione (la mappa va rigenerata sulla nuova conversazione)
+    st.session_state["session_map_data"] = None
+    st.session_state["n_domande_sessione"] = 0
+    st.session_state["nudge_mostrato"] = False
+
     # Ripristina impostazioni Knowledge Base
     kb_settings = extract_kb_settings(data)
     

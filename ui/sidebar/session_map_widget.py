@@ -89,7 +89,17 @@ def render_nudge_sidebar(nudge_text: str) -> bool:
     )
 
 
-def render_session_map_display(map_data: SessionMap) -> None:
+def render_generate_map_button() -> bool:
+    """
+    Bottone per generare la mappa su una conversazione esistente/caricata.
+
+    Returns:
+        True se l'utente ha premuto il bottone
+    """
+    return st.sidebar.button("📊 Genera mappa", key="btn_genera_mappa")
+
+
+def render_session_map_display(map_data: SessionMap) -> bool:
     """
     Renderizza la mappa sessione nella sidebar.
 
@@ -97,33 +107,38 @@ def render_session_map_display(map_data: SessionMap) -> None:
 
     Args:
         map_data: Mappa sessione già calcolata da SessionMapAnalyzer
+
+    Returns:
+        True se l'utente ha premuto "Rigenera mappa"
     """
     st.sidebar.markdown("---")
-    st.sidebar.markdown("#### 📊 Mappa della sessione")
+    with st.sidebar.expander("📊 Mappa della sessione", expanded=True):
+        # 1. Frame dominante
+        st.markdown("**Frame dominante:**")
+        st.markdown(f"> {map_data.dominant_frame}")
 
-    # 1. Frame dominante
-    st.sidebar.markdown("**Frame dominante:**")
-    st.sidebar.markdown(f"> {map_data.dominant_frame}")
+        # 2. Connessione domande → frame
+        if map_data.entries:
+            st.markdown("**Domande → frame:**")
+            for i, entry in enumerate(map_data.entries):
+                question_short = entry.question_summary[:80]
+                if len(entry.question_summary) > 80:
+                    question_short += "..."
+                st.markdown(
+                    f"{i + 1}. *\"{question_short}\"*\n"
+                    f"   → {entry.frame_contribution}"
+                )
 
-    # 2. Connessione domande → frame
-    if map_data.entries:
-        st.sidebar.markdown("**Domande → frame:**")
-        for i, entry in enumerate(map_data.entries):
-            question_short = entry.question_summary[:80]
-            if len(entry.question_summary) > 80:
-                question_short += "..."
-            st.sidebar.markdown(
-                f"{i + 1}. *\"{question_short}\"*\n"
-                f"   → {entry.frame_contribution}"
-            )
+        # 3. Frame non esplorati
+        if map_data.unexplored_frames:
+            st.markdown("**Frame non esplorati:**")
+            for frame in map_data.unexplored_frames:
+                st.markdown(f"→ {frame}")
 
-    # 3. Frame non esplorati
-    if map_data.unexplored_frames:
-        st.sidebar.markdown("**Frame non esplorati:**")
-        for frame in map_data.unexplored_frames:
-            st.sidebar.markdown(f"→ {frame}")
+        # Timestamp
+        st.caption(
+            f"Mappa generata alle {map_data.created_at.strftime('%H:%M')}"
+        )
 
-    # Timestamp
-    st.sidebar.caption(
-        f"Mappa generata alle {map_data.created_at.strftime('%H:%M')}"
-    )
+    # Bottone rigenera (fuori dall'expander, visibile sempre)
+    return st.sidebar.button("🔄 Rigenera mappa", key="btn_rigenera_mappa")
