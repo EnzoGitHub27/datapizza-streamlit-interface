@@ -1,8 +1,9 @@
 # ui/sidebar/llm_config.py
-# DeepAiUG v1.8.0 - Sidebar: Configurazione LLM
+# DeepAiUG v1.12.0 - Sidebar: Configurazione LLM
 # ============================================================================
 # 🆕 v1.5.0: Aggiunto controllo privacy per passaggio a Cloud con documenti
 # 🆕 v1.8.0: Aggiunto toggle modalità socratica
+# 🆕 v1.12.0: container parameter per supporto st.expander
 # ============================================================================
 
 import streamlit as st
@@ -19,9 +20,12 @@ from config.settings import (
 from core import get_local_ollama_models
 
 
-def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
+def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, float, int]:
     """
     Renderizza la sezione configurazione LLM nella sidebar.
+
+    Args:
+        container: Container Streamlit in cui renderizzare (default: st.sidebar)
 
     Returns:
         Tupla con:
@@ -33,20 +37,19 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
         - system_prompt: System prompt
         - temperature: Temperatura
         - max_messages: Max messaggi in context
-        - socratic_mode: Modalità socratica (v1.8.0)
     """
-    st.sidebar.header("⚙️ Configurazione")
-    
+    container = container or st.sidebar
+
     # Tipo connessione
     # 🆕 v1.5.0: Controlla se mostrare warning privacy
     current_connection = st.session_state.get("connection_type", "Local (Ollama)")
-    
-    connection_type = st.sidebar.selectbox(
-        "Tipo connessione", 
-        ["Local (Ollama)", "Remote host", "Cloud provider"], 
+
+    connection_type = container.selectbox(
+        "Tipo connessione",
+        ["Local (Ollama)", "Remote host", "Cloud provider"],
         index=["Local (Ollama)", "Remote host", "Cloud provider"].index(current_connection)
     )
-    
+
     # 🆕 v1.5.0: Rileva cambio verso Cloud con documenti in memoria
     docs_uploaded = st.session_state.get("documents_uploaded_this_session", False)
     privacy_acknowledged = st.session_state.get("privacy_acknowledged_for_cloud", False)
@@ -54,7 +57,7 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
     if connection_type == "Cloud provider" and docs_uploaded and not privacy_acknowledged:
         # Segnala che serve il dialog di privacy (gestito in app.py)
         st.session_state["show_privacy_dialog"] = True
-        st.sidebar.warning(
+        container.warning(
             "⚠️ **Documenti in memoria!**\n\n"
             "Conferma richiesta prima di usare Cloud."
         )
@@ -80,7 +83,7 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
             if sensitivity["has_sources"]:
                 icons.append("📎")
             icon_str = "🔒" + "".join(dict.fromkeys(icons))  # deduplicate
-            st.sidebar.warning(
+            container.warning(
                 f"⚠️ La conversazione attuale contiene **{sensitivity['reason']}** "
                 f"({icon_str}).\n\n"
                 "I messaggi con contenuti locali non verranno inviati al provider cloud. "
@@ -88,48 +91,48 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
             )
 
     st.session_state["connection_type"] = connection_type
-    
+
     # Blocco Cloud se Knowledge Base attiva (PRIVACY)
     if st.session_state.get("use_knowledge_base") and connection_type == "Cloud provider":
-        st.sidebar.error("🔒 **Cloud bloccato**: Knowledge Base attiva. I tuoi documenti rimangono privati!")
-        st.sidebar.info("Disattiva Knowledge Base o usa Local/Remote")
+        container.error("🔒 **Cloud bloccato**: Knowledge Base attiva. I tuoi documenti rimangono privati!")
+        container.info("Disattiva Knowledge Base o usa Local/Remote")
         connection_type = "Local (Ollama)"
         st.session_state["connection_type"] = connection_type
-    
+
     # Variabili default
     base_url = "http://localhost:11434/v1"
     api_key = ""
     provider = None
     model = ""
-    
+
     # ========== LOCAL (OLLAMA) ==========
     if connection_type == "Local (Ollama)":
-        st.sidebar.markdown("### 🖥️ Locale")
-        base_url = st.sidebar.text_input("Base URL", value=base_url)
-        
-        col_r, col_c = st.sidebar.columns([3, 1])
+        container.markdown("### 🖥️ Locale")
+        base_url = container.text_input("Base URL", value=base_url)
+
+        col_r, col_c = container.columns([3, 1])
         with col_r:
             if st.button("🔄 Aggiorna", use_container_width=True):
                 st.session_state["models_local"] = get_local_ollama_models()
-        
+
         models_local = st.session_state.get("models_local", get_local_ollama_models())
         if not st.session_state.get("models_local"):
             st.session_state["models_local"] = models_local
-        
+
         with col_c:
             if models_local:
                 st.metric("", len(models_local))
-        
+
         if models_local:
             prev = st.session_state.get("model_select")
             idx = models_local.index(prev) if prev in models_local else 0
-            model = st.sidebar.selectbox("Modello", models_local, index=idx, key="model_select")
+            model = container.selectbox("Modello", models_local, index=idx, key="model_select")
         else:
-            model = st.sidebar.text_input("Modello", value="llama3.2")
-    
+            model = container.text_input("Modello", value="llama3.2")
+
     # ========== REMOTE HOST ==========
     elif connection_type == "Remote host":
-        st.sidebar.markdown("### 🌐 Remote")
+        container.markdown("### 🌐 Remote")
 
         # Carica configurazione YAML
         from config.settings import (
@@ -152,12 +155,12 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
             default_server = next((s for s in servers if s["id"] == default_id), servers[0] if servers else None)
 
             if default_server:
-                st.sidebar.info(f"{default_server['icon']} {default_server['name']}")
+                container.info(f"{default_server['icon']} {default_server['name']}")
                 if default_server.get("description"):
-                    st.sidebar.caption(default_server["description"])
+                    container.caption(default_server["description"])
                 selected_server_url = f"http://{default_server['host']}:{default_server['port']}/v1"
             else:
-                st.sidebar.error("⚠️ Nessun server configurato in remote_servers.yaml")
+                container.error("⚠️ Nessun server configurato in remote_servers.yaml")
                 selected_server_url = "http://localhost:11434/v1"
 
         # MODE: SELECTABLE (solo lista, no manuale)
@@ -166,17 +169,17 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
 
             if servers:
                 server_options = [f"{s['icon']} {s['name']}" for s in servers]
-                selected_idx = st.sidebar.selectbox(
+                selected_idx = container.selectbox(
                     "Server",
                     range(len(servers)),
                     format_func=lambda i: server_options[i]
                 )
                 selected_server = servers[selected_idx]
                 if selected_server.get("description"):
-                    st.sidebar.caption(selected_server["description"])
+                    container.caption(selected_server["description"])
                 selected_server_url = f"http://{selected_server['host']}:{selected_server['port']}/v1"
             else:
-                st.sidebar.error("⚠️ Nessun server configurato in remote_servers.yaml")
+                container.error("⚠️ Nessun server configurato in remote_servers.yaml")
                 selected_server_url = "http://localhost:11434/v1"
 
         # MODE: CUSTOM_ALLOWED (lista + manuale) o legacy (no yaml)
@@ -201,11 +204,11 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
             if not options[:-1]:
                 selected_option = manual_option
             else:
-                selected_option = st.sidebar.selectbox("Server", options)
+                selected_option = container.selectbox("Server", options)
 
             # Se manuale, mostra text_input
             if selected_option == manual_option:
-                selected_server_url = st.sidebar.text_input(
+                selected_server_url = container.text_input(
                     "Host",
                     value="http://192.168.1.10:11434/v1"
                 )
@@ -213,16 +216,16 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
                 selected_server_url, description = server_map[selected_option]
                 # Mostra descrizione se disponibile
                 if description:
-                    st.sidebar.caption(description)
+                    container.caption(description)
 
         base_url = selected_server_url
-        api_key = st.sidebar.text_input("API Key (opzionale)", type="password", value="")
+        api_key = container.text_input("API Key (opzionale)", type="password", value="")
 
         # Bottone refresh modelli + dropdown
         settings = get_remote_servers_settings(remote_config) if remote_config else {"show_refresh_button": True}
 
         if settings.get("show_refresh_button", True):
-            col_r, col_c = st.sidebar.columns([3, 1])
+            col_r, col_c = container.columns([3, 1])
             with col_r:
                 if st.button("🔄 Aggiorna modelli", use_container_width=True, key="refresh_remote"):
                     with st.spinner("Recupero modelli..."):
@@ -237,16 +240,16 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
             if models_remote:
                 prev = st.session_state.get("model_select_remote")
                 idx = models_remote.index(prev) if prev in models_remote else 0
-                model = st.sidebar.selectbox("Modello", models_remote, index=idx, key="model_select_remote")
+                model = container.selectbox("Modello", models_remote, index=idx, key="model_select_remote")
             else:
-                model = st.sidebar.text_input("Modello", value="llama3.2")
+                model = container.text_input("Modello", value="llama3.2")
         else:
             # Nessun bottone refresh, solo text_input
-            model = st.sidebar.text_input("Modello", value="llama3.2")
-    
+            model = container.text_input("Modello", value="llama3.2")
+
     # ========== CLOUD PROVIDER ==========
     else:
-        st.sidebar.markdown("### ☁️ Cloud")
+        container.markdown("### ☁️ Cloud")
 
         # Load YAML config (None = fallback to hardcoded CLOUD_PROVIDERS)
         from config.settings import (
@@ -262,7 +265,7 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
             yaml_providers = get_cloud_providers(cloud_config)
             provider_labels = [f"{p['icon']} {p['name']}" for p in yaml_providers]
 
-            selected_idx = st.sidebar.selectbox(
+            selected_idx = container.selectbox(
                 "Provider",
                 range(len(yaml_providers)),
                 format_func=lambda i: provider_labels[i],
@@ -276,7 +279,7 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
             db = selected_provider["base_url"]
         else:
             # ── Fallback: hardcoded CLOUD_PROVIDERS ──
-            provider = st.sidebar.selectbox(
+            provider = container.selectbox(
                 "Provider",
                 list(CLOUD_PROVIDERS.keys())
             )
@@ -298,7 +301,7 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
             if not show_keys:
                 # Mostra solo messaggio, non la key
                 message = get_api_key_message(security_config, key_visible=False)
-                st.sidebar.success(message)
+                container.success(message)
 
                 # Flag per permettere cambio key
                 change_key_flag = f"change_key_{pk}"
@@ -307,21 +310,21 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
 
                 # Bottone per usare altra key
                 if not st.session_state[change_key_flag]:
-                    if st.sidebar.button("🔄 Usa altra key", key=f"btn_change_{pk}"):
+                    if container.button("🔄 Usa altra key", key=f"btn_change_{pk}"):
                         st.session_state[change_key_flag] = True
                         st.rerun()
                     # Usa la key esistente
                     api_key = existing_key
                 else:
                     # Modalità cambio key: mostra input
-                    api_key = st.sidebar.text_input("Nuova API Key", type="password", key=f"new_key_{pk}")
-                    col1, col2 = st.sidebar.columns(2)
+                    api_key = container.text_input("Nuova API Key", type="password", key=f"new_key_{pk}")
+                    col1, col2 = container.columns(2)
                     with col1:
                         if st.button("💾 Salva", key=f"save_new_{pk}"):
                             if api_key:
                                 save_api_key_to_file(pk, api_key)
                                 st.session_state[change_key_flag] = False
-                                st.sidebar.success("Key aggiornata!")
+                                container.success("Key aggiornata!")
                                 st.rerun()
                     with col2:
                         if st.button("❌ Annulla", key=f"cancel_new_{pk}"):
@@ -332,14 +335,14 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
             # Se le key DEVONO essere visibili (configurato dal sistemista)
             else:
                 message = get_api_key_message(security_config, key_visible=True)
-                st.sidebar.success(message)
+                container.success(message)
 
                 # Usa session_state per permettere modifica
                 session_key = f"api_key_{pk}"
                 if session_key not in st.session_state:
                     st.session_state[session_key] = existing_key
 
-                api_key = st.sidebar.text_input(
+                api_key = container.text_input(
                     "API Key",
                     type="password",
                     value=st.session_state[session_key],
@@ -351,14 +354,14 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
                     st.session_state[session_key] = api_key
 
                 # Bottone per salvare modifiche
-                if st.sidebar.button("💾 Salva modifiche"):
+                if container.button("💾 Salva modifiche"):
                     save_api_key_to_file(pk, api_key)
-                    st.sidebar.success("Key aggiornata!")
+                    container.success("Key aggiornata!")
                     st.rerun()
         else:
             # Nessuna key esistente, input vuoto
-            api_key = st.sidebar.text_input("API Key", type="password")
-            if api_key and st.sidebar.button("💾 Salva"):
+            api_key = container.text_input("API Key", type="password")
+            if api_key and container.button("💾 Salva"):
                 save_api_key_to_file(pk, api_key)
                 st.rerun()
 
@@ -383,7 +386,7 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
                 if dm in model_ids:
                     default_idx = model_ids.index(dm)
 
-                chosen = st.sidebar.selectbox(
+                chosen = container.selectbox(
                     "Modello",
                     range(len(model_labels)),
                     index=default_idx,
@@ -391,23 +394,23 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
                 )
 
                 if model_ids[chosen] == "__custom__":
-                    model = st.sidebar.text_input("Nome modello", value="")
+                    model = container.text_input("Nome modello", value="")
                 else:
                     model = model_ids[chosen]
             else:
                 # Provider without predefined models (e.g. Custom)
-                model = st.sidebar.text_input("Modello", value=dm)
+                model = container.text_input("Modello", value=dm)
         else:
             # Fallback: simple text input
-            model = st.sidebar.text_input("Modello", value=dm)
+            model = container.text_input("Modello", value=dm)
 
         base_url = db
-    
+
     # Salva modello corrente
     st.session_state["current_model"] = model
-    
+
     # ========== PARAMETRI LLM ==========
-    with st.sidebar.expander("⚙️ Parametri", expanded=False):
+    with container.expander("⚙️ Parametri", expanded=False):
         system_prompt = st.text_area(
             "System Prompt",
             value="Sei un assistente utile. Rispondi in modo chiaro e preciso.",
@@ -424,7 +427,25 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
             10, 100, 50, 10,
         )
 
-    # ========== MODALITA SOCRATICA - v1.8.0 ==========
+    return (
+        connection_type,
+        provider,
+        api_key,
+        model,
+        base_url,
+        system_prompt,
+        temperature,
+        max_messages,
+    )
+
+
+def render_socratic_mode_settings() -> str:
+    """
+    Renderizza la sezione modalità socratica nella sidebar.
+
+    Returns:
+        Chiave della modalità selezionata ("fast", "standard", "socratic")
+    """
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 🧠 Modalità Socratica")
 
@@ -455,14 +476,4 @@ def render_llm_config() -> Tuple[str, str, str, str, str, str, float, int, str]:
     # Mostra descrizione modalità selezionata
     st.sidebar.caption(SOCRATIC_MODES[socratic_mode]["description"])
 
-    return (
-        connection_type,
-        provider,
-        api_key,
-        model,
-        base_url,
-        system_prompt,
-        temperature,
-        max_messages,
-        socratic_mode  # v1.8.0
-    )
+    return socratic_mode

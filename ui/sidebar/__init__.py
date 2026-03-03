@@ -1,14 +1,15 @@
 # ui/sidebar/__init__.py
-# DeepAiUG v1.4.0 - Modulo sidebar
+# DeepAiUG v1.12.0 - Modulo sidebar
 # ============================================================================
 
-from .llm_config import render_llm_config
+from .llm_config import render_llm_config, render_socratic_mode_settings
 from .knowledge_base import render_knowledge_base_config
 from .conversations import render_conversations_manager
 from .export_ui import render_export_section, render_export_preview
 
 __all__ = [
     "render_llm_config",
+    "render_socratic_mode_settings",
     "render_knowledge_base_config",
     "render_conversations_manager",
     "render_export_section",

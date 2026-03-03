@@ -20,7 +20,7 @@ from export import (
 def render_export_section():
     """Renderizza la sezione export nella sidebar."""
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 📤 Export Conversazione")
+    st.sidebar.markdown("### 📤 Export")
     
     messages = st.session_state.get("messages", [])
     

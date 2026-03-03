@@ -5,7 +5,7 @@
 # Fallback silenzioso ai valori default se il file manca o è malformato.
 # ============================================================================
 
-from .constants import BASE_DIR
+from .constants import BASE_DIR, VERSION
 
 try:
     import yaml
@@ -25,8 +25,8 @@ _DEFAULTS: dict = {
     },
     "news_banner": {
         "enabled": True,
-        "text": "Modalità Socratica - Scegli la profondità di analisi!",
-        "version": "1.10.0",
+        "text": "Architettura Sidebar — configurazione separata e UI più pulita",
+        "version": VERSION,
     },
     # v1.11.1 - Matrix rain
     "matrix_rain": True,

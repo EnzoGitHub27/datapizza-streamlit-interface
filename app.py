@@ -84,6 +84,7 @@ from ui import (
     render_export_section,
     render_export_preview,
 )
+from ui.sidebar import render_socratic_mode_settings
 
 # 🆕 v1.5.0 - File upload widget
 from ui.file_upload import (
@@ -285,10 +286,11 @@ def get_socratic_client(connection_type, provider, api_key, model, base_url, tem
         return None
 
 # ============================================================================
-# SIDEBAR
+# SIDEBAR — v1.12.0 Architettura Sidebar
 # ============================================================================
 
-# LLM Configuration
+# 1. ⚙️ Configurazione (chiusa di default)
+config_expander = st.sidebar.expander("⚙️ Configurazione", expanded=False)
 (
     connection_type,
     provider,
@@ -298,13 +300,13 @@ def get_socratic_client(connection_type, provider, api_key, model, base_url, tem
     system_prompt,
     temperature,
     max_messages,
-    socratic_mode  # v1.8.0
-) = render_llm_config()
+) = render_llm_config(container=config_expander)
+render_knowledge_base_config(connection_type, container=config_expander)
 
-# v1.9.0 - Widget storico socratico nella sidebar
-render_socratic_history_sidebar(socratic_mode)
+# 2. 💬 Conversazione (aperta)
+render_conversations_manager()
 
-# 🆕 v1.10.0 - Mappa sessione: settings + nudge + display in sidebar
+# 3. 🗺️ Mappa Sessione (aperta)
 session_map_mode = render_session_map_settings()
 st.session_state["session_map_mode"] = session_map_mode
 
@@ -372,13 +374,11 @@ if st.session_state.get("session_map_data") is not None:
                     st.session_state["session_map_data"] = session_map
                     st.rerun()
 
-# Knowledge Base Configuration
-render_knowledge_base_config(connection_type)
+# 4. 🧠 Modalità Socratica (aperta)
+socratic_mode = render_socratic_mode_settings()
+render_socratic_history_sidebar(socratic_mode)
 
-# Conversations Manager
-render_conversations_manager()
-
-# Export Section
+# 5. 📤 Export (aperta)
 render_export_section()
 
 # ============================================================================

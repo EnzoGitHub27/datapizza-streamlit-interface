@@ -19,7 +19,7 @@ from ui.socratic import SocraticHistory, clear_socratic_cache  # v1.9.0
 def render_conversations_manager():
     """Renderizza la sezione gestione conversazioni nella sidebar."""
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 💾 Conversazioni")
+    st.sidebar.markdown("### 💬 Conversazione")
     
     # Auto-save toggle
     auto_save = st.sidebar.checkbox(

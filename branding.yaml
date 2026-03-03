@@ -8,8 +8,10 @@ app:
 
 news_banner:
   enabled: true
-  text: "Modalità Socratica - Scegli la profondità di analisi!"
-  version: "1.10.0"
+  # text e version ora derivano automaticamente da config/constants.py
+  # Decommentare per sovrascrivere manualmente:
+  # text: "Testo personalizzato"
+  # version: "1.12.0"
 
 # Matrix rain — effetto visivo
 matrix_rain: true          # true/false — attiva/disattiva
