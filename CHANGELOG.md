@@ -7,6 +7,16 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.12.1] - 2026-03-03 — Fix installer Windows
+
+### Fixed
+
+- `installer/INSTALLA_DeepAiUG.bat`: aggiornamento PATH dopo installazione Ollama (fix popup "file non trovato")
+- `installer/INSTALLA_DeepAiUG.bat`: sostituito WebClient con Invoke-WebRequest (fix errore DownloadProgressChanged)
+- `installer/INSTALLA_DeepAiUG.bat`: stderr Ollama serve reindirizzato a nul (eliminato messaggio "handle is invalid")
+
+---
+
 ## [1.12.0] - 2026-03-03 — Architettura Sidebar
 
 ### Changed

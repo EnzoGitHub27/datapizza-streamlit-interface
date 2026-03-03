@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.12.0"
+VERSION = "1.12.1"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Architettura Sidebar"
+VERSION_DESCRIPTION = "Fix installer Windows"
 
 # ============================================================================
 # PATHS

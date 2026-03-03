@@ -239,6 +239,8 @@ if !OLLAMA_FOUND! equ 0 (
     )
     del "!DEST!\OllamaSetup.exe" >nul 2>&1
 )
+:: Aggiorna PATH nella sessione corrente per trovare ollama subito
+set "PATH=!PATH!;%LOCALAPPDATA%\Programs\Ollama"
 echo.
 
 :: ============================================================
@@ -425,7 +427,7 @@ if exist "%LOCALAPPDATA%\Programs\Ollama\ollama app.exe" (
 ) else if exist "%LOCALAPPDATA%\Ollama\ollama app.exe" (
     start "" "%LOCALAPPDATA%\Ollama\ollama app.exe"
 ) else (
-    start "" ollama serve >nul 2>&1
+    start /B ollama serve 2>nul
 )
 
 echo   Attesa avvio Ollama...
@@ -481,7 +483,7 @@ echo [LAUNCHER] Creazione DeepAiUG.bat >> "!LOG!"
     echo     ^) else if exist "%%LOCALAPPDATA%%\Ollama\ollama app.exe" ^(
     echo         start "" "%%LOCALAPPDATA%%\Ollama\ollama app.exe"
     echo     ^) else ^(
-    echo         start "" ollama serve
+    echo         start /B ollama serve 2^>nul
     echo     ^)
     echo     timeout /t 5 /nobreak ^>nul
     echo ^)
@@ -550,7 +552,7 @@ exit /b 0
 echo   Download %~3 in corso...
 echo [DOWNLOAD] %~3: %~1 >> "!LOG!"
 
-powershell -Command "$ProgressPreference = 'Continue'; $url = '%~1'; $dest = '%~2'; $wc = New-Object System.Net.WebClient; $wc.DownloadProgressChanged += { $pct = $_.ProgressPercentage; $dl = [math]::Round($_.BytesReceived/1MB,1); $tot = [math]::Round($_.TotalBytesToReceive/1MB,1); Write-Host ('  [' + ('#' * [int]($pct/5)) + ('.' * (20-[int]($pct/5))) + '] ' + $pct + '%%  ' + $dl + ' MB / ' + $tot + ' MB    ') -NoNewline; Write-Host \"`r\" -NoNewline }; $wc.DownloadFileTaskAsync($url, $dest).Wait(); Write-Host ''"
+powershell -Command "Invoke-WebRequest -Uri '%~1' -OutFile '%~2'"
 
 if !errorlevel! neq 0 (
     echo.
