@@ -7,6 +7,37 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.12.0] - 2026-03-03 — Architettura Sidebar
+
+### Changed
+
+- Sidebar riorganizzata in 5 sezioni distinte con ordine fisso
+- ⚙️ **Configurazione** in `st.expander` chiuso di default (connessione, modello, parametri, Knowledge Base)
+- 💬 **Conversazione**, 🗺️ **Mappa Sessione**, 🧠 **Modalità Socratica**, 📤 **Export** — aperte di default
+- Banner "Novità" ora dinamico: legge `VERSION` da `config/constants.py` invece di valore hardcoded
+- `render_llm_config()` accetta parametro `container` per supporto expander
+- `render_knowledge_base_config()` accetta parametro `container` con pattern `_container` a livello di modulo
+- `render_socratic_mode_settings()` estratta come funzione indipendente
+
+### 🔧 Modifiche Tecniche
+
+- `ui/sidebar/llm_config.py`: +`container` param, return 8 valori (era 9), +`render_socratic_mode_settings()`
+- `ui/sidebar/knowledge_base.py`: +`container` param, `_container` modulo per ~10 helpers privati
+- `ui/sidebar/conversations.py`: Header rinominato "💬 Conversazione"
+- `ui/sidebar/export_ui.py`: Header rinominato "📤 Export"
+- `ui/sidebar/__init__.py`: +export `render_socratic_mode_settings`
+- `app.py`: Sidebar ristrutturata con `st.sidebar.expander` + nuovo ordine 5 sezioni
+- `config/constants.py`: VERSION → 1.12.0, VERSION_DESCRIPTION → "Architettura Sidebar"
+- `config/branding.py`: default `news_banner.version` usa `VERSION` invece di stringa hardcoded
+- `branding.yaml`: rimossi `text` e `version` hardcoded (delegati ai default dinamici)
+
+### 📝 Note
+
+- **Solo UI**: nessuna modifica alla logica applicativa, session_state o prompt socratici
+- La logica session map (nudge, genera, rigenera) resta identica, solo riposizionata nella sidebar
+
+---
+
 ## [1.11.1] - 2026-02-27 — Matrix Theme
 
 ### ✨ Nuove Funzionalità

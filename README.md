@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.11.2-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.11.2)
+[![Version](https://img.shields.io/badge/version-1.12.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.12.0)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -44,6 +44,13 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
+
+### 🏗️ Novità v1.12.0 — Architettura Sidebar
+
+- **Sidebar riorganizzata** in 5 sezioni con ordine fisso
+- **⚙️ Configurazione** chiusa di default (`st.expander`) — connessione, modello, parametri, KB
+- **💬 Conversazione**, **🗺️ Mappa**, **🧠 Socratica**, **📤 Export** — sempre visibili
+- **Banner dinamico**: la versione nel banner segue automaticamente `VERSION`
 
 ### 🚀 Novità v1.11.2 — Installer multipiattaforma
 
@@ -176,7 +183,7 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.11.1
+## 🏗️ Architettura v1.12.0
 
 ```
 datapizza-streamlit-interface/
@@ -420,6 +427,7 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
+| v1.12.0 | 🏗️ Architettura Sidebar — configurazione separata | ✅ |
 | v1.11.2 | 🚀 Installer multipiattaforma Windows/Mac/Linux | ✅ |
 | v1.11.1 | 🎨 Matrix Theme | ✅ |
 | v1.11.0 | 🎨 Branding + UX Polish + Bug Fix parser | ✅ |
