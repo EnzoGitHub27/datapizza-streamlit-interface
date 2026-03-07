@@ -7,6 +7,24 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.13.0] — 2026-03-07
+
+### Aggiunto
+- **F3 Vault Support**: riconoscimento automatico Obsidian, LogSeq, Notion Export
+- Banner UI dedicato con icona e conteggio file per tipo vault
+- Parser nativo .canvas Obsidian (estrae testo dai nodi)
+- Aggiornamento incrementale vault basato su timestamp file
+- Filtro file per tipo vault (esclude .obsidian/, logseq/bak/, ecc.)
+- Costanti VAULT_TYPES in config/constants.py
+- Nuovo modulo `rag/vault.py` con funzioni detect, scan, parse, update
+
+### Modificato
+- `ui/sidebar/knowledge_base.py`: flusso selezione con riconoscimento vault automatico
+- `rag/adapters/local_folder.py`: supporto file .canvas in `_load_single_file()`
+- `config/constants.py`: VERSION → 1.13.0
+
+---
+
 ## [1.12.1] - 2026-03-03 — Fix installer Windows
 
 ### Fixed

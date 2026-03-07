@@ -28,6 +28,9 @@ from rag import (
     MediaWikiAdapter,
     DokuWikiAdapter,
 )
+from config.constants import VAULT_SESSION_KEY, VAULT_LAST_SYNC_KEY, VAULT_FILE_COUNT_KEY
+from rag.vault import detect_vault_type, scan_vault_files
+import time
 
 # Container di modulo — settato da render_knowledge_base_config()
 _container = None
@@ -230,8 +233,20 @@ def _render_local_folder_from_yaml(source: dict, adapter_config: dict):
     st.session_state[session_key] = folder_path
     st.session_state["kb_folder_path"] = folder_path  # Per compatibilità
 
+    # --- F3 Vault Support: riconoscimento automatico ---
+    if folder_path and Path(folder_path).exists():
+        vault_info = detect_vault_type(folder_path)
+        st.session_state[VAULT_SESSION_KEY] = vault_info
+        _container.info(
+            f"{vault_info['icon']} **{vault_info['label']} rilevato**  \n"
+            f"{len(scan_vault_files(folder_path, vault_info))} file compatibili trovati"
+        )
+        auto_ext = vault_info['include_ext']
+    else:
+        auto_ext = [".md", ".txt", ".html"]
+
     # Estensioni dal YAML o default
-    yaml_extensions = adapter_config.get("extensions", [".md", ".txt", ".html"])
+    yaml_extensions = adapter_config.get("extensions", auto_ext)
     ext_key = f"kb_extensions_{source_id}"
     saved_ext = st.session_state.get(ext_key, yaml_extensions)
 
@@ -274,6 +289,11 @@ def _render_local_folder_from_yaml(source: dict, adapter_config: dict):
                 "extensions": extensions,
                 "recursive": recursive
             }
+            st.session_state[VAULT_LAST_SYNC_KEY] = time.time()
+            st.session_state[VAULT_FILE_COUNT_KEY] = len(scan_vault_files(
+                folder_path,
+                st.session_state.get(VAULT_SESSION_KEY, {'include_ext': extensions, 'exclude_patterns': []})
+            ))
             _sync_source("local", final_config)
         else:
             _container.error("❌ Percorso cartella non valido")
@@ -289,11 +309,23 @@ def _render_local_folder_config():
     )
     st.session_state["kb_folder_path"] = folder_path
 
+    # --- F3 Vault Support: riconoscimento automatico ---
+    if folder_path and Path(folder_path).exists():
+        vault_info = detect_vault_type(folder_path)
+        st.session_state[VAULT_SESSION_KEY] = vault_info
+        _container.info(
+            f"{vault_info['icon']} **{vault_info['label']} rilevato**  \n"
+            f"{len(scan_vault_files(folder_path, vault_info))} file compatibili trovati"
+        )
+        auto_ext = vault_info['include_ext']
+    else:
+        auto_ext = [".md", ".txt", ".html"]
+
     # Selezione estensioni
     _container.markdown("**Formati file:**")
     col_ext1, col_ext2 = _container.columns(2)
 
-    saved_ext = st.session_state.get("kb_extensions", [".md", ".txt", ".html"])
+    saved_ext = st.session_state.get("kb_extensions", auto_ext)
     with col_ext1:
         use_md = st.checkbox(".md", value=".md" in saved_ext, key="ext_md")
         use_txt = st.checkbox(".txt", value=".txt" in saved_ext, key="ext_txt")
@@ -326,6 +358,11 @@ def _render_local_folder_config():
                 "extensions": extensions,
                 "recursive": recursive
             }
+            st.session_state[VAULT_LAST_SYNC_KEY] = time.time()
+            st.session_state[VAULT_FILE_COUNT_KEY] = len(scan_vault_files(
+                folder_path,
+                st.session_state.get(VAULT_SESSION_KEY, {'include_ext': extensions, 'exclude_patterns': []})
+            ))
             _sync_source("local", adapter_config)
         else:
             _container.error("❌ Percorso cartella non valido")
@@ -525,6 +562,18 @@ def _render_chunking_params(key_prefix: str):
 
 def _render_kb_stats():
     """Renderizza statistiche Knowledge Base."""
+    # --- F3 Vault Support: stato vault attivo ---
+    vault_attivo = st.session_state.get(VAULT_SESSION_KEY)
+    ultima_sync  = st.session_state.get(VAULT_LAST_SYNC_KEY, 0)
+    n_file_kb    = st.session_state.get(VAULT_FILE_COUNT_KEY, 0)
+
+    if vault_attivo and ultima_sync:
+        sync_str = datetime.fromtimestamp(ultima_sync).strftime('%d/%m/%Y %H:%M')
+        _container.success(
+            f"{vault_attivo['icon']} **{vault_attivo['label']} attivo**  \n"
+            f"Ultima sync: {sync_str}  |  {n_file_kb} file indicizzati"
+        )
+
     kb_manager: KnowledgeBaseManager = st.session_state.get("kb_manager")
 
     if kb_manager and kb_manager.is_indexed():

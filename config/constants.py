@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.12.1"
+VERSION = "1.13.0"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Fix installer Windows"
+VERSION_DESCRIPTION = "F3 Vault Support"
 
 # ============================================================================
 # PATHS
@@ -233,3 +233,38 @@ SESSION_MAP_MODES = {
 DEFAULT_SESSION_MAP_MODE = "threshold"
 SESSION_MAP_NUDGE_THRESHOLD = 5
 SESSION_MAP_PROGRESSIVE_VISIBLE_AFTER = 4
+
+# ============================================================================
+# F3 VAULT SUPPORT - v1.13.0
+# ============================================================================
+
+VAULT_TYPES = {
+    'obsidian': {
+        'label':            'Vault Obsidian',
+        'icon':             '🟣',
+        'include_ext':      ['.md', '.canvas'],
+        'exclude_patterns': ['.obsidian', 'templates', '.trash', '.archive']
+    },
+    'logseq': {
+        'label':            'Vault LogSeq',
+        'icon':             '🟤',
+        'include_ext':      ['.md', '.org'],
+        'exclude_patterns': ['logseq/bak', 'logseq/version-files']
+    },
+    'notion': {
+        'label':            'Export Notion',
+        'icon':             '⬛',
+        'include_ext':      ['.md'],
+        'exclude_patterns': []
+    },
+    'folder': {
+        'label':            'Cartella',
+        'icon':             '📁',
+        'include_ext':      ['.md', '.txt', '.pdf', '.docx'],
+        'exclude_patterns': []
+    }
+}
+
+VAULT_SESSION_KEY    = 'active_vault'
+VAULT_LAST_SYNC_KEY  = 'vault_last_sync'
+VAULT_FILE_COUNT_KEY = 'vault_file_count'
