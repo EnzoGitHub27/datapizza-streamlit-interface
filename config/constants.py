@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.12.1"
+VERSION = "1.12.2"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Fix installer Windows"
+VERSION_DESCRIPTION = "Sistema temi selezionabili — Business Modern + Matrix"
 
 # ============================================================================
 # PATHS
