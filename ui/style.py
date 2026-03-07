@@ -1,18 +1,27 @@
 # ui/style.py
-# DeepAiUG v1.11.1 - Matrix Theme
+# DeepAiUG v1.12.2 - Theme System (Matrix + Business Modern)
 # ============================================================================
+
+
+def inject_theme() -> None:
+    """Inietta il tema configurato (Matrix o Business Modern)."""
+    from config.branding import THEME, MATRIX_RAIN_ENABLED, MATRIX_RAIN_INTENSITY
+
+    if THEME == "matrix":
+        inject_matrix_style()
+    else:  # business_modern (default)
+        from ui.business_style import inject_business_style
+        inject_business_style()
 
 
 def inject_matrix_style() -> None:
     """Inietta il tema Matrix nell'app Streamlit."""
-    from config.branding import MATRIX_RAIN_ENABLED, MATRIX_RAIN_INTENSITY
-
-    _inject_css()
+    _inject_matrix_css()
     if MATRIX_RAIN_ENABLED:
         _inject_matrix_rain(MATRIX_RAIN_INTENSITY)
 
 
-def _inject_css() -> None:
+def _inject_matrix_css() -> None:
     """Inject Matrix CSS variables, scanlines, and component styles."""
     import streamlit as st
 

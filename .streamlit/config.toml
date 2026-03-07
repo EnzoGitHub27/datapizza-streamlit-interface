@@ -1,6 +1,18 @@
+# v1.12.2 - Theme Configuration
+# The actual theme CSS is injected via ui/style.py based on branding.yaml "theme" setting
+# These are fallback colors used when CSS is not fully loaded
+
 [theme]
-primaryColor = "#00d4aa"
-backgroundColor = "#020c06"
-secondaryBackgroundColor = "#0a1f12"
-textColor = "#c8ffd4"
-font = "monospace"
+# Business Modern Theme (DEFAULT)
+primaryColor = "#0066cc"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f8f9fa"
+textColor = "#1a1a1a"
+font = "sans serif"
+
+# Alternative: Matrix Theme (uncomment to use)
+# primaryColor = "#00d4aa"
+# backgroundColor = "#020c06"
+# secondaryBackgroundColor = "#0a1f12"
+# textColor = "#c8ffd4"
+# font = "monospace"
