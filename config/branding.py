@@ -31,6 +31,8 @@ _DEFAULTS: dict = {
     # v1.11.1 - Matrix rain
     "matrix_rain": True,
     "matrix_rain_intensity": 0.055,
+    # v1.12.2 - Theme selection
+    "theme": "business_modern",  # "matrix" o "business_modern"
 }
 
 
@@ -89,3 +91,6 @@ NEWS_BANNER_VERSION: str = _branding["news_banner"]["version"]
 # v1.11.1 - Matrix rain
 MATRIX_RAIN_ENABLED: bool = _branding.get("matrix_rain", True)
 MATRIX_RAIN_INTENSITY: float = float(_branding.get("matrix_rain_intensity", 0.055))
+
+# v1.12.2 - Theme selection
+THEME: str = _branding.get("theme", "business_modern")  # "matrix" o "business_modern"
