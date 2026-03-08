@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.13.4"
+VERSION = "1.13.7"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "ChromaDB batch fix + progress bar"
+VERSION_DESCRIPTION = "Conferma caricamento vault + icone vault in conversazioni"
 
 # ============================================================================
 # PATHS

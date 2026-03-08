@@ -140,6 +140,7 @@ def list_saved_conversations() -> List[Dict[str, Any]]:
                     "has_wiki": sensitivity["has_wiki"],
                     "has_folder": sensitivity["has_folder"],
                     "has_documents": sensitivity["has_documents"],
+                    "kb_folder_path": data.get("knowledge_base", {}).get("kb_folder_path", ""),
                 })
             except Exception:
                 continue

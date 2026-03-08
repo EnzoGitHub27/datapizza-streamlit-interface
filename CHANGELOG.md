@@ -7,6 +7,45 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.13.7] — 2026-03-08
+
+### Aggiunto
+- Conferma a 2 step prima del caricamento conversazioni con vault pesante
+  (>=50 file): bottoni "✅ Procedi" / "❌ Annulla" con avviso e stima tempo
+- Icone vault specifiche nelle conversazioni salvate:
+  🧠🟣 Obsidian, 🧠🟤 LogSeq, 🧠⬛ Notion (sostituisce 📁 generico)
+
+### Modificato
+- core/persistence.py: kb_folder_path esposto in list_saved_conversations()
+- ui/sidebar/conversations.py: _get_conversation_icon() con detect_vault_type()
+- ui/sidebar/conversations.py: logica caricamento con _has_heavy_kb() e pending_load_id
+
+---
+
+## [1.13.6] — 2026-03-08
+
+### Fix
+- _progress_cb: firma universale (*args) compatibile con tutte le fasi
+  di indicizzazione (caricamento documenti + batching ChromaDB)
+- Stima tempo ri-indicizzazione corretta: ~0.4s per file invece di 0.01s
+  con formattazione automatica in secondi/minuti
+
+---
+
+## [1.13.5] — 2026-03-08
+
+### Aggiunto
+- Avviso informativo prima del caricamento conversazioni con KB attiva:
+  mostra tipo vault, numero file e stima tempo ri-indicizzazione
+- Progress bar durante la ri-indicizzazione al caricamento conversazione
+- Aggiornamento automatico stato vault in session_state dopo ri-indicizzazione
+
+### Modificato
+- ui/sidebar/conversations.py: _show_load_warning() + progress_callback
+  in _load_conversation()
+
+---
+
 ## [1.13.4] — 2026-03-08
 
 ### Fix

@@ -13,6 +13,9 @@ from core import (
     extract_kb_settings,
 )
 from rag import KnowledgeBaseManager, TextChunker, LocalFolderAdapter
+from config.constants import VAULT_SESSION_KEY, VAULT_LAST_SYNC_KEY, VAULT_FILE_COUNT_KEY
+from rag.vault import detect_vault_type, scan_vault_files
+import time
 from ui.socratic import SocraticHistory, clear_socratic_cache  # v1.9.0
 
 
@@ -66,7 +69,6 @@ def render_conversations_manager():
 
             with col_l:
                 if st.button("📂 Carica"):
-                    # Block loading sensitive conversations on cloud providers
                     if sel_entry["is_sensitive"] and is_cloud:
                         st.sidebar.error(
                             f"{sel_entry['icons']} Questa conversazione contiene "
@@ -74,37 +76,65 @@ def render_conversations_manager():
                             "caricata con un provider cloud per motivi di privacy."
                         )
                     else:
-                        _load_conversation(sel_entry["id"])
-                        st.rerun()
+                        # Controlla se ha vault pesante — se sì chiede conferma
+                        needs_confirm = _has_heavy_kb(sel_entry["id"])
+                        if needs_confirm:
+                            st.session_state["pending_load_id"] = sel_entry["id"]
+                            st.rerun()
+                        else:
+                            _load_conversation(sel_entry["id"])
+                            st.rerun()
 
             with col_d:
                 if st.button("🗑️ Elimina"):
                     delete_conversation(sel_entry["id"])
                     st.rerun()
 
+            # Pannello conferma per vault pesanti
+            pending_id = st.session_state.get("pending_load_id")
+            if pending_id and pending_id == sel_entry["id"]:
+                _show_load_warning(pending_id)
+                col_ok, col_no = st.sidebar.columns(2)
+                with col_ok:
+                    if st.button("✅ Procedi", key="confirm_load"):
+                        st.session_state.pop("pending_load_id", None)
+                        _load_conversation(pending_id)
+                        st.rerun()
+                with col_no:
+                    if st.button("❌ Annulla", key="cancel_load"):
+                        st.session_state.pop("pending_load_id", None)
+                        st.rerun()
+
 
 def _get_conversation_icon(conv_info: dict, is_cloud: bool) -> str:
-    """Genera le icone da mostrare accanto alla conversazione.
-
-    Icone per tipo di contenuto sensibile:
-    - 📚 = Knowledge Base Wiki (MediaWiki/DokuWiki)
-    - 📁 = Cartella documenti locale
-    - 📎 = Singoli file allegati (attachments nei messaggi)
-    Combinazioni possibili: 📚, 📁, 📎, 📚📎, 📁📎
-    Se is_cloud è True, prependi 🔒 a ogni combinazione.
-
-    Args:
-        conv_info: Dict da list_saved_conversations() con has_wiki, has_folder, has_documents
-        is_cloud: True se il provider corrente è cloud
-
-    Returns:
-        Stringa icone (es. "🔒📁📎") o stringa vuota se non sensibile
+    """
+    Genera icone da mostrare accanto alla conversazione.
+    - 📚 KB Wiki, 📎 allegati
+    - Vault: icona specifica (🟣 Obsidian, 🟤 LogSeq, ⬛ Notion, 📁 cartella)
+    - 🔒 prefisso se is_cloud
     """
     parts: list[str] = []
+
     if conv_info.get("has_wiki"):
         parts.append("📚")
+
     if conv_info.get("has_folder"):
-        parts.append("📁")
+        # Rileva tipo vault per icona specifica
+        folder_path = conv_info.get("kb_folder_path", "")
+        if folder_path and Path(folder_path).exists():
+            vault_info = detect_vault_type(folder_path)
+            vault_type = vault_info.get("type", "folder")
+            if vault_type == "obsidian":
+                parts.append("🧠🟣")
+            elif vault_type == "logseq":
+                parts.append("🧠🟤")
+            elif vault_type == "notion":
+                parts.append("🧠⬛")
+            else:
+                parts.append("📁")
+        else:
+            parts.append("📁")
+
     if conv_info.get("has_documents"):
         parts.append("📎")
 
@@ -113,6 +143,66 @@ def _get_conversation_icon(conv_info: dict, is_cloud: bool) -> str:
 
     icons = "".join(parts)
     return f"🔒{icons}" if is_cloud else icons
+
+
+def _has_heavy_kb(conversation_id: str) -> bool:
+    """
+    Ritorna True se la conversazione ha una KB locale attiva
+    con almeno 50 file — soglia per mostrare la conferma.
+    """
+    from core import load_conversation as _load_raw
+    data = _load_raw(conversation_id)
+    if not data:
+        return False
+    kb_settings = data.get("knowledge_base", {})
+    if not kb_settings.get("use_knowledge_base", False):
+        return False
+    folder_path = kb_settings.get("kb_folder_path", "")
+    if not folder_path or not Path(folder_path).exists():
+        return False
+    vault_info = detect_vault_type(folder_path)
+    file_list = scan_vault_files(folder_path, vault_info)
+    return len(file_list) >= 50
+
+
+def _show_load_warning(conversation_id: str):
+    """
+    Mostra avviso informativo prima di caricare una conversazione
+    con Knowledge Base attiva. Legge i metadati senza caricare
+    l'intera conversazione.
+    """
+    from core import load_conversation as _load_raw
+    data = _load_raw(conversation_id)
+    if not data:
+        return
+
+    kb_settings = data.get("knowledge_base", {})
+    if not kb_settings.get("use_knowledge_base", False):
+        return
+
+    folder_path = kb_settings.get("kb_folder_path", "")
+    if not folder_path or not Path(folder_path).exists():
+        return
+
+    vault_info = detect_vault_type(folder_path)
+    file_list = scan_vault_files(folder_path, vault_info)
+    n_files = len(file_list)
+
+    # Stima tempo: ~0.4 secondi per file (basato su benchmark reale)
+    stima_sec = max(5, int(n_files * 0.4))
+    if stima_sec < 60:
+        stima_str = f"~{stima_sec}s"
+    elif stima_sec < 300:
+        minuti = stima_sec // 60
+        stima_str = f"~{minuti} min"
+    else:
+        minuti = stima_sec // 60
+        stima_str = f"~{minuti} min (operazione lunga)"
+
+    st.sidebar.info(
+        f"{vault_info['icon']} **{vault_info['label']}** — {n_files} file  \n"
+        f"⏱️ Ri-indicizzazione stimata: {stima_str}"
+    )
 
 
 def _load_conversation(conversation_id: str):
@@ -171,5 +261,34 @@ def _load_conversation(conversation_id: str):
                     "recursive": kb_settings["kb_recursive"]
                 })
                 kb_manager.set_adapter(adapter)
-                # Re-indicizza
-                kb_manager.index_documents()
+                # Re-indicizza con progress bar (v1.13.4 callback)
+                progress_bar = st.sidebar.progress(
+                    0, text="Re-indicizzazione in corso..."
+                )
+
+                def _progress_cb(*args, **kwargs):
+                    # manager.py chiama con (message, float) nelle fasi iniziali
+                    # vector_store.py chiama con (current, total, chunks_done, chunks_total) nel batching
+                    if len(args) == 2 and isinstance(args[0], str):
+                        # Fase caricamento/chunking: (messaggio, progress_float)
+                        progress_bar.progress(
+                            args[1],
+                            text=args[0]
+                        )
+                    elif len(args) == 4:
+                        # Fase batching ChromaDB: (current, total, chunks_done, chunks_total)
+                        current, total, chunks_done, chunks_total = args
+                        progress_bar.progress(
+                            current / total,
+                            text=f"Re-indicizzazione: {chunks_done}/{chunks_total} chunk"
+                        )
+
+                kb_manager.index_documents(progress_callback=_progress_cb)
+                progress_bar.empty()
+
+                # Aggiorna stato vault
+                vault_info = detect_vault_type(folder_path)
+                file_list = scan_vault_files(folder_path, vault_info)
+                st.session_state[VAULT_SESSION_KEY]    = vault_info
+                st.session_state[VAULT_LAST_SYNC_KEY]  = time.time()
+                st.session_state[VAULT_FILE_COUNT_KEY] = len(file_list)
