@@ -5,7 +5,7 @@
 
 def inject_theme() -> None:
     """Inietta il tema configurato (Matrix o Business Modern)."""
-    from config.branding import THEME, MATRIX_RAIN_ENABLED, MATRIX_RAIN_INTENSITY
+    from config.branding import THEME
 
     if THEME == "matrix":
         inject_matrix_style()
@@ -16,6 +16,8 @@ def inject_theme() -> None:
 
 def inject_matrix_style() -> None:
     """Inietta il tema Matrix nell'app Streamlit."""
+    from config.branding import MATRIX_RAIN_ENABLED, MATRIX_RAIN_INTENSITY
+
     _inject_matrix_css()
     if MATRIX_RAIN_ENABLED:
         _inject_matrix_rain(MATRIX_RAIN_INTENSITY)
@@ -43,6 +45,24 @@ def _inject_matrix_css() -> None:
 
     /* === APP BACKGROUND === */
     .stApp { background: #020c06 !important; color: #c8ffd4 !important; }
+
+    /* === FORCE TEXT COLOR (override Streamlit defaults) === */
+    .stApp p, .stApp span, .stApp li, .stApp a, .stApp div {
+      color: #c8ffd4 !important;
+    }
+
+    /* === TOOLBAR (dark background) === */
+    .stAppToolbar {
+      background: rgba(0, 15, 8, 0.97) !important;
+    }
+    .stAppToolbar button, .stAppToolbar [data-testid="stBaseButton-header"],
+    .stAppToolbar [data-testid="stBaseButton-headerNoPadding"] {
+      color: #c8ffd4 !important;
+    }
+    .stAppToolbar svg {
+      color: #c8ffd4 !important;
+      fill: #c8ffd4 !important;
+    }
 
     /* === SCANLINES OVERLAY === */
     .stApp::before {
@@ -103,6 +123,22 @@ def _inject_matrix_css() -> None:
       border-color: #00ff41 !important;
       color: #00ff41 !important;
       box-shadow: 0 0 8px rgba(0, 212, 170, 0.4) !important;
+    }
+
+    /* === SUBMIT BUTTON (Chat Input) === */
+    [data-testid="stBaseButton-primaryFormSubmit"] {
+      background: rgba(0, 212, 170, 0.2) !important;
+      border: 1px solid #00d4aa !important;
+      color: #c8ffd4 !important;
+    }
+    [data-testid="stBaseButton-primaryFormSubmit"]:hover {
+      background: rgba(0, 212, 170, 0.4) !important;
+      border-color: #00ff41 !important;
+      color: #00ff41 !important;
+      box-shadow: 0 0 8px rgba(0, 212, 170, 0.4) !important;
+    }
+    [data-testid="stBaseButton-primaryFormSubmit"] p {
+      color: #c8ffd4 !important;
     }
 
     /* === INPUT / TEXTAREA === */

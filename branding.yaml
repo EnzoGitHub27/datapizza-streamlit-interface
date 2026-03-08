@@ -14,7 +14,7 @@ news_banner:
   # version: "1.12.0"
 
 # v1.12.2 - Theme Selection
-theme: "business_modern"   # Opzioni: "business_modern" (default), "matrix"
+theme: "matrix"   # Opzioni: "business_modern" (default), "matrix"
 # Se usi "matrix", puoi configurare anche:
-# matrix_rain: true          # true/false — attiva/disattiva pioggia Matrix
-# matrix_rain_intensity: 0.055  # float 0.01-0.20 — opacità pioggia
+matrix_rain: true          # true/false — attiva/disattiva pioggia Matrix
+matrix_rain_intensity: 0.15  # float 0.01-0.20 — opacità pioggia
