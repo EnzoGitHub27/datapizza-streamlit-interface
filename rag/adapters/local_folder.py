@@ -95,8 +95,22 @@ class LocalFolderAdapter(WikiAdapter):
             Document se caricato con successo, None altrimenti
         """
         ext = file_path.suffix.lower()
-        
+
         try:
+            # F3 Vault Support: file .canvas Obsidian
+            if ext == '.canvas':
+                from rag.vault import parse_canvas_file
+                content = parse_canvas_file(file_path)
+                if content:
+                    metadata = {
+                        "file_size": file_path.stat().st_size,
+                        "modified_at": datetime.fromtimestamp(
+                            file_path.stat().st_mtime
+                        ).isoformat(),
+                    }
+                    return Document(str(file_path), content, metadata)
+                return None
+
             if ext in [".md", ".txt"]:
                 content = self._load_text_file(file_path)
             elif ext in [".html", ".htm"]:
