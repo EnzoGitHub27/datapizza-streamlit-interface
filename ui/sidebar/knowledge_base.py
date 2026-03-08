@@ -104,20 +104,29 @@ def render_knowledge_base_config(connection_type: str, container=None):
 def _render_source_selector(sources: list, config: dict):
     """
     Renderizza selettore sorgenti con raggruppamento per tipo.
+    Aggiunge in coda i vault types (F3) dopo le sorgenti YAML.
     """
-    # Crea opzioni con icone
     source_options = []
     source_map = {}
 
+    # Sorgenti da YAML
     for source in sources:
         icon = source.get("icon", _get_type_icon(source.get("type", "local")))
         label = f"{icon} {source['name']}"
         source_options.append(label)
-        source_map[label] = source
+        source_map[label] = ("yaml", source)
 
     # Aggiungi opzione custom se modalità lo permette
     if config.get("mode") == "custom" or not sources:
         source_options.append("➕ Configura manualmente...")
+
+    # Vault types in coda (F3) — sempre disponibili
+    for vault_id, vault_info in VAULT_TYPES.items():
+        if vault_id == "folder":
+            continue
+        label = f"{vault_info['icon']} {vault_info['label']}"
+        source_options.append(label)
+        source_map[label] = ("vault", vault_id)
 
     selected_label = _container.selectbox(
         "Seleziona sorgente",
@@ -127,11 +136,19 @@ def _render_source_selector(sources: list, config: dict):
 
     if selected_label == "➕ Configura manualmente...":
         _render_custom_source_selector()
-    else:
-        source = source_map[selected_label]
-        if source.get("description"):
-            _container.caption(source["description"])
-        _render_source_config(source, config)
+        return
+
+    category, value = source_map[selected_label]
+
+    if category == "vault":
+        _render_vault_config(value)
+        return
+
+    # Sorgente YAML
+    source = value
+    if source.get("description"):
+        _container.caption(source["description"])
+    _render_source_config(source, config)
 
 
 def _render_custom_source_selector():
@@ -406,7 +423,10 @@ def _render_vault_config(vault_type: str):
     if folder_path and Path(folder_path).exists():
         file_list = scan_vault_files(folder_path, vault_info)
         ext_str = ", ".join(vault_info['include_ext'])
-        _container.caption(f"📂 {len(file_list)} file trovati ({ext_str})")
+        _container.info(
+            f"{vault_info['icon']} **{vault_info['label']} rilevato**  \n"
+            f"{len(file_list)} file trovati ({ext_str})"
+        )
         st.session_state[VAULT_SESSION_KEY] = vault_info
     elif folder_path:
         _container.warning("⚠️ Percorso non trovato")
@@ -568,12 +588,19 @@ def _sync_source(source_type: str, config: dict):
 
     kb_manager.set_adapter(adapter)
 
-    # Indicizza
-    with st.spinner("🔄 Sincronizzazione in corso..."):
-        if kb_manager.index_documents():
-            _container.success("✅ Indicizzazione completata!")
-        else:
-            _container.error("❌ Errore indicizzazione")
+    # Indicizza con progress bar
+    progress_bar = _container.progress(0, text="🔄 Avvio sincronizzazione...")
+
+    def _ui_progress(status: str, frac: float):
+        progress_bar.progress(min(frac, 1.0), text=status)
+
+    success = kb_manager.index_documents(progress_callback=_ui_progress)
+
+    if success:
+        progress_bar.progress(1.0, text="✅ Indicizzazione completata!")
+    else:
+        progress_bar.empty()
+        _container.error("❌ Errore indicizzazione")
 
 
 def _show_last_sync_info(source_type: str, config: dict):

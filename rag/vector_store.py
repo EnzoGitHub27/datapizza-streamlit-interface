@@ -2,11 +2,14 @@
 # DeepAiUG v1.4.0 - Vector Store per RAG
 # ============================================================================
 
+import math
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Callable
 
 from .models import Chunk
 from config import KNOWLEDGE_BASE_DIR, DEFAULT_TOP_K_RESULTS
+
+CHROMA_BATCH_SIZE = 500
 
 
 class SimpleVectorStore:
@@ -64,41 +67,57 @@ class SimpleVectorStore:
             self.use_chromadb = False
     
     def add_chunks(
-        self, 
-        chunks: List[Chunk], 
-        embeddings: List[List[float]] = None
+        self,
+        chunks: List[Chunk],
+        embeddings: List[List[float]] = None,
+        progress_callback: Callable = None
     ):
         """
-        Aggiunge chunks al vector store.
-        
+        Aggiunge chunks al vector store con batching e progress callback.
+
         Args:
             chunks: Lista di Chunk da aggiungere
             embeddings: Embeddings pre-calcolati (opzionale)
+            progress_callback: Callback(status: str, progress: float) per aggiornamenti
         """
         if not chunks:
             return
-        
+
         if self.use_chromadb and self.collection:
             try:
-                ids = [chunk.id for chunk in chunks]
-                documents = [chunk.text for chunk in chunks]
-                metadatas = [chunk.to_dict() for chunk in chunks]
-                
-                # Se abbiamo embeddings, usiamoli
-                if embeddings:
-                    self.collection.add(
-                        ids=ids,
-                        documents=documents,
-                        metadatas=metadatas,
-                        embeddings=embeddings
-                    )
-                else:
-                    # ChromaDB genererà embeddings automaticamente
-                    self.collection.add(
-                        ids=ids,
-                        documents=documents,
-                        metadatas=metadatas
-                    )
+                total = len(chunks)
+                n_batches = math.ceil(total / CHROMA_BATCH_SIZE)
+
+                for b in range(n_batches):
+                    start = b * CHROMA_BATCH_SIZE
+                    end = min(start + CHROMA_BATCH_SIZE, total)
+                    batch = chunks[start:end]
+
+                    ids = [chunk.id for chunk in batch]
+                    documents = [chunk.text for chunk in batch]
+                    metadatas = [chunk.to_dict() for chunk in batch]
+
+                    if embeddings:
+                        batch_emb = embeddings[start:end]
+                        self.collection.add(
+                            ids=ids,
+                            documents=documents,
+                            metadatas=metadatas,
+                            embeddings=batch_emb
+                        )
+                    else:
+                        self.collection.add(
+                            ids=ids,
+                            documents=documents,
+                            metadatas=metadatas
+                        )
+
+                    if progress_callback:
+                        progress_callback(
+                            f"ChromaDB: batch {b + 1}/{n_batches} ({end}/{total} chunks)",
+                            end / total
+                        )
+
             except Exception as e:
                 print(f"❌ Errore aggiunta a ChromaDB: {e}")
         else:

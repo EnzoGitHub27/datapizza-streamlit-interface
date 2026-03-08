@@ -101,15 +101,21 @@ class KnowledgeBaseManager:
         if progress_callback:
             progress_callback(f"📦 Creati {len(self.chunks)} chunks", 0.7)
         
-        # 3. Indicizzazione
+        # 3. Indicizzazione (con batching ChromaDB)
         if progress_callback:
             progress_callback("🔍 Indicizzazione in corso...", 0.8)
-        
+
         self.vector_store.clear()
-        self.vector_store.add_chunks(self.chunks)
-        
+
+        # Callback interno: mappa progresso batching nel range 0.8 → 1.0
+        def _batch_cb(status: str, frac: float):
+            if progress_callback:
+                progress_callback(status, 0.8 + frac * 0.2)
+
+        self.vector_store.add_chunks(self.chunks, progress_callback=_batch_cb)
+
         self.last_indexed = datetime.now().isoformat()
-        
+
         if progress_callback:
             progress_callback("✅ Indicizzazione completata!", 1.0)
         

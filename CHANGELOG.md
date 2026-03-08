@@ -7,6 +7,46 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.13.4] — 2026-03-08
+
+### Fix
+- **ChromaDB batch limit**: indicizzazione di vault e cartelle grandi
+  non crasha più (ValueError: Batch size exceeded).
+  I chunk vengono ora inseriti in batch da 500 elementi.
+
+### Aggiunto
+- Progress bar in tempo reale durante l'indicizzazione —
+  mostra chunk processati e numero di batch
+- Parametro progress_callback in add_chunks() (rag/vector_store.py)
+  per aggiornamenti dal backend senza accoppiamento UI
+- Propagazione callback attraverso index_documents() → add_chunks()
+
+### Modificato
+- rag/vector_store.py: batching ChromaDB con CHROMA_BATCH_SIZE = 500
+- rag/manager.py: index_documents() propaga progress_callback
+- ui/sidebar/knowledge_base.py: _sync_source() con st.progress bar
+
+---
+
+## [1.13.3] — 2026-03-08
+
+### Modificato
+- _render_vault_config(): banner "Vault rilevato" ripristinato con st.info
+  (era caption — ora coerente con _render_local_folder_config)
+
+---
+
+## [1.13.2] — 2026-03-08
+
+### Aggiunto
+- Vault Obsidian, LogSeq, Notion Export visibili nel dropdown anche
+  in modalità YAML (selectable/fixed) — sempre disponibili in coda
+
+### Modificato
+- _render_source_selector(): estesa con vault types in coda alle sorgenti YAML
+
+---
+
 ## [1.13.1] — 2026-03-08
 
 ### Aggiunto
