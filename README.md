@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.12.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.12.0)
+[![Version](https://img.shields.io/badge/version-1.13.4-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.13.4)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -37,6 +37,7 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 - 💾 **Persistenza** delle conversazioni su file JSON
 - 📥 **Export** in Markdown, JSON, TXT, PDF + Batch ZIP
 - 📚 **Knowledge Base RAG** - Interroga documenti locali e wiki!
+- 🟣 **Vault Support** - Obsidian, LogSeq, Notion Export con riconoscimento automatico
 - 🌐 **Multi-Wiki** - MediaWiki + DokuWiki support
 - 📎 **File Upload in Chat** - Allega PDF, DOCX, TXT, immagini
 - 🔐 **Privacy-First Protection** - Sistema completo protezione dati sensibili
@@ -44,6 +45,15 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
+
+### 🟣 Novità v1.13.x — Vault Support (F3)
+
+- **Vault Obsidian, LogSeq, Notion Export** selezionabili direttamente dal menu Knowledge Base
+- **Riconoscimento automatico** del tipo vault dal percorso inserito
+- **Parser nativo .canvas** Obsidian (estrae testo dai nodi del canvas)
+- **Aggiornamento incrementale** basato su timestamp file
+- **ChromaDB batch fix** — supporto corpus grandi (testato su 808 file / 6693 chunk)
+- **Progress bar** in tempo reale durante l'indicizzazione
 
 ### 🏗️ Novità v1.12.0 — Architettura Sidebar
 
@@ -183,7 +193,7 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.12.0
+## 🏗️ Architettura v1.13.4
 
 ```
 datapizza-streamlit-interface/
@@ -211,6 +221,7 @@ datapizza-streamlit-interface/
 │   ├── chunker.py            # TextChunker intelligente
 │   ├── vector_store.py       # ChromaDB + fallback
 │   ├── manager.py            # KnowledgeBaseManager
+│   ├── vault.py              # ⭐ F3: detect, scan, parse canvas, update incrementale
 │   └── adapters/             # Sorgenti dati
 │       ├── local_folder.py   # File locali
 │       ├── mediawiki.py      # API MediaWiki
@@ -359,6 +370,9 @@ Puoi inserire le API keys direttamente dall'interfaccia Streamlit!
 | Tipo | Descrizione | Pacchetto |
 |------|-------------|-----------|
 | 📁 **Cartella Locale** | File MD, TXT, HTML, PDF | - |
+| 🟣 **Vault Obsidian** | Note .md + Canvas, riconoscimento automatico | - |
+| 🟤 **Vault LogSeq** | Note .md e .org, esclusi file di backup | - |
+| ⬛ **Notion Export** | Cartelle export Notion in formato MD | - |
 | 🌐 **MediaWiki** | Wikipedia-like wikis | `mwclient` |
 | 📘 **DokuWiki** | Wiki per documentazione | `dokuwiki` |
 
@@ -427,6 +441,11 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
+| v1.13.4 | 🔧 ChromaDB batch fix + progress bar indicizzazione | ✅ |
+| v1.13.3 | 🟣 Banner vault rilevato coerente | ✅ |
+| v1.13.2 | 🟣 Vault nel dropdown YAML | ✅ |
+| v1.13.1 | 🟣 Vault nel dropdown custom | ✅ |
+| v1.13.0 | 🟣 F3 Vault Support — Obsidian, LogSeq, Notion | ✅ |
 | v1.12.0 | 🏗️ Architettura Sidebar — configurazione separata | ✅ |
 | v1.11.2 | 🚀 Installer multipiattaforma Windows/Mac/Linux | ✅ |
 | v1.11.1 | 🎨 Matrix Theme | ✅ |

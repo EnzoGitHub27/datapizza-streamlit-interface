@@ -69,6 +69,16 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    │
    ├─→ v1.11.1 ✅ (2026-02-27)  + 🎨 Matrix Theme
    │
+   ├─→ v1.11.2 ✅ (2026-02-28)  + 🚀 Installer multipiattaforma
+   │
+   ├─→ v1.12.0 ✅ (2026-03-05)  + 🏗️ Architettura Sidebar
+   │
+   ├─→ v1.13.0 ✅ (2026-03-07)  + 🟣 F3 Vault Support (Obsidian/LogSeq/Notion)
+   ├─→ v1.13.1 ✅ (2026-03-08)  + 🟣 Vault nel dropdown custom
+   ├─→ v1.13.2 ✅ (2026-03-08)  + 🟣 Vault nel dropdown YAML
+   ├─→ v1.13.3 ✅ (2026-03-08)  + 🟣 Banner vault coerente
+   ├─→ v1.13.4 ✅ (2026-03-08)  + 🔧 ChromaDB batch fix + progress bar
+   │
    └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
 
 ✅ = Completata
@@ -81,6 +91,39 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 ---
 
 ## ✅ Completate
+
+### v1.13.x — F3 Vault Support ✅
+**Data:** 2026-03-07 / 2026-03-08
+
+**v1.13.0 — Riconoscimento automatico vault**
+- Nuovo modulo `rag/vault.py`: detect_vault_type(), scan_vault_files(), parse_canvas_file(), get_files_to_update()
+- Banner UI con icona e conteggio file per tipo vault rilevato
+- Parser nativo file .canvas Obsidian (JSON → estrazione testo nodi)
+- Aggiornamento incrementale basato su mtime file
+- Filtri esclusione per tipo vault (.obsidian/, logseq/bak/, ecc.)
+- VAULT_TYPES dict + 3 session key in config/constants.py
+
+**v1.13.1 — Vault nel dropdown custom**
+- Vault Obsidian, LogSeq, Notion Export visibili in _render_custom_source_selector()
+- Nuova funzione _render_vault_config() — UI dedicata senza checkbox manuali
+
+**v1.13.2 — Vault nel dropdown YAML**
+- _render_source_selector() estesa: vault types sempre in coda alle sorgenti YAML
+
+**v1.13.3 — Banner coerente**
+- Banner "Vault rilevato" ripristinato con st.info in _render_vault_config()
+
+**v1.13.4 — ChromaDB batch fix + progress bar**
+- Fix critico: batch da 500 elementi risolve ValueError su corpus grandi
+- Testato su 808 file Obsidian / 6693 chunk
+- progress_callback architecture: backend puro, progress bar in UI
+- CHROMA_BATCH_SIZE = 500 in rag/vector_store.py
+
+### v1.12.0 — Architettura Sidebar ✅
+**Data:** 2026-03-05
+- Sidebar riorganizzata in 5 sezioni con ordine fisso
+- ⚙️ Configurazione in st.expander chiuso di default
+- Banner versione dinamico da costante VERSION
 
 ### v1.11.1 — Matrix Theme ✅
 **Data:** 2026-02-27
@@ -274,7 +317,7 @@ Nessun altro file modificato.
 
 ---
 
-## 🛠️ Architettura Attuale (v1.11.1)
+## 🛠️ Architettura Attuale (v1.13.4)
 
 ```
 datapizza-streamlit-interface/
@@ -302,6 +345,7 @@ datapizza-streamlit-interface/
 │   ├── chunker.py            # TextChunker
 │   ├── vector_store.py       # ChromaDB
 │   ├── manager.py            # Orchestrazione
+│   └── vault.py              # ⭐ F3: detect, scan, parse canvas, update (v1.13.0)
 │   └── adapters/
 │       ├── local_folder.py   # File locali
 │       ├── mediawiki.py      # MediaWiki
@@ -358,5 +402,5 @@ Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per dettagli.
 
 ---
 
-*Ultimo aggiornamento: 2026-02-27*
+*Ultimo aggiornamento: 2026-03-08*
 *DeepAiUG Streamlit Interface © 2026*
