@@ -13,6 +13,7 @@ from config import (
     DEFAULT_CHUNK_OVERLAP,
     DEFAULT_TOP_K_RESULTS,
     WIKI_TYPES,
+    VAULT_TYPES,
 )
 from config.settings import (
     load_wiki_config,
@@ -136,13 +137,26 @@ def _render_source_selector(sources: list, config: dict):
 def _render_custom_source_selector():
     """
     Renderizza selettore per configurazione manuale.
+    Mostra wiki types (WIKI_TYPES) e vault types (VAULT_TYPES).
     """
-    # Selezione tipo
     type_options = []
+    type_routing = {}  # label -> (category, id)
+
+    # Wiki types esistenti
     for type_id, type_info in WIKI_TYPES.items():
         icon = type_info.get("icon", "📄")
         name = type_info.get("name", type_id)
-        type_options.append(f"{icon} {name}")
+        label = f"{icon} {name}"
+        type_options.append(label)
+        type_routing[label] = ("wiki", type_id)
+
+    # Vault types (F3) — escludi 'folder' già coperto da 'local'
+    for vault_id, vault_info in VAULT_TYPES.items():
+        if vault_id == "folder":
+            continue
+        label = f"{vault_info['icon']} {vault_info['label']}"
+        type_options.append(label)
+        type_routing[label] = ("vault", vault_id)
 
     selected_type_label = _container.selectbox(
         "Tipo sorgente",
@@ -150,24 +164,26 @@ def _render_custom_source_selector():
         help="Seleziona il tipo di sorgente documenti"
     )
 
-    # Estrai tipo dall'etichetta
-    type_ids = list(WIKI_TYPES.keys())
-    selected_idx = type_options.index(selected_type_label)
-    source_type = type_ids[selected_idx]
+    category, source_id = type_routing[selected_type_label]
 
-    # Verifica disponibilità
-    if not is_source_type_available(source_type):
-        missing_pkg = get_missing_package(source_type)
+    # Routing vault
+    if category == "vault":
+        _render_vault_config(source_id)
+        return
+
+    # Verifica disponibilità (solo per wiki types)
+    if not is_source_type_available(source_id):
+        missing_pkg = get_missing_package(source_id)
         _container.error(f"❌ Pacchetto `{missing_pkg}` non installato")
         _container.code(f"pip install {missing_pkg}", language="bash")
         return
 
-    # Renderizza config specifica per tipo
-    if source_type == "local":
+    # Routing wiki types
+    if source_id == "local":
         _render_local_folder_config()
-    elif source_type == "mediawiki":
+    elif source_id == "mediawiki":
         _render_mediawiki_custom_config()
-    elif source_type == "dokuwiki":
+    elif source_id == "dokuwiki":
         _render_dokuwiki_custom_config()
 
 
@@ -366,6 +382,58 @@ def _render_local_folder_config():
             _sync_source("local", adapter_config)
         else:
             _container.error("❌ Percorso cartella non valido")
+
+
+def _render_vault_config(vault_type: str):
+    """
+    Renderizza configurazione per vault (Obsidian, LogSeq, Notion Export).
+    UI semplificata: percorso + conteggio automatico + chunking + pulsante.
+    Estensioni e filtri sono gestiti automaticamente da VAULT_TYPES.
+    """
+    vault_info = {**VAULT_TYPES[vault_type], 'type': vault_type}
+
+    session_key = f"kb_vault_path_{vault_type}"
+    folder_path = _container.text_input(
+        f"Percorso {vault_info['label']}",
+        value=st.session_state.get(session_key, ""),
+        placeholder="/path/to/vault",
+        help=f"Percorso assoluto alla cartella del {vault_info['label']}",
+        key=f"input_{session_key}"
+    )
+    st.session_state[session_key] = folder_path
+    st.session_state["kb_folder_path"] = folder_path  # Per compatibilità
+
+    if folder_path and Path(folder_path).exists():
+        file_list = scan_vault_files(folder_path, vault_info)
+        ext_str = ", ".join(vault_info['include_ext'])
+        _container.caption(f"📂 {len(file_list)} file trovati ({ext_str})")
+        st.session_state[VAULT_SESSION_KEY] = vault_info
+    elif folder_path:
+        _container.warning("⚠️ Percorso non trovato")
+
+    # Parametri Chunking
+    _render_chunking_params(key_prefix=f"vault_{vault_type}")
+
+    # Pulsante indicizzazione
+    if _container.button(
+        f"🔄 Indicizza {vault_info['label']}",
+        use_container_width=True,
+        type="primary"
+    ):
+        if folder_path and Path(folder_path).exists():
+            file_list = scan_vault_files(folder_path, vault_info)
+            adapter_config = {
+                "folder_path": folder_path,
+                "extensions": vault_info['include_ext'],
+                "recursive": True,
+                "exclude_patterns": vault_info['exclude_patterns']
+            }
+            st.session_state[VAULT_SESSION_KEY]    = vault_info
+            st.session_state[VAULT_LAST_SYNC_KEY]  = time.time()
+            st.session_state[VAULT_FILE_COUNT_KEY] = len(file_list)
+            _sync_source("local", adapter_config)
+        else:
+            _container.error(f"❌ Percorso {vault_info['label']} non valido")
 
 
 def _render_mediawiki_custom_config():

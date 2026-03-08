@@ -7,6 +7,19 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.13.1] — 2026-03-08
+
+### Aggiunto
+- Vault Obsidian, LogSeq, Notion Export visibili direttamente nel dropdown "Tipo sorgente"
+- Nuova funzione _render_vault_config() — UI dedicata per vault (senza checkbox manuali)
+- Conteggio file automatico e caption estensioni al cambio percorso vault
+
+### Modificato
+- _render_custom_source_selector(): esteso con VAULT_TYPES (escluso 'folder')
+- config/__init__.py: VAULT_TYPES e session key esportati da config direttamente
+
+---
+
 ## [1.13.0] — 2026-03-07
 
 ### Aggiunto

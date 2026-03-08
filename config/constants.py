@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.13.0"
+VERSION = "1.13.1"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "F3 Vault Support"
+VERSION_DESCRIPTION = "UX Vault nel dropdown"
 
 # ============================================================================
 # PATHS
