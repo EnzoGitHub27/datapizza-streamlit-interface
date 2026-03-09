@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.13.4-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.13.4)
+[![Version](https://img.shields.io/badge/version-1.13.9-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.13.9)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -46,7 +46,7 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 
 ---
 
-### 🟣 Novità v1.13.x — Vault Support (F3)
+### 🟣 Novità v1.13.x — Vault Support (F3) + UX Fix
 
 - **Vault Obsidian, LogSeq, Notion Export** selezionabili direttamente dal menu Knowledge Base
 - **Riconoscimento automatico** del tipo vault dal percorso inserito
@@ -54,6 +54,9 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 - **Aggiornamento incrementale** basato su timestamp file
 - **ChromaDB batch fix** — supporto corpus grandi (testato su 808 file / 6693 chunk)
 - **Progress bar** in tempo reale durante l'indicizzazione
+- **Conferma a 2 step** prima del caricamento conversazioni con vault pesante (≥50 file)
+- **Icone vault specifiche** nelle conversazioni salvate: 🧠🟣 Obsidian, 🧠🟤 LogSeq, 🧠⬛ Notion
+- **Fix modello nei bottoni socratici** — ogni esplorazione mostra il modello che l'ha generata
 
 ### 🏗️ Novità v1.12.0 — Architettura Sidebar
 
@@ -441,6 +444,11 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
+| v1.13.9 | 🔧 Fix modello per esplorazione socratica specifica | ✅ |
+| v1.13.8 | 🔧 Fix nome modello nei bottoni socratici | ✅ |
+| v1.13.7 | 🧠 Conferma caricamento vault + icone vault in conversazioni | ✅ |
+| v1.13.6 | 🔧 Fix progress callback + stima tempo caricamento | ✅ |
+| v1.13.5 | 🟣 Warning + progress bar caricamento conversazioni vault | ✅ |
 | v1.13.4 | 🔧 ChromaDB batch fix + progress bar indicizzazione | ✅ |
 | v1.13.3 | 🟣 Banner vault rilevato coerente | ✅ |
 | v1.13.2 | 🟣 Vault nel dropdown YAML | ✅ |

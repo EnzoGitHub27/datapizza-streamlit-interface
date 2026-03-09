@@ -78,6 +78,11 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    ├─→ v1.13.2 ✅ (2026-03-08)  + 🟣 Vault nel dropdown YAML
    ├─→ v1.13.3 ✅ (2026-03-08)  + 🟣 Banner vault coerente
    ├─→ v1.13.4 ✅ (2026-03-08)  + 🔧 ChromaDB batch fix + progress bar
+   ├─→ v1.13.5 ✅ (2026-03-08)  + 🟣 Warning + progress bar caricamento vault
+   ├─→ v1.13.6 ✅ (2026-03-09)  + 🔧 Fix progress callback + stima tempo
+   ├─→ v1.13.7 ✅ (2026-03-09)  + 🧠 Conferma caricamento vault + icone vault
+   ├─→ v1.13.8 ✅ (2026-03-09)  + 🔧 Fix nome modello bottoni socratici
+   ├─→ v1.13.9 ✅ (2026-03-09)  + 🔧 Fix modello per esplorazione specifica
    │
    └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
 
@@ -118,6 +123,29 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 - Testato su 808 file Obsidian / 6693 chunk
 - progress_callback architecture: backend puro, progress bar in UI
 - CHROMA_BATCH_SIZE = 500 in rag/vector_store.py
+
+**v1.13.5 — Warning + progress bar caricamento conversazioni vault**
+- _show_load_warning(): avviso tipo vault + file count + stima tempo prima del caricamento
+- Progress bar ChromaDB durante ri-indicizzazione al caricamento conversazione
+
+**v1.13.6 — Fix progress callback + stima tempo**
+- _progress_cb con firma universale (*args) compatibile con tutte le fasi
+- Stima tempo corretta: ~0.4s per file con formattazione automatica secondi/minuti
+
+**v1.13.7 — Conferma caricamento vault + icone vault**
+- Conferma a 2 step (≥50 file): "✅ Procedi" / "❌ Annulla" con avviso e stima
+- Icone vault specifiche nelle conversazioni: 🧠🟣 Obsidian, 🧠🟤 LogSeq, 🧠⬛ Notion
+- core/persistence.py: kb_folder_path esposto in list_saved_conversations()
+- _has_heavy_kb() — soglia 50 file per attivare la conferma
+
+**v1.13.8 — Fix nome modello bottoni socratici**
+- model_used passato esplicitamente a render_socratic_buttons()
+- Cambiare modello non altera più il footer delle risposte già generate
+
+**v1.13.9 — Fix modello per esplorazione socratica specifica**
+- Cache modello dedicata per ogni esplorazione (socratic_model_{action}_{idx})
+- _render_model_timestamp() con priorità: cache specifica → model_used → current_model
+- Ogni bottone socratico mostra il modello che ha generato quella specifica esplorazione
 
 ### v1.12.0 — Architettura Sidebar ✅
 **Data:** 2026-03-05
@@ -317,7 +345,7 @@ Nessun altro file modificato.
 
 ---
 
-## 🛠️ Architettura Attuale (v1.13.4)
+## 🛠️ Architettura Attuale (v1.13.9)
 
 ```
 datapizza-streamlit-interface/
@@ -402,5 +430,5 @@ Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per dettagli.
 
 ---
 
-*Ultimo aggiornamento: 2026-03-08*
+*Ultimo aggiornamento: 2026-03-09*
 *DeepAiUG Streamlit Interface © 2026*
