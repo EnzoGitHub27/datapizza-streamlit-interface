@@ -106,7 +106,8 @@ def render_chat_message(
                 msg_index=index,
                 client=llm_client,
                 user_question=user_question,
-                socratic_mode=socratic_mode
+                socratic_mode=socratic_mode,
+                model_used=model_used
             )
 
         st.write("")

@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.13.7"
+VERSION = "1.13.9"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Conferma caricamento vault + icone vault in conversazioni"
+VERSION_DESCRIPTION = "Fix modello per esplorazioni socratiche"
 
 # ============================================================================
 # PATHS

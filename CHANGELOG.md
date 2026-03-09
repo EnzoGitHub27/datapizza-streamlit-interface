@@ -7,6 +7,35 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.13.9] — 2026-03-09
+
+### Fix
+- Ogni esplorazione socratica ora mostra il modello che l'ha generata,
+  non il modello attualmente selezionato nella sidebar
+- Cache modello dedicata per ogni esplorazione (socratic_model_{action}_{idx})
+
+### Modificato
+- ui/socratic/buttons.py: _get_model_cache_key(), salvataggio modello
+  in tutti e 5 i generate_*(), _render_model_timestamp() con priorità
+  cache specifica
+
+---
+
+## [1.13.8] — 2026-03-09
+
+### Fix
+- Nome modello nei bottoni socratici ora mostra il modello che ha
+  generato quella risposta, non il modello attualmente selezionato
+- Cambiare modello nella sidebar non altera più il footer delle
+  risposte già generate
+
+### Modificato
+- ui/chat.py: passa model_used a render_socratic_buttons()
+- ui/socratic/buttons.py: _render_model_timestamp() accetta model_name
+  esplicito con fallback a current_model
+
+---
+
 ## [1.13.7] — 2026-03-08
 
 ### Aggiunto

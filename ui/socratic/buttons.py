@@ -21,9 +21,17 @@ from .prompts import (
 )
 
 
-def _render_model_timestamp() -> None:
-    """Mostra modello e timestamp sotto un output socratico."""
-    model_name = st.session_state.get("current_model", "")
+def _render_model_timestamp(model_name: str = "", msg_index: int = 0, action: str = "") -> None:
+    """Mostra modello e timestamp sotto un output socratico.
+    Priorità: cache modello specifica > model_name passato > current_model.
+    """
+    if action and msg_index is not None:
+        model_cache_key = _get_model_cache_key(msg_index, action)
+        cached_model = st.session_state.get(model_cache_key, "")
+        if cached_model:
+            model_name = cached_model
+    if not model_name:
+        model_name = st.session_state.get("current_model", "")
     now = datetime.now().strftime("%H:%M")
     if model_name:
         st.caption(f"🤖 {model_name}  •  🕐 {now}")
@@ -32,6 +40,11 @@ def _render_model_timestamp() -> None:
 def _get_socratic_cache_key(msg_index: int, action: str) -> str:
     """Genera la chiave per la cache delle risposte socratiche."""
     return f"socratic_{action}_{msg_index}"
+
+
+def _get_model_cache_key(msg_index: int, action: str) -> str:
+    """Genera la chiave per la cache del modello usato."""
+    return f"socratic_model_{action}_{msg_index}"
 
 
 def _get_loading_key(msg_index: int, action: str) -> str:
@@ -113,6 +126,8 @@ def generate_alternatives(
         
         # Salva in cache
         st.session_state[cache_key] = alternatives_text
+        model_cache_key = _get_model_cache_key(msg_index, "alternatives")
+        st.session_state[model_cache_key] = st.session_state.get("current_model", "")
 
         # v1.9.0 - Registra esplorazione
         _record_exploration("alternatives", response, alternatives_text, msg_index)
@@ -159,6 +174,8 @@ def generate_assumptions(
 
         # Salva in cache
         st.session_state[cache_key] = assumptions_text
+        model_cache_key = _get_model_cache_key(msg_index, "assumptions")
+        st.session_state[model_cache_key] = st.session_state.get("current_model", "")
 
         # v1.9.0 - Registra esplorazione
         _record_exploration("assumptions", response, assumptions_text, msg_index)
@@ -205,6 +222,8 @@ def generate_limits(
 
         # Salva in cache
         st.session_state[cache_key] = limits_text
+        model_cache_key = _get_model_cache_key(msg_index, "limits")
+        st.session_state[model_cache_key] = st.session_state.get("current_model", "")
 
         # v1.9.0 - Registra esplorazione
         _record_exploration("limits", response, limits_text, msg_index)
@@ -251,6 +270,8 @@ def generate_confute(
 
         # Salva in cache
         st.session_state[cache_key] = confute_text
+        model_cache_key = _get_model_cache_key(msg_index, "confute")
+        st.session_state[model_cache_key] = st.session_state.get("current_model", "")
 
         # v1.9.0 - Registra esplorazione
         _record_exploration("confute", response, confute_text, msg_index)
@@ -299,6 +320,8 @@ def generate_reflect(
 
         # Salva in cache
         st.session_state[cache_key] = reflect_text
+        model_cache_key = _get_model_cache_key(msg_index, "reflect")
+        st.session_state[model_cache_key] = st.session_state.get("current_model", "")
 
         # v1.9.0 - Registra esplorazione (con user_question esplicita)
         _record_exploration("reflect", response, reflect_text, msg_index, user_question)
@@ -314,7 +337,8 @@ def render_socratic_buttons(
     msg_index: int,
     client: Optional[object] = None,
     user_question: Optional[str] = None,
-    socratic_mode: str = "standard"
+    socratic_mode: str = "standard",
+    model_used: str = ""
 ):
     """
     Renderizza i bottoni socratici sotto una risposta AI. (v1.8.0)
@@ -325,6 +349,7 @@ def render_socratic_buttons(
         client: Client LLM per generare le alternative (opzionale)
         user_question: La domanda utente precedente (per "Rifletti") - v1.8.0
         socratic_mode: Modalità socratica ("fast", "standard", "socratic") - v1.8.0
+        model_used: Nome del modello che ha generato la risposta originale
     """
     # v1.8.0 - Se modalità "fast", non mostrare bottoni
     if socratic_mode == "fast":
@@ -527,35 +552,35 @@ def render_socratic_buttons(
         with st.expander("🔄 **Alternative generate** - Esplora prospettive diverse", expanded=False):
             st.markdown(st.session_state[alt_cache_key])
             st.caption("💡 *Quale prospettiva ti sembra più utile?*")
-            _render_model_timestamp()
+            _render_model_timestamp(model_used, msg_index, "alternatives")
 
     # Mostra le assunzioni se presenti
     if has_assum_cached:
         with st.expander("🤔 **Assunzioni implicite** - Cosa si dà per scontato?", expanded=False):
             st.markdown(st.session_state[assum_cache_key])
             st.caption("💭 *Quali si applicano davvero alla tua situazione?*")
-            _render_model_timestamp()
+            _render_model_timestamp(model_used, msg_index, "assumptions")
 
     # Mostra i limiti se presenti
     if has_limits_cached:
         with st.expander("⚠️ **Limiti di validità** - Quando NON funziona", expanded=False):
             st.markdown(st.session_state[limits_cache_key])
             st.caption("🔍 *La tua situazione rientra in questi casi limite?*")
-            _render_model_timestamp()
+            _render_model_timestamp(model_used, msg_index, "limits")
 
     # Mostra la confutazione se presente (v1.8.0)
     if has_confute_cached:
         with st.expander("🎭 **Confutazione** - Avvocato del diavolo", expanded=False):
             st.markdown(st.session_state[confute_cache_key])
             st.caption("⚔️ *Usa questa critica per rafforzare il tuo ragionamento.*")
-            _render_model_timestamp()
+            _render_model_timestamp(model_used, msg_index, "confute")
 
     # Mostra la riflessione se presente (v1.8.0)
     if has_reflect_cached:
         with st.expander("🪞 **Riflessione sulla domanda** - Sfida il tuo perimetro", expanded=False):
             st.markdown(st.session_state[reflect_cache_key])
             st.caption("🎯 *Stai facendo la domanda giusta?*")
-            _render_model_timestamp()
+            _render_model_timestamp(model_used, msg_index, "reflect")
 
     # ========== INVITO RIFLESSIONE (solo in modalità socratica) - v1.8.0 ==========
     if mode_config.get("show_reflection_invite", False):
