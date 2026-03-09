@@ -12,18 +12,32 @@
 mode: "custom_allowed"
 
 # Server predefinito (usato se mode=fixed o come default in selectable)
-default_server: "esempio_server"
+default_server: "proxmox_p6000"
 
 # Lista server disponibili
 servers:
-  esempio_server:
-    name: "Server Esempio"
-    icon: "🖥️"
-    host: "192.168.1.100"
+  proxmox_p6000:
+    name: "Proxmox P6000 24GB"
+    icon: "🚀"
+    host: "192.168.1.10"
     port: 11434
-    description: "Server Ollama esempio - modifica questo file per i tuoi server"
+    description: "Ollama LXC Container — NVIDIA Quadro P6000 24GB VRAM, 32GB RAM"
 
-  # Puoi aggiungere altri server:
+  dopey:
+    name: "Dopey 8GB"
+    icon: "🤖"
+    host: "192.168.1.151"
+    port: 11434
+    description: "Jetson Nano 8GB — modelli leggeri e veloci"
+
+  # ── Esempi di configurazione ──────────────────────────────────────────────
+  #
+  # esempio_server:
+  #   name: "Server Esempio"
+  #   icon: "🖥️"
+  #   host: "192.168.1.100"
+  #   port: 11434
+  #   description: "Server Ollama esempio - modifica questo file per i tuoi server"
   #
   # server_lab:
   #   name: "Lab Server"
