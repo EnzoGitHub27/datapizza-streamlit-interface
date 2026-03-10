@@ -266,6 +266,50 @@ ollama list  # verifica modelli installati
 
 ---
 
+## 🔍 Come scegliere il modello giusto per il tuo hardware
+
+Uno degli ostacoli più comuni nell'adottare un'AI locale è capire **quale modello scaricare** senza sprecare tempo e spazio su modelli incompatibili con il proprio hardware.
+
+Ti consigliamo di usare **[llmfit](https://github.com/AlexsJones/llmfit)** — uno strumento open source che analizza CPU, RAM e VRAM della tua macchina e ti mostra quali modelli LLM sono compatibili, con score, token/s stimati e quantizzazione ottimale.
+
+### Installazione rapida (Linux/macOS)
+
+```bash
+curl -fsSL https://llmfit.axjns.dev/install.sh | sh
+```
+
+> ⚠️ È un singolo binario Rust — nessun ambiente virtuale, nessun conflitto con i tuoi venv Python esistenti.
+
+### Utilizzo base
+
+```bash
+# Interfaccia TUI interattiva
+llmfit
+
+# Output tabellare (consigliato su VM o server)
+llmfit --cli
+
+# Solo i modelli perfettamente compatibili
+llmfit fit --perfect -n 10
+
+# Se hai una GPU ma llmfit non la rileva (VM, Jetson, ecc.)
+llmfit --memory=8G --cli
+```
+
+### Guida rapida alla scelta del modello per DeepAiUG
+
+| VRAM disponibile | Modelli consigliati per iniziare | Note |
+|---|---|---|
+| **< 4 GB** | `llama3.2:3b`, `qwen3:0.6b`, `qwen3.5:0.8b` | Inferenza CPU o ibrida |
+| **4 GB** | `llama3.2:3b`, `qwen3.5:2b`, `ministral-3b` | GPU pura, ottima velocità |
+| **8 GB** | `llama3.1:8b`, `qwen3.5:4b`, `gemma3:4b` | Sweet spot qualità/velocità |
+| **16 GB+** | `qwen2.5-coder:7b`, `llama3.1:latest`, `deepseek-v2-lite` | Modelli capaci per uso professionale |
+| **24 GB+** | `qwen3.5:4b`+ modelli 14-30B | Qualità paragonabile ai cloud |
+
+> 💡 I pulsanti Socratici di DeepAiUG sono stati calibrati e testati su `llama3.2:3b` — è il punto di partenza consigliato per chi ha hardware limitato.
+
+---
+
 ## 🔧 Installazione avanzata (sviluppatori)
 
 ### Metodo 1: Script Automatico (da repo clonata)
