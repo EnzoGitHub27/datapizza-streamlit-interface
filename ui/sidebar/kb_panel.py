@@ -33,6 +33,7 @@ def render_kb_panel():
     with st.sidebar.expander("📚 Gestione Knowledge Base", expanded=False):
         _render_stats_header()
         _render_kb_chat_list()
+        _render_bulk_flag_section()
 
 
 def _render_stats_header():
@@ -191,3 +192,59 @@ def _render_remove_confirm(chat_id: str):
         if st.button("❌ No", key=f"kb_confirm_no_{chat_id}"):
             st.session_state.pop(f"_kb_confirm_del_{chat_id}", None)
             st.rerun()
+
+
+def _render_bulk_flag_section():
+    """Sezione per flaggare chat esistenti non ancora nella KB."""
+    conversations = list_saved_conversations()
+    non_kb_convs = [
+        c for c in conversations
+        if not c.get("kb_metadata", {}).get("includi_in_kb")
+    ]
+
+    if not non_kb_convs:
+        return
+
+    st.markdown("---")
+    st.markdown("**Flagga chat esistenti**")
+    st.info(
+        "Le chat salvate prima di v1.14.0 non sono nella KB. "
+        "Selezionale qui per includerle."
+    )
+
+    # Checkbox per ogni chat non flaggata
+    selected_ids = []
+    for conv in non_kb_convs:
+        chat_id = conv["id"]
+        label = f"{conv.get('last_updated', '')[:10]} · {conv.get('model', '?')[:12]} ({conv.get('message_count', 0)} msg)"
+        if st.checkbox(label, key=f"bulk_flag_{chat_id}", value=False):
+            selected_ids.append(chat_id)
+
+    # Rilevanza di default per le selezionate
+    bulk_ril_label = st.radio(
+        "Rilevanza per le selezionate",
+        list(_RILEVANZA_MAP.keys()),
+        index=0,
+        horizontal=True,
+        key="bulk_flag_rilevanza",
+    )
+
+    if st.button(
+        f"➕ Aggiungi alla KB ({len(selected_ids)})",
+        key="bulk_flag_submit",
+        disabled=len(selected_ids) == 0,
+    ):
+        bulk_meta = {
+            "includi_in_kb": True,
+            "rilevanza": _RILEVANZA_MAP.get(bulk_ril_label, 1),
+            "tipo": [],
+            "note": "",
+        }
+        count = 0
+        for cid in selected_ids:
+            if update_conversation_kb_metadata(cid, bulk_meta):
+                count += 1
+        st.success(
+            f"{count} chat aggiunte alla KB — clicca **Aggiorna KB Chat** per indicizzarle"
+        )
+        st.rerun()
