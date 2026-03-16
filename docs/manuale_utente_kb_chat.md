@@ -7,60 +7,106 @@ Knowledge Base (KB) e verranno consultate automaticamente nelle conversazioni fu
 
 ---
 
-## Come flaggare una chat per la KB
+## Il flusso in quattro passi
 
-1. Nella **sidebar**, apri la sezione **"Includi nella Knowledge Base"** (icona a libro)
+```
+1. FLAGGA  →  2. SALVA  →  3. INDICIZZA  →  4. USA
+```
+
+Questo ordine è importante: se salti il passo 2 (salvataggio), il passo 3
+(indicizzazione) non troverà nulla da elaborare.
+
+---
+
+## Passo 1 — Flagga una chat per la KB
+
+Nella **sidebar**, nella sezione **"Conversazione"**, trovi l'expander
+**"📚 Includi nella Knowledge Base"**.
+
+1. Apri l'expander
 2. Spunta la checkbox **"Includi questa chat nella Knowledge Base"**
 3. Compila i campi opzionali:
-   - **Rilevanza**: Bassa, Media o Alta (determina quanto peso dare a questa chat
-     quando il sistema cerca informazioni)
-   - **Tipo**: seleziona una o piu categorie tra *decisione*, *insight*,
-     *memoria aziendale*, *riferimento*, *sperimentale*
-   - **Note**: un breve appunto libero per ricordarti perche questa chat e importante
-4. La chat viene salvata automaticamente con questi metadati
+   - **Rilevanza**: Bassa, Media o Alta (determina il peso nel retrieval)
+   - **Tipo**: una o più categorie tra *decisione*, *insight*,
+     *memoria_aziendale*, *riferimento*, *sperimentale*
+   - **Note**: appunto libero sul perché questa chat è importante
 
-Le chat non flaggate non vengono mai incluse nella KB. Nessuna chat entra
-automaticamente: la scelta e sempre tua.
+> ⚠️ **Importante**: se dopo aver flaggato non hai ancora salvato la conversazione,
+> il sistema mostra un avviso giallo prima del pulsante "Aggiorna KB Chat".
+> In quel caso salva prima di procedere.
+
+Nessuna chat entra automaticamente nella KB: la scelta è sempre tua.
+
+---
+
+## Passo 1b — Flaggare le chat già salvate (bulk)
+
+Se hai chat salvate prima della v1.14.0, puoi includerle nella KB senza
+aprirle una per una.
+
+Nella sidebar, apri **"📚 Gestione Knowledge Base"** → sezione
+**"Flagga chat esistenti"**:
+
+1. Leggi il messaggio informativo che indica quante chat non sono ancora in KB
+2. Seleziona le chat che vuoi includere tramite le checkbox
+3. Scegli una **rilevanza di default** applicata a tutte le selezionate
+4. Clicca **"➕ Aggiungi alla KB (N)"**
+5. Il sistema aggiorna i metadati su disco e ti suggerisce di cliccare
+   "Aggiorna KB Chat" per indicizzarle
+
+---
+
+## Passo 2 — Salva la conversazione
+
+Usa il normale pulsante di salvataggio nella sezione **"💬 Conversazione"**.
+Solo dopo il salvataggio i metadati KB vengono scritti su disco e
+l'indicizzatore può trovarli.
+
+---
+
+## Passo 3 — Indicizza
+
+Clicca il pulsante **"🔄 Aggiorna KB Chat"** nella sidebar.
+
+Il sistema:
+- Legge tutte le chat con `includi_in_kb: true`
+- Le suddivide in frammenti (chunk)
+- Le inserisce nel database vettoriale locale (ChromaDB, collection separata)
+- Applica il peso di rilevanza a ciascun frammento
+
+Al termine viene mostrato il conteggio: *"Indicizzate N chat, M chunk totali"*
+e la data dell'ultima indicizzazione.
+
+Esegui "Aggiorna KB Chat" ogni volta che:
+- Hai flaggato nuove chat
+- Hai modificato i metadati di chat già in KB
+- Hai aggiunto chat tramite il bulk-flag
+
+---
+
+## Passo 4 — Usa la KB Chat nel retrieval
+
+1. Attiva il toggle **"✅ Usa KB Chat"** nella sidebar
+2. (Opzionale) Usa il selettore **"Filtra per tipo"** per cercare solo
+   tra le chat di un certo tipo — se vuoto, cerca in tutte
+3. Fai la tua domanda normalmente
+4. Il sistema cercherà anche tra le chat indicizzate; i risultati
+   provenienti dalla KB Chat sono contrassegnati con il prefisso 💬
+   nelle fonti della risposta
 
 ---
 
 ## Il pannello Gestione Knowledge Base
 
-Nella sidebar trovi la sezione espandibile **"Gestione Knowledge Base"**.
-Qui puoi vedere tutte le chat attualmente incluse nella KB, con:
+Nella sidebar, l'expander **"📚 Gestione Knowledge Base"** mostra:
 
-- Data e modello usato
-- Rilevanza (stelle)
-- Tipo (etichette)
-- Note (troncate)
-- Numero di "chunk" indicizzati (i frammenti in cui la chat e stata suddivisa)
-
-### Modificare i metadati
-
-Clicca **"Modifica"** accanto a una chat per cambiare rilevanza, tipo o note.
-Dopo il salvataggio, la chat viene ri-indicizzata automaticamente con i nuovi
-parametri.
-
-### Rimuovere una chat dalla KB
-
-Clicca **"Rimuovi"** per togliere una chat dalla KB. La chat stessa
-**non viene eliminata**: resta tra le conversazioni salvate, semplicemente
-non verra piu consultata dal sistema.
-
----
-
-## Attivare il retrieval dalla KB Chat
-
-1. Nella sidebar, nella sezione conversazioni, attiva il toggle **"Usa KB Chat"**
-2. Quando fai una domanda, il sistema cerchera anche tra le chat flaggate
-3. I risultati piu rilevanti vengono inclusi nel contesto della risposta,
-   con peso maggiore per le chat a rilevanza alta
-
-### Filtrare per tipo
-
-Sotto il toggle "Usa KB Chat" trovi un selettore **"Filtra per tipo"**.
-Se selezioni uno o piu tipi (ad esempio solo "decisione"), il sistema
-cerchera solo tra le chat di quel tipo. Se lasci vuoto, cerca in tutte.
+- Lista delle chat attualmente in KB con data, rilevanza (⭐), tipo, note, chunk
+- Statistiche: chat indicizzate, chunk totali, data ultima indicizzazione
+- **Modifica**: cambia rilevanza, tipo o note di una chat — ri-indicizzazione
+  automatica dopo il salvataggio
+- **Rimuovi**: toglie la chat dalla KB senza eliminarla dalle conversazioni
+  salvate
+- **Flagga chat esistenti**: sezione bulk per le chat pre-v1.14.0
 
 ---
 
@@ -68,45 +114,49 @@ cerchera solo tra le chat di quel tipo. Se lasci vuoto, cerca in tutte.
 
 ### Rilevanza
 
-| Livello | Icona | Significato |
-|---|---|---|
-| Bassa | ⭐ | Informazione utile ma non critica |
-| Media | ⭐⭐ | Insight o decisione di medio peso |
-| Alta | ⭐⭐⭐ | Decisione strategica, memoria aziendale importante |
+| Livello | Icona | Significato | Boost retrieval |
+|---|---|---|---|
+| Bassa | 📚 | Informazione utile ma non critica | ×1.0 |
+| Media | 📚⭐ | Insight o decisione di medio peso | ×1.15 |
+| Alta | 📚⭐⭐ | Decisione strategica, memoria aziendale importante | ×1.30 |
 
-La rilevanza influenza l'ordine dei risultati: a parita di pertinenza,
-le chat con rilevanza alta vengono mostrate prima.
+A parità di pertinenza tematica, le chat con rilevanza alta vengono
+preferite nel retrieval.
 
 ### Tipo
 
 | Tipo | Quando usarlo |
 |---|---|
-| decisione | La chat contiene una scelta architetturale o strategica |
-| insight | Un'osservazione o scoperta significativa |
-| memoria_aziendale | Informazioni su processi, persone, contesti aziendali |
-| riferimento | Link, riferimenti bibliografici, risorse esterne |
-| sperimentale | Esperimenti, prove, tentativi da documentare |
+| `decisione` | Scelta architetturale, strategica o operativa |
+| `insight` | Osservazione o scoperta significativa |
+| `memoria_aziendale` | Informazioni su processi, persone, contesti aziendali |
+| `riferimento` | Risorse esterne, link, fonti bibliografiche |
+| `sperimentale` | Esperimenti e prove da documentare |
 
-Puoi assegnare piu tipi alla stessa chat.
+Puoi assegnare più tipi alla stessa chat.
 
 ---
 
-## Indicizzazione manuale
+## Icone nel selettore chat
 
-Il pulsante **"Aggiorna KB Chat"** nella sidebar riesegue l'indicizzazione
-di tutte le chat flaggate. Usalo dopo aver modificato molte chat o
-se noti che i risultati non sono aggiornati.
+Le chat incluse nella KB mostrano un'icona accanto al titolo:
+
+| Icona | Significato |
+|---|---|
+| 📚 | In KB — rilevanza bassa |
+| 📚⭐ | In KB — rilevanza media |
+| 📚⭐⭐ | In KB — rilevanza alta |
 
 ---
 
 ## Privacy
 
 - Tutte le chat restano **locali** sul tuo computer
-- La KB Chat usa lo stesso database locale (ChromaDB) gia usato per i wiki
-- **Nessuna sincronizzazione cloud** dei dati della KB
-- Se una chat e marcata come sensibile (contiene file locali, vault, ecc.)
-  il sistema ti avvisera prima di includerla nella KB
+- La KB Chat usa un database ChromaDB separato (`knowledge_base/chat_kb_vectorstore/`)
+- **Nessuna sincronizzazione cloud** — i dati non escono mai dalla tua macchina
+- Le chat con file allegati o vault attivo mostrano un avviso prima
+  dell'inclusione in KB
 
 ---
 
-*Documentazione DeepAiUG v1.14.0*
+*Documentazione DeepAiUG v1.14.1 — aggiornato 2026-03-16*
