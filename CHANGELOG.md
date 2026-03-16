@@ -7,6 +7,29 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
 
+## [1.14.0] — 2026-03-16
+
+### Aggiunto
+- Chat salvate come Knowledge Base epistemica: le conversazioni flaggate
+  diventano sorgente RAG consultabile nelle sessioni future
+- Schema `kb_metadata` nel JSON delle chat (includi_in_kb, rilevanza, tipo, note)
+- Sezione "Includi nella Knowledge Base" nel dialog di salvataggio (sidebar)
+- Collection ChromaDB separata `deepaiug_chat_kb` per le chat indicizzate
+- Boost retrieval per rilevanza (1.0 / 1.15 / 1.30)
+- Pannello gestione KB in sidebar: vista tabellare, modifica metadati inline,
+  rimozione dalla KB senza eliminare la chat
+- Toggle "Usa KB Chat" con filtro per tipo nel retrieval
+- Pulsante "Aggiorna KB Chat" per re-indicizzazione manuale
+- Icone nel selettore chat: 📚 / 📚⭐ / 📚⭐⭐ per rilevanza
+- File `chat_kb_meta.json` per timestamp ultima indicizzazione
+- Test suite completa (23 test) in `tests/test_kb_chat_indexer.py`
+- Documentazione utente in `docs/manuale_utente_kb_chat.md`
+
+### Retrocompatibilita
+- Chat esistenti senza `kb_metadata` vengono lette normalmente con default sicuri
+
+---
+
 ## [1.13.9] — 2026-03-09
 
 ### Fix

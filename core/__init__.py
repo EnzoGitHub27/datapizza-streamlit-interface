@@ -17,6 +17,19 @@ from .persistence import (
     delete_conversation,
     get_conversation_preview,
     extract_kb_settings,
+    get_kb_metadata,
+    KB_METADATA_DEFAULT,
+    update_conversation_kb_metadata,
+)
+
+from .kb_chat_indexer import (
+    index_chat_to_kb,
+    remove_chat_from_kb,
+    get_kb_chat_stats,
+    search_chat_kb,
+    reindex_all_chat_kb,
+    get_chunks_per_chat,
+    load_chat_kb_meta,
 )
 
 from .conversation import (
@@ -43,6 +56,17 @@ __all__ = [
     "delete_conversation",
     "get_conversation_preview",
     "extract_kb_settings",
+    "get_kb_metadata",
+    "KB_METADATA_DEFAULT",
+    "update_conversation_kb_metadata",
+    # KB Chat Indexer (v1.14.0)
+    "index_chat_to_kb",
+    "remove_chat_from_kb",
+    "get_kb_chat_stats",
+    "search_chat_kb",
+    "reindex_all_chat_kb",
+    "get_chunks_per_chat",
+    "load_chat_kb_meta",
     # Conversation
     "create_message",
     "get_conversation_history",

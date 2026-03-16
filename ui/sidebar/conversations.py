@@ -11,6 +11,9 @@ from core import (
     load_conversation,
     delete_conversation,
     extract_kb_settings,
+    get_kb_metadata,
+    reindex_all_chat_kb,
+    get_kb_chat_stats,
 )
 from rag import KnowledgeBaseManager, TextChunker, LocalFolderAdapter
 from config.constants import VAULT_SESSION_KEY, VAULT_LAST_SYNC_KEY, VAULT_FILE_COUNT_KEY
@@ -45,11 +48,14 @@ def render_conversations_manager():
     conv_options: list[dict] = []
     for c in saved_conversations:
         icons = _get_conversation_icon(c, is_cloud)
-        prefix = f"{icons} " if icons else ""
+        kb_icon = _get_kb_metadata_icon(c.get("kb_metadata"))
+        all_icons = f"{icons}{kb_icon}".strip()
+        prefix = f"{all_icons} " if all_icons else ""
         label = f"{prefix}{c['last_updated'][:10]} - {c['model'][:12]} ({c['message_count']})"
         conv_options.append({"label": label, "id": c["id"],
                              "is_sensitive": c.get("is_sensitive", False),
-                             "reason": c.get("reason", ""), "icons": icons})
+                             "reason": c.get("reason", ""), "icons": icons,
+                             "kb_metadata": c.get("kb_metadata", {})})
 
     selected = st.sidebar.selectbox(
         "Carica",
@@ -64,6 +70,17 @@ def render_conversations_manager():
             # Show sensitivity detail when selected
             if sel_entry["is_sensitive"] and sel_entry["reason"]:
                 st.sidebar.caption(f"{sel_entry['icons']} {sel_entry['reason']}")
+
+            # v1.14.0 - Show KB metadata detail
+            _kb_meta = sel_entry.get("kb_metadata", {})
+            if _kb_meta.get("includi_in_kb"):
+                _tipo_str = ", ".join(_kb_meta.get("tipo", [])) or "—"
+                _note_str = _kb_meta.get("note", "") or "—"
+                _ril = _kb_meta.get("rilevanza", 1)
+                _ril_label = {1: "bassa", 2: "media", 3: "alta"}.get(_ril, "?")
+                st.sidebar.caption(
+                    f"📚 KB: rilevanza {_ril_label} · tipo: {_tipo_str} · note: {_note_str}"
+                )
 
             col_l, col_d = st.sidebar.columns(2)
 
@@ -105,6 +122,52 @@ def render_conversations_manager():
                         st.session_state.pop("pending_load_id", None)
                         st.rerun()
 
+    # v1.14.0 — KB Chat: toggle + pulsante re-index
+    st.sidebar.markdown("---")
+    _render_chat_kb_controls()
+
+
+def _render_chat_kb_controls():
+    """Renderizza toggle KB Chat e pulsante Aggiorna KB nella sidebar."""
+    use_chat_kb = st.sidebar.checkbox(
+        "📚 Usa KB Chat",
+        value=st.session_state.get("use_chat_kb", False),
+        help="Includi le chat flaggate nel retrieval RAG",
+    )
+    st.session_state["use_chat_kb"] = use_chat_kb
+
+    # v1.14.0 — Filtro per tipo (post-processing)
+    if use_chat_kb:
+        _tipo_opzioni = ["decisione", "insight", "memoria_aziendale", "riferimento", "sperimentale"]
+        tipo_filter = st.sidebar.multiselect(
+            "Filtra per tipo",
+            _tipo_opzioni,
+            default=st.session_state.get("chat_kb_tipo_filter", []),
+            key="chat_kb_tipo_filter_widget",
+            help="Vuoto = tutti i tipi",
+        )
+        st.session_state["chat_kb_tipo_filter"] = tipo_filter
+
+    # Stats rapide
+    stats = get_kb_chat_stats()
+    if stats.get("using_chromadb") and stats["total_chunks"] > 0:
+        st.sidebar.caption(
+            f"📊 {stats['total_chats']} chat · {stats['total_chunks']} chunk indicizzati"
+        )
+
+    if st.sidebar.button("🔄 Aggiorna KB Chat", key="reindex_chat_kb"):
+        progress_bar = st.sidebar.progress(0, text="Avvio indicizzazione...")
+
+        def _progress_cb(status: str, frac: float):
+            progress_bar.progress(frac, text=status)
+
+        result = reindex_all_chat_kb(progress_callback=_progress_cb)
+        progress_bar.empty()
+        st.sidebar.success(
+            f"✅ Indicizzate {result['chats_indexed']} chat, "
+            f"{result['total_chunks']} chunk totali"
+        )
+
 
 def _get_conversation_icon(conv_info: dict, is_cloud: bool) -> str:
     """
@@ -143,6 +206,23 @@ def _get_conversation_icon(conv_info: dict, is_cloud: bool) -> str:
 
     icons = "".join(parts)
     return f"🔒{icons}" if is_cloud else icons
+
+
+def _get_kb_metadata_icon(kb_metadata: dict | None) -> str:
+    """
+    Genera icona KB epistemica in base a rilevanza (v1.14.0).
+    - 📚 = inclusa in KB (rilevanza bassa)
+    - 📚⭐ = inclusa in KB (rilevanza media)
+    - 📚⭐⭐ = inclusa in KB (rilevanza alta)
+    """
+    if not kb_metadata or not kb_metadata.get("includi_in_kb"):
+        return ""
+    rilevanza = kb_metadata.get("rilevanza", 1)
+    if rilevanza >= 3:
+        return "📚⭐⭐"
+    elif rilevanza == 2:
+        return "📚⭐"
+    return "📚"
 
 
 def _has_heavy_kb(conversation_id: str) -> bool:
@@ -231,6 +311,9 @@ def _load_conversation(conversation_id: str):
     st.session_state["session_map_data"] = None
     st.session_state["n_domande_sessione"] = 0
     st.session_state["nudge_mostrato"] = False
+
+    # v1.14.0 - Ripristina kb_metadata (retrocompatibile)
+    st.session_state["kb_metadata"] = get_kb_metadata(data)
 
     # Ripristina impostazioni Knowledge Base
     kb_settings = extract_kb_settings(data)

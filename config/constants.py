@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.13.9"
+VERSION = "1.14.0"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Fix modello per esplorazioni socratiche"
+VERSION_DESCRIPTION = "Chat salvate come Knowledge Base epistemica"
 
 # ============================================================================
 # PATHS
