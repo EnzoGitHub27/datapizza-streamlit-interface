@@ -38,6 +38,7 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 - 📥 **Export** in Markdown, JSON, TXT, PDF + Batch ZIP
 - 📚 **Knowledge Base RAG** - Interroga documenti locali e wiki!
 - 🟣 **Vault Support** - Obsidian, LogSeq, Notion Export con riconoscimento automatico
+- 📚 **Chat KB** - Chat salvate come Knowledge Base epistemica con rilevanza e tipo
 - 🌐 **Multi-Wiki** - MediaWiki + DokuWiki support
 - 📎 **File Upload in Chat** - Allega PDF, DOCX, TXT, immagini
 - 🔐 **Privacy-First Protection** - Sistema completo protezione dati sensibili
@@ -45,6 +46,18 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
+
+### 📚 Novità v1.14.0 — Chat Salvate come Knowledge Base Epistemica
+
+- **Chat KB**: le conversazioni flaggate diventano sorgente RAG consultabile nelle sessioni future
+- **Metadati epistemici**: rilevanza (⭐/⭐⭐/⭐⭐⭐), tipo (decisione / insight / memoria_aziendale / riferimento), note libere
+- **Boost retrieval** proporzionale alla rilevanza (×1.0 / ×1.15 / ×1.30)
+- **Pannello gestione KB** in sidebar: modifica metadati inline, rimozione, statistiche chunk
+- **Icone indicatore** nel selettore chat: 📚 / 📚⭐ / 📚⭐⭐
+- **Toggle "Usa KB Chat"** con filtro per tipo nel retrieval
+- **Collection ChromaDB separata** `deepaiug_chat_kb` — indipendente da wiki e vault
+- **23 test** su retrocompatibilità, chunking, indicizzazione, boost e filtro tipo
+- **Privacy-first by design**: nessuna chat entra nella KB senza scelta esplicita dell'utente
 
 ### 🟣 Novità v1.13.x — Vault Support (F3) + UX Fix
 
@@ -196,12 +209,12 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.13.4
+## 🏗️ Architettura v1.14.0
 
 ```
 datapizza-streamlit-interface/
 ├── app.py                    # ⭐ Entry point principale
-├── .streamlit/config.toml    # ⭐ NEW: Tema Streamlit nativo (Matrix)
+├── .streamlit/config.toml    # Tema Streamlit nativo (Matrix)
 ├── wiki_sources.yaml         # Configurazione sorgenti wiki
 ├── remote_servers.yaml       # Config server remoti
 ├── cloud_models.yaml         # Config modelli cloud
@@ -211,12 +224,13 @@ datapizza-streamlit-interface/
 ├── config/                   # 📁 Configurazione
 │   ├── constants.py          # Costanti, WIKI_TYPES, VISION_MODELS
 │   ├── settings.py           # Loader settings, API keys
-│   └── branding.py           # ⭐ NEW: load_branding() + 6 costanti
+│   └── branding.py           # load_branding() + 6 costanti
 │
 ├── core/                     # 📁 Logica core
 │   ├── llm_client.py         # Factory client LLM
 │   ├── conversation.py       # Gestione messaggi
-│   ├── persistence.py        # Salvataggio/caricamento (+ socratic_history)
+│   ├── persistence.py        # Salvataggio/caricamento (+ kb_metadata v1.14.0)
+│   ├── kb_chat_indexer.py    # ⭐ NEW v1.14.0: indicizzazione chat-KB ChromaDB
 │   └── file_processors.py    # Estrazione testo da file
 │
 ├── rag/                      # 📁 Sistema RAG
@@ -224,18 +238,29 @@ datapizza-streamlit-interface/
 │   ├── chunker.py            # TextChunker intelligente
 │   ├── vector_store.py       # ChromaDB + fallback
 │   ├── manager.py            # KnowledgeBaseManager
-│   ├── vault.py              # ⭐ F3: detect, scan, parse canvas, update incrementale
+│   ├── vault.py              # F3: detect, scan, parse canvas, update incrementale
 │   └── adapters/             # Sorgenti dati
 │       ├── local_folder.py   # File locali
 │       ├── mediawiki.py      # API MediaWiki
 │       └── dokuwiki.py       # DokuWiki
 │
+├── knowledge_base/           # 📁 Dati KB (generato a runtime)
+│   ├── vectorstore/          # ChromaDB wiki/vault
+│   ├── chat_kb_vectorstore/  # ⭐ NEW v1.14.0: ChromaDB chat-KB
+│   └── chat_kb_meta.json     # ⭐ NEW v1.14.0: timestamp ultima indicizzazione
+│
 ├── export/                   # 📁 Sistema export
 │   └── exporters.py          # MD, JSON, TXT, PDF, ZIP
 │
+├── tests/                    # 📁 Test suite
+│   └── test_kb_chat_indexer.py  # ⭐ NEW v1.14.0: 23 test indicizzazione KB
+│
+├── docs/                     # 📁 Documentazione
+│   └── manuale_utente_kb_chat.md  # ⭐ NEW v1.14.0: guida utente KB Chat
+│
 └── ui/                       # 📁 Interfaccia utente
     ├── styles.py             # CSS
-    ├── style.py              # ⭐ NEW: Matrix Theme (CSS + rain animation)
+    ├── style.py              # Matrix Theme (CSS + rain animation)
     ├── chat.py               # Rendering chat
     ├── file_upload.py        # Widget upload file
     ├── privacy_warning.py    # Dialog privacy
@@ -244,9 +269,14 @@ datapizza-streamlit-interface/
     │   ├── buttons.py        # Bottoni UI + registrazione esplorazioni
     │   ├── history.py        # SocraticExploration + SocraticHistory
     │   ├── history_widget.py # Widget sidebar storico
-    │   └── session_map.py    # ⭐ NEW: SessionMap + SessionMapAnalyzer (F2)
-    └── sidebar/              # Componenti sidebar
-        ├── session_map_widget.py # ⭐ NEW: Widget mappa sessione (F2)
+    │   └── session_map.py    # SessionMap + SessionMapAnalyzer (F2)
+    └── sidebar/
+        ├── llm_config.py
+        ├── knowledge_base.py
+        ├── conversations.py
+        ├── export_ui.py
+        ├── session_map_widget.py  # Widget mappa sessione (F2)
+        └── kb_panel.py            # ⭐ NEW v1.14.0: pannello gestione KB Chat
 ```
 
 ---
