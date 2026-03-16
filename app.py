@@ -51,6 +51,8 @@ from core import (
     estimate_tokens,
     KB_METADATA_DEFAULT,
     search_chat_kb,
+    reindex_all_chat_kb,
+    get_kb_chat_stats,
 )
 
 # 🆕 v1.5.0 - File processors
@@ -316,8 +318,14 @@ render_knowledge_base_config(connection_type, container=config_expander)
 # 2. 💬 Conversazione (aperta)
 render_conversations_manager()
 
-# 2b. 📚 KB Metadata (v1.14.0) — sezione collassata
+# --------------------------------------------------------------------------
+# 2b–2e. KB Chat — ordine logico: flagga → aggiorna → gestisci → usa
+# --------------------------------------------------------------------------
+
+# 2b. 📚 Includi nella KB (azione sulla chat corrente)
 with st.sidebar.expander("📚 Includi nella Knowledge Base", expanded=False):
+    st.caption("Flagga questa conversazione per includerla nella KB alla prossima indicizzazione")
+
     _kb_meta = st.session_state.get("kb_metadata", dict(KB_METADATA_DEFAULT))
 
     _includi = st.checkbox(
@@ -327,7 +335,6 @@ with st.sidebar.expander("📚 Includi nella Knowledge Base", expanded=False):
     )
 
     _rilevanza_map = {"Bassa": 1, "Media": 2, "Alta": 3}
-    _rilevanza_rev = {1: "Bassa", 2: "Media", 3: "Alta"}
     _rilevanza_label = st.radio(
         "Rilevanza",
         list(_rilevanza_map.keys()),
@@ -353,7 +360,6 @@ with st.sidebar.expander("📚 Includi nella Knowledge Base", expanded=False):
         disabled=not _includi,
     )
 
-    # Aggiorna session state
     st.session_state["kb_metadata"] = {
         "includi_in_kb": _includi,
         "rilevanza": _rilevanza_map.get(_rilevanza_label, 1),
@@ -361,8 +367,51 @@ with st.sidebar.expander("📚 Includi nella Knowledge Base", expanded=False):
         "note": _note if _includi else "",
     }
 
-# 2c. 📚 Pannello gestione KB (v1.14.0)
+# 2c. 🔄 Aggiorna KB Chat (indicizza le flaggate)
+if st.sidebar.button("🔄 Aggiorna KB Chat", key="reindex_chat_kb"):
+    _progress_bar = st.sidebar.progress(0, text="Avvio indicizzazione...")
+
+    def _reindex_cb(status: str, frac: float):
+        _progress_bar.progress(frac, text=status)
+
+    _reindex_result = reindex_all_chat_kb(progress_callback=_reindex_cb)
+    _progress_bar.empty()
+    st.sidebar.success(
+        f"✅ Indicizzate {_reindex_result['chats_indexed']} chat, "
+        f"{_reindex_result['total_chunks']} chunk totali"
+    )
+
+st.sidebar.caption("Indicizza tutte le chat flaggate — fallo dopo aver salvato nuove chat")
+
+# Stats rapide
+_kb_stats = get_kb_chat_stats()
+if _kb_stats.get("using_chromadb") and _kb_stats["total_chunks"] > 0:
+    st.sidebar.caption(
+        f"📊 {_kb_stats['total_chats']} chat · {_kb_stats['total_chunks']} chunk indicizzati"
+    )
+
+# 2d. 📚 Gestione KB (modifica/rimozione + bulk-flag)
 render_kb_panel()
+
+# 2e. ✅ Usa KB Chat (toggle retrieval)
+_use_chat_kb = st.sidebar.checkbox(
+    "📚 Usa KB Chat",
+    value=st.session_state.get("use_chat_kb", False),
+    help="Includi le chat flaggate nel retrieval RAG",
+)
+st.session_state["use_chat_kb"] = _use_chat_kb
+st.sidebar.caption("Attiva per includere le chat indicizzate nelle risposte")
+
+if _use_chat_kb:
+    _tipo_opzioni_filter = ["decisione", "insight", "memoria_aziendale", "riferimento", "sperimentale"]
+    _tipo_filter = st.sidebar.multiselect(
+        "Filtra per tipo",
+        _tipo_opzioni_filter,
+        default=st.session_state.get("chat_kb_tipo_filter", []),
+        key="chat_kb_tipo_filter_widget",
+        help="Vuoto = tutti i tipi",
+    )
+    st.session_state["chat_kb_tipo_filter"] = _tipo_filter
 
 # 3. 🗺️ Mappa Sessione (aperta)
 session_map_mode = render_session_map_settings()

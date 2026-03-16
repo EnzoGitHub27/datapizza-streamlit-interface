@@ -12,8 +12,6 @@ from core import (
     delete_conversation,
     extract_kb_settings,
     get_kb_metadata,
-    reindex_all_chat_kb,
-    get_kb_chat_stats,
 )
 from rag import KnowledgeBaseManager, TextChunker, LocalFolderAdapter
 from config.constants import VAULT_SESSION_KEY, VAULT_LAST_SYNC_KEY, VAULT_FILE_COUNT_KEY
@@ -122,51 +120,6 @@ def render_conversations_manager():
                         st.session_state.pop("pending_load_id", None)
                         st.rerun()
 
-    # v1.14.0 — KB Chat: toggle + pulsante re-index
-    st.sidebar.markdown("---")
-    _render_chat_kb_controls()
-
-
-def _render_chat_kb_controls():
-    """Renderizza toggle KB Chat e pulsante Aggiorna KB nella sidebar."""
-    use_chat_kb = st.sidebar.checkbox(
-        "📚 Usa KB Chat",
-        value=st.session_state.get("use_chat_kb", False),
-        help="Includi le chat flaggate nel retrieval RAG",
-    )
-    st.session_state["use_chat_kb"] = use_chat_kb
-
-    # v1.14.0 — Filtro per tipo (post-processing)
-    if use_chat_kb:
-        _tipo_opzioni = ["decisione", "insight", "memoria_aziendale", "riferimento", "sperimentale"]
-        tipo_filter = st.sidebar.multiselect(
-            "Filtra per tipo",
-            _tipo_opzioni,
-            default=st.session_state.get("chat_kb_tipo_filter", []),
-            key="chat_kb_tipo_filter_widget",
-            help="Vuoto = tutti i tipi",
-        )
-        st.session_state["chat_kb_tipo_filter"] = tipo_filter
-
-    # Stats rapide
-    stats = get_kb_chat_stats()
-    if stats.get("using_chromadb") and stats["total_chunks"] > 0:
-        st.sidebar.caption(
-            f"📊 {stats['total_chats']} chat · {stats['total_chunks']} chunk indicizzati"
-        )
-
-    if st.sidebar.button("🔄 Aggiorna KB Chat", key="reindex_chat_kb"):
-        progress_bar = st.sidebar.progress(0, text="Avvio indicizzazione...")
-
-        def _progress_cb(status: str, frac: float):
-            progress_bar.progress(frac, text=status)
-
-        result = reindex_all_chat_kb(progress_callback=_progress_cb)
-        progress_bar.empty()
-        st.sidebar.success(
-            f"✅ Indicizzate {result['chats_indexed']} chat, "
-            f"{result['total_chunks']} chunk totali"
-        )
 
 
 def _get_conversation_icon(conv_info: dict, is_cloud: bool) -> str:
