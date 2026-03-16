@@ -83,6 +83,7 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    ├─→ v1.13.7 ✅ (2026-03-09)  + 🧠 Conferma caricamento vault + icone vault
    ├─→ v1.13.8 ✅ (2026-03-09)  + 🔧 Fix nome modello bottoni socratici
    ├─→ v1.13.9 ✅ (2026-03-09)  + 🔧 Fix modello per esplorazione specifica
+   ├─→ v1.14.0 ✅ (2026-03-16)  + 📚 Chat salvate come KB epistemica
    │
    └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
 
@@ -345,7 +346,7 @@ Nessun altro file modificato.
 
 ---
 
-## 🛠️ Architettura Attuale (v1.13.9)
+## 🛠️ Architettura Attuale (v1.14.0)
 
 ```
 datapizza-streamlit-interface/

@@ -49,6 +49,8 @@ from core import (
     get_conversation_history,
     create_message,
     estimate_tokens,
+    KB_METADATA_DEFAULT,
+    search_chat_kb,
 )
 
 # 🆕 v1.5.0 - File processors
@@ -84,6 +86,7 @@ from ui import (
     render_export_section,
     render_export_preview,
 )
+from ui.sidebar.kb_panel import render_kb_panel
 from ui.sidebar import render_socratic_mode_settings
 
 # 🆕 v1.5.0 - File upload widget
@@ -173,6 +176,10 @@ def initialize_session_state():
         "uploaded_files_history": [],
         "privacy_acknowledged_for_cloud": False,
         "show_privacy_dialog": False,
+        # v1.14.0 - KB Metadata (chat come Knowledge Base epistemica)
+        "kb_metadata": dict(KB_METADATA_DEFAULT),
+        "use_chat_kb": False,
+        "chat_kb_tipo_filter": [],
         # v1.8.0 - Socratic mode
         "socratic_mode": DEFAULT_SOCRATIC_MODE,
         # v1.10.0 - Session Map (F2)
@@ -239,7 +246,8 @@ def _save_current_conversation():
             "kb_chunk_overlap": st.session_state.get("kb_chunk_overlap", DEFAULT_CHUNK_OVERLAP),
             "rag_top_k": st.session_state.get("rag_top_k", DEFAULT_TOP_K_RESULTS),
         },
-        socratic_history=SocraticHistory.to_serializable()  # v1.9.0
+        socratic_history=SocraticHistory.to_serializable(),  # v1.9.0
+        kb_metadata=st.session_state.get("kb_metadata"),  # v1.14.0
     )
 
 def reset_conversation():
@@ -248,6 +256,8 @@ def reset_conversation():
     st.session_state["conversation_id"] = generate_conversation_id()
     st.session_state["conversation_created_at"] = datetime.now().isoformat()
     st.session_state["total_tokens_estimate"] = 0
+    # v1.14.0 - Reset KB metadata
+    st.session_state["kb_metadata"] = dict(KB_METADATA_DEFAULT)
     # 🆕 v1.5.0 - Pulisci anche file pending e flag privacy
     clear_pending_files()
     reset_privacy_flags()
@@ -305,6 +315,54 @@ render_knowledge_base_config(connection_type, container=config_expander)
 
 # 2. 💬 Conversazione (aperta)
 render_conversations_manager()
+
+# 2b. 📚 KB Metadata (v1.14.0) — sezione collassata
+with st.sidebar.expander("📚 Includi nella Knowledge Base", expanded=False):
+    _kb_meta = st.session_state.get("kb_metadata", dict(KB_METADATA_DEFAULT))
+
+    _includi = st.checkbox(
+        "Includi questa chat nella Knowledge Base",
+        value=_kb_meta.get("includi_in_kb", False),
+        key="kb_meta_includi",
+    )
+
+    _rilevanza_map = {"Bassa": 1, "Media": 2, "Alta": 3}
+    _rilevanza_rev = {1: "Bassa", 2: "Media", 3: "Alta"}
+    _rilevanza_label = st.radio(
+        "Rilevanza",
+        list(_rilevanza_map.keys()),
+        index=_kb_meta.get("rilevanza", 1) - 1,
+        horizontal=True,
+        key="kb_meta_rilevanza",
+        disabled=not _includi,
+    )
+
+    _tipo_opzioni = ["decisione", "insight", "memoria_aziendale", "riferimento", "sperimentale"]
+    _tipo = st.multiselect(
+        "Tipo",
+        _tipo_opzioni,
+        default=[t for t in _kb_meta.get("tipo", []) if t in _tipo_opzioni],
+        key="kb_meta_tipo",
+        disabled=not _includi,
+    )
+
+    _note = st.text_input(
+        "Note",
+        value=_kb_meta.get("note", ""),
+        key="kb_meta_note",
+        disabled=not _includi,
+    )
+
+    # Aggiorna session state
+    st.session_state["kb_metadata"] = {
+        "includi_in_kb": _includi,
+        "rilevanza": _rilevanza_map.get(_rilevanza_label, 1),
+        "tipo": _tipo if _includi else [],
+        "note": _note if _includi else "",
+    }
+
+# 2c. 📚 Pannello gestione KB (v1.14.0)
+render_kb_panel()
 
 # 3. 🗺️ Mappa Sessione (aperta)
 session_map_mode = render_session_map_settings()
@@ -592,12 +650,36 @@ if submit and user_input.strip():
                     top_k = st.session_state.get("rag_top_k", DEFAULT_TOP_K_RESULTS)
                     with st.spinner("🔍 Ricerca documenti rilevanti..."):
                         context_text, sources = kb_manager.get_context_for_prompt(
-                            user_input.strip(), 
+                            user_input.strip(),
                             top_k
                         )
-                    
+
                     if context_text:
                         st.info(f"📎 Trovati {len(sources)} documenti KB")
+
+            # v1.14.0 — Chat KB retrieval (merge con wiki se attivo)
+            if st.session_state.get("use_chat_kb"):
+                top_k_chat = st.session_state.get("rag_top_k", DEFAULT_TOP_K_RESULTS)
+                _tipo_f = st.session_state.get("chat_kb_tipo_filter", []) or None
+                with st.spinner("📚 Ricerca nella KB Chat..."):
+                    chat_kb_results = search_chat_kb(
+                        user_input.strip(), top_k=top_k_chat, tipo_filter=_tipo_f
+                    )
+                if chat_kb_results:
+                    chat_context_parts = []
+                    for j, r in enumerate(chat_kb_results, 1):
+                        meta = r.get("metadata", {})
+                        src = meta.get("chat_titolo", meta.get("chat_id", "chat"))
+                        chat_context_parts.append(f"[Chat KB {j}: {src}]\n{r['text']}")
+                        src_label = f"💬 {src}"
+                        if src_label not in sources:
+                            sources.append(src_label)
+                    chat_context = "\n\n---\n\n".join(chat_context_parts)
+                    if context_text:
+                        context_text += "\n\n--- CHAT KB ---\n\n" + chat_context
+                    else:
+                        context_text = chat_context
+                    st.info(f"📚 Trovati {len(chat_kb_results)} risultati dalla KB Chat")
             
             # Create LLM client
             with st.spinner("🔧 Connessione..."):

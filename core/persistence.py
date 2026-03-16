@@ -1,5 +1,5 @@
 # core/persistence.py
-# DeepAiUG v1.4.0 - Persistenza conversazioni
+# DeepAiUG v1.14.0 - Persistenza conversazioni + KB Metadata
 # ============================================================================
 
 import json
@@ -13,6 +13,30 @@ from config import (
     DEFAULT_CHUNK_OVERLAP,
     DEFAULT_TOP_K_RESULTS,
 )
+
+
+KB_METADATA_DEFAULT = {
+    "includi_in_kb": False,
+    "rilevanza": 1,
+    "tipo": [],
+    "note": "",
+}
+
+
+def get_kb_metadata(conversation_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Estrae kb_metadata da una conversazione con default sicuri.
+    Garantisce retrocompatibilità con chat salvate prima di v1.14.0.
+    """
+    raw = conversation_data.get("kb_metadata")
+    if not raw:
+        return dict(KB_METADATA_DEFAULT)
+    return {
+        "includi_in_kb": raw.get("includi_in_kb", False),
+        "rilevanza": raw.get("rilevanza", 1),
+        "tipo": raw.get("tipo", []),
+        "note": raw.get("note", ""),
+    }
 
 
 def ensure_conversations_dir():
@@ -41,7 +65,8 @@ def save_conversation(
     provider: str,
     tokens_estimate: int,
     kb_settings: Dict[str, Any] = None,
-    socratic_history: List[Dict[str, Any]] = None  # v1.9.0
+    socratic_history: List[Dict[str, Any]] = None,  # v1.9.0
+    kb_metadata: Dict[str, Any] = None,  # v1.14.0
 ) -> bool:
     """
     Salva una conversazione su file.
@@ -55,6 +80,7 @@ def save_conversation(
         tokens_estimate: Stima token usati
         kb_settings: Impostazioni Knowledge Base (opzionale)
         socratic_history: Esplorazioni socratiche serializzate (v1.9.0, opzionale)
+        kb_metadata: Metadati per inclusione nella KB epistemica (v1.14.0, opzionale)
 
     Returns:
         True se salvato con successo
@@ -74,7 +100,8 @@ def save_conversation(
                 "tokens_estimate": tokens_estimate
             },
             "knowledge_base": kb_settings or {},
-            "socratic_history": socratic_history or []  # v1.9.0
+            "socratic_history": socratic_history or [],  # v1.9.0
+            "kb_metadata": kb_metadata or dict(KB_METADATA_DEFAULT),  # v1.14.0
         }
         
         filename = get_conversation_filename(conversation_id)
@@ -85,6 +112,29 @@ def save_conversation(
         
     except Exception as e:
         print(f"❌ Errore salvataggio conversazione: {e}")
+        return False
+
+
+def update_conversation_kb_metadata(
+    conversation_id: str, kb_metadata: Dict[str, Any]
+) -> bool:
+    """
+    Aggiorna solo il campo kb_metadata di una conversazione salvata (v1.14.0).
+    Evita di riscrivere l'intera struttura tramite save_conversation.
+    """
+    try:
+        filename = get_conversation_filename(conversation_id)
+        if not filename.exists():
+            return False
+        with open(filename, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        data["kb_metadata"] = kb_metadata
+        data["last_updated"] = datetime.now().isoformat()
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        print(f"❌ Errore aggiornamento kb_metadata: {e}")
         return False
 
 
@@ -141,6 +191,7 @@ def list_saved_conversations() -> List[Dict[str, Any]]:
                     "has_folder": sensitivity["has_folder"],
                     "has_documents": sensitivity["has_documents"],
                     "kb_folder_path": data.get("knowledge_base", {}).get("kb_folder_path", ""),
+                    "kb_metadata": get_kb_metadata(data),  # v1.14.0
                 })
             except Exception:
                 continue
