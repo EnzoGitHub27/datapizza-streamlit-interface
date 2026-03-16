@@ -368,6 +368,17 @@ with st.sidebar.expander("📚 Includi nella Knowledge Base", expanded=False):
     }
 
 # 2c. 🔄 Aggiorna KB Chat (indicizza le flaggate)
+# Avviso se la chat corrente è flaggata in session_state ma non ancora su disco
+if st.session_state.get("kb_metadata", {}).get("includi_in_kb"):
+    from core import load_conversation as _load_conv, get_kb_metadata as _get_kb_meta
+    _disk_data = _load_conv(st.session_state.get("conversation_id", ""))
+    _disk_flagged = _get_kb_meta(_disk_data).get("includi_in_kb") if _disk_data else False
+    if not _disk_flagged:
+        st.sidebar.warning(
+            "⚠️ Hai flaggato questa chat per la KB ma non è ancora salvata su disco. "
+            "Invia un messaggio (o attendi l'auto-save) prima di aggiornare."
+        )
+
 if st.sidebar.button("🔄 Aggiorna KB Chat", key="reindex_chat_kb"):
     _progress_bar = st.sidebar.progress(0, text="Avvio indicizzazione...")
 
