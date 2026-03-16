@@ -6,6 +6,12 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
+## [1.14.1] — 2026-03-16
+
+### Fix
+- KB Chat sidebar: riordino sezioni (includi → aggiorna → gestione → usa)
+- Aggiunte caption contestuali su tutti gli elementi KB Chat
+- Bulk-flag per chat pre-v1.14.0: selezione multipla con rilevanza di default
 
 ## [1.14.0] — 2026-03-16
 
