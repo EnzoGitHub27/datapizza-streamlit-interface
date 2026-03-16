@@ -98,6 +98,35 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 
 ## ✅ Completate
 
+### v1.14.0 — Chat Salvate come Knowledge Base Epistemica ✅
+**Data:** 2026-03-16
+
+Le chat salvate non sono semplice storico: contengono decisioni architetturali, insight strategici, memoria aziendale implicita. Con v1.14.0 il sistema lo sa — e le rende disponibili come sorgente RAG con peso epistemico.
+
+**Sprint 1 — Schema e UI salvataggio**
+- `kb_metadata` nel JSON delle chat: `includi_in_kb`, `rilevanza` (1/2/3), `tipo` (list), `note`
+- Sezione collassata "📚 Includi nella KB" nel dialog di salvataggio
+- Icone nel selettore chat: 📚 / 📚⭐ / 📚⭐⭐ per rilevanza
+- Retrocompatibilità completa: chat pre-v1.14.0 ricevono default sicuri
+
+**Sprint 2 — Indicizzazione RAG**
+- Nuovo `core/kb_chat_indexer.py`: `index_chat_to_kb()`, `remove_chat_from_kb()`, `get_kb_stats()`, `search_chat_kb()`
+- Collection ChromaDB separata `deepaiug_chat_kb` (path: `knowledge_base/chat_kb_vectorstore/`)
+- Boost score per rilevanza nel retrieval: ×1.0 / ×1.15 / ×1.30
+- Filtro post-processing per tipo (CSV metadata + overfetch ×3)
+- Toggle "📚 Usa KB Chat" + pulsante "🔄 Aggiorna KB Chat" con progress bar
+
+**Sprint 3 — Pannello gestione KB**
+- `ui/sidebar/kb_panel.py`: vista tabellare chat indicizzate con modifica inline e rimozione
+- `update_conversation_kb_metadata()` in `core/persistence.py` per aggiornamento atomico
+- `chat_kb_meta.json` per timestamp ultima indicizzazione e statistiche
+- Filtro per tipo nel retrieval attivabile dalla sidebar
+
+**Sprint 4 — Test e documentazione**
+- 23/23 test in `tests/test_kb_chat_indexer.py` (7 classi: retrocompat, chunking, indexing, reindex, search/filter, stats, meta)
+- `docs/manuale_utente_kb_chat.md` — guida utente in italiano, tono non tecnico
+- Bump versione a 1.14.0 in `config/constants.py`, README, CHANGELOG, ROADMAP
+
 ### v1.13.x — F3 Vault Support ✅
 **Data:** 2026-03-07 / 2026-03-08
 
@@ -366,7 +395,8 @@ datapizza-streamlit-interface/
 ├── core/                     # Logica core
 │   ├── llm_client.py         # Factory LLM
 │   ├── conversation.py       # Messaggi
-│   ├── persistence.py        # Salvataggio (+ socratic_history + sensitivity detection)
+│   ├── persistence.py        # Salvataggio (+ socratic_history + kb_metadata v1.14.0)
+│   ├── kb_chat_indexer.py    # ⭐ NEW v1.14.0: indicizzazione chat-KB ChromaDB
 │   └── file_processors.py    # File upload extraction
 │
 ├── rag/                      # Sistema RAG
@@ -374,14 +404,25 @@ datapizza-streamlit-interface/
 │   ├── chunker.py            # TextChunker
 │   ├── vector_store.py       # ChromaDB
 │   ├── manager.py            # Orchestrazione
-│   └── vault.py              # ⭐ F3: detect, scan, parse canvas, update (v1.13.0)
+│   ├── vault.py              # ⭐ F3: detect, scan, parse canvas, update (v1.13.0)
 │   └── adapters/
 │       ├── local_folder.py   # File locali
 │       ├── mediawiki.py      # MediaWiki
 │       └── dokuwiki.py       # DokuWiki
 │
+├── knowledge_base/           # Dati KB (generato a runtime)
+│   ├── vectorstore/          # ChromaDB wiki/vault
+│   ├── chat_kb_vectorstore/  # ⭐ NEW v1.14.0: ChromaDB chat-KB
+│   └── chat_kb_meta.json     # ⭐ NEW v1.14.0: timestamp ultima indicizzazione
+│
 ├── export/                   # Export
 │   └── exporters.py          # MD, JSON, TXT, PDF, ZIP
+│
+├── tests/                    # Test suite
+│   └── test_kb_chat_indexer.py  # ⭐ NEW v1.14.0: 23 test
+│
+├── docs/                     # Documentazione
+│   └── manuale_utente_kb_chat.md  # ⭐ NEW v1.14.0: guida utente KB Chat
 │
 └── ui/                       # Interfaccia
     ├── styles.py
@@ -401,7 +442,8 @@ datapizza-streamlit-interface/
         ├── knowledge_base.py
         ├── conversations.py  # + load socratic history
         ├── export_ui.py
-        └── session_map_widget.py  # ⭐ Widget mappa sessione (F2)
+        ├── session_map_widget.py  # ⭐ Widget mappa sessione (F2)
+        └── kb_panel.py            # ⭐ NEW v1.14.0: pannello gestione KB Chat
 ```
 
 ---
@@ -431,5 +473,5 @@ Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per dettagli.
 
 ---
 
-*Ultimo aggiornamento: 2026-03-09*
+*Ultimo aggiornamento: 2026-03-16*
 *DeepAiUG Streamlit Interface © 2026*
