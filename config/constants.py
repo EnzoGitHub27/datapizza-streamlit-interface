@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.14.0"
+VERSION = "1.14.1"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Chat salvate come Knowledge Base epistemica"
+VERSION_DESCRIPTION = "KB Chat UX fix — ordine sidebar, bulk-flag, avviso salvataggio"
 
 # ============================================================================
 # PATHS
