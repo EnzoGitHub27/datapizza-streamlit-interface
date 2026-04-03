@@ -47,7 +47,8 @@ def render_conversations_manager():
     for c in saved_conversations:
         icons = _get_conversation_icon(c, is_cloud)
         kb_icon = _get_kb_metadata_icon(c.get("kb_metadata"))
-        all_icons = f"{icons}{kb_icon}".strip()
+        vault_icon = "🧠" if c.get("vault_used") else ""  # v1.14.2
+        all_icons = f"{vault_icon}{icons}{kb_icon}".strip()
         prefix = f"{all_icons} " if all_icons else ""
         label = f"{prefix}{c['last_updated'][:10]} - {c['model'][:12]} ({c['message_count']})"
         conv_options.append({"label": label, "id": c["id"],
@@ -126,8 +127,9 @@ def _get_conversation_icon(conv_info: dict, is_cloud: bool) -> str:
     """
     Genera icone da mostrare accanto alla conversazione.
     - 📚 KB Wiki, 📎 allegati
-    - Vault: icona specifica (🟣 Obsidian, 🟤 LogSeq, ⬛ Notion, 📁 cartella)
+    - Vault: colore tipo (🟣 Obsidian, 🟤 LogSeq, ⬛ Notion, 📁 cartella)
     - 🔒 prefisso se is_cloud
+    Nota v1.14.2: 🧠 è gestito dal label builder via vault_used flag.
     """
     parts: list[str] = []
 
@@ -136,16 +138,18 @@ def _get_conversation_icon(conv_info: dict, is_cloud: bool) -> str:
 
     if conv_info.get("has_folder"):
         # Rileva tipo vault per icona specifica
+        # v1.14.2: 🧠 viene dal flag vault_used (riga label builder),
+        # qui mostriamo solo l'indicatore colore del tipo vault
         folder_path = conv_info.get("kb_folder_path", "")
         if folder_path and Path(folder_path).exists():
             vault_info = detect_vault_type(folder_path)
             vault_type = vault_info.get("type", "folder")
             if vault_type == "obsidian":
-                parts.append("🧠🟣")
+                parts.append("🟣")
             elif vault_type == "logseq":
-                parts.append("🧠🟤")
+                parts.append("🟤")
             elif vault_type == "notion":
-                parts.append("🧠⬛")
+                parts.append("⬛")
             else:
                 parts.append("📁")
         else:
@@ -267,6 +271,8 @@ def _load_conversation(conversation_id: str):
 
     # v1.14.0 - Ripristina kb_metadata (retrocompatibile)
     st.session_state["kb_metadata"] = get_kb_metadata(data)
+    # v1.14.2 - Ripristina vault_used (retrocompatibile)
+    st.session_state["vault_used"] = data.get("vault_used", False)
 
     # Ripristina impostazioni Knowledge Base
     kb_settings = extract_kb_settings(data)
