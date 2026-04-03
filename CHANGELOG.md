@@ -6,6 +6,18 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
+## [1.14.2] — 2026-04-03
+
+### Aggiunto
+- Flag `vault_used` nel JSON conversazione: marca le chat condotte con vault attivo
+- Icona 🧠 nel selettore conversazioni per chat che hanno usato un vault
+- Getter `get_vault_used()` in `core/persistence.py` con fallback retrocompatibile
+- Test unitari per `get_vault_used()` (default False, True esplicito, False esplicito)
+
+### Retrocompatibilita
+- Chat salvate prima di v1.14.2 senza campo `vault_used` vengono lette normalmente (default `False`)
+
+---
 ## [1.14.1] — 2026-03-16
 
 ### Fix

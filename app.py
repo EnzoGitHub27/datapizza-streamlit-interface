@@ -35,6 +35,8 @@ from config import (
     NEWS_BANNER_ENABLED,    # v1.10.0 - Branding
     NEWS_BANNER_TEXT,        # v1.10.0 - Branding
     NEWS_BANNER_VERSION,    # v1.10.0 - Branding
+    VAULT_SESSION_KEY,      # v1.14.2 - vault_used flag
+    VAULT_LAST_SYNC_KEY,    # v1.14.2 - vault_used flag
 )
 
 # ============================================================================
@@ -250,6 +252,7 @@ def _save_current_conversation():
         },
         socratic_history=SocraticHistory.to_serializable(),  # v1.9.0
         kb_metadata=st.session_state.get("kb_metadata"),  # v1.14.0
+        vault_used=st.session_state.get("vault_used", False),  # v1.14.2
     )
 
 def reset_conversation():
@@ -260,6 +263,8 @@ def reset_conversation():
     st.session_state["total_tokens_estimate"] = 0
     # v1.14.0 - Reset KB metadata
     st.session_state["kb_metadata"] = dict(KB_METADATA_DEFAULT)
+    # v1.14.2 - Reset vault_used
+    st.session_state["vault_used"] = False
     # 🆕 v1.5.0 - Pulisci anche file pending e flag privacy
     clear_pending_files()
     reset_privacy_flags()
@@ -699,7 +704,12 @@ if submit and user_input.strip():
 
             # 🆕 v1.10.0 - Incrementa contatore domande sessione
             st.session_state["n_domande_sessione"] += 1
-            
+
+            # 🆕 v1.14.2 - Marca vault_used se vault attivo (una volta True, resta True)
+            if (st.session_state.get(VAULT_SESSION_KEY)
+                    and st.session_state.get(VAULT_LAST_SYNC_KEY, 0)):
+                st.session_state["vault_used"] = True
+
             # Prepare RAG context if active
             context_text = ""
             sources = []
