@@ -20,6 +20,7 @@ from .persistence import (
     get_kb_metadata,
     KB_METADATA_DEFAULT,
     update_conversation_kb_metadata,
+    get_vault_used,
 )
 
 from .kb_chat_indexer import (

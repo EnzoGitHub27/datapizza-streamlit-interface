@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.14.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.14.0)
+[![Version](https://img.shields.io/badge/version-1.14.2-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.14.2)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -46,6 +46,12 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
+
+### 🧠 Novità v1.14.2 — Vault Used Flag + Icona nel Selettore
+
+- **Flag `vault_used`**: le conversazioni condotte con un vault attivo vengono marcate nel JSON
+- **Icona 🧠** nel selettore conversazioni: identifica a colpo d'occhio le chat che hanno usato conoscenza da vault
+- **Retrocompatibilità completa**: chat pre-v1.14.2 caricate senza crash (default `false`)
 
 ### 📚 Novità v1.14.0 — Chat Salvate come Knowledge Base Epistemica
 

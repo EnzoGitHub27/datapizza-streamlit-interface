@@ -1,5 +1,5 @@
 # core/persistence.py
-# DeepAiUG v1.14.0 - Persistenza conversazioni + KB Metadata
+# DeepAiUG v1.14.2 - Persistenza conversazioni + KB Metadata + vault_used
 # ============================================================================
 
 import json
@@ -21,6 +21,14 @@ KB_METADATA_DEFAULT = {
     "tipo": [],
     "note": "",
 }
+
+
+def get_vault_used(conversation_data: Dict[str, Any]) -> bool:
+    """
+    Ritorna True se la conversazione è stata condotta con un vault attivo.
+    Retrocompatibile: chat pre-v1.14.2 senza il campo → False.
+    """
+    return conversation_data.get("vault_used", False)
 
 
 def get_kb_metadata(conversation_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -67,6 +75,7 @@ def save_conversation(
     kb_settings: Dict[str, Any] = None,
     socratic_history: List[Dict[str, Any]] = None,  # v1.9.0
     kb_metadata: Dict[str, Any] = None,  # v1.14.0
+    vault_used: bool = False,  # v1.14.2
 ) -> bool:
     """
     Salva una conversazione su file.
@@ -81,6 +90,7 @@ def save_conversation(
         kb_settings: Impostazioni Knowledge Base (opzionale)
         socratic_history: Esplorazioni socratiche serializzate (v1.9.0, opzionale)
         kb_metadata: Metadati per inclusione nella KB epistemica (v1.14.0, opzionale)
+        vault_used: True se la conversazione ha usato un vault (v1.14.2)
 
     Returns:
         True se salvato con successo
@@ -102,6 +112,7 @@ def save_conversation(
             "knowledge_base": kb_settings or {},
             "socratic_history": socratic_history or [],  # v1.9.0
             "kb_metadata": kb_metadata or dict(KB_METADATA_DEFAULT),  # v1.14.0
+            "vault_used": vault_used,  # v1.14.2
         }
         
         filename = get_conversation_filename(conversation_id)
@@ -192,6 +203,7 @@ def list_saved_conversations() -> List[Dict[str, Any]]:
                     "has_documents": sensitivity["has_documents"],
                     "kb_folder_path": data.get("knowledge_base", {}).get("kb_folder_path", ""),
                     "kb_metadata": get_kb_metadata(data),  # v1.14.0
+                    "vault_used": get_vault_used(data),  # v1.14.2
                 })
             except Exception:
                 continue

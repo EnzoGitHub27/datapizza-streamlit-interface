@@ -84,6 +84,8 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    ├─→ v1.13.8 ✅ (2026-03-09)  + 🔧 Fix nome modello bottoni socratici
    ├─→ v1.13.9 ✅ (2026-03-09)  + 🔧 Fix modello per esplorazione specifica
    ├─→ v1.14.0 ✅ (2026-03-16)  + 📚 Chat salvate come KB epistemica
+   ├─→ v1.14.1 ✅ (2026-03-16)  + 🔧 KB Chat UX fix
+   ├─→ v1.14.2 ✅ (2026-04-03)  + 🧠 vault_used flag + icona selettore
    │
    └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
 
