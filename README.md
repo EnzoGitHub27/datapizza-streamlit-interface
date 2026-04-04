@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.14.2-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.14.2)
+[![Version](https://img.shields.io/badge/version-1.14.3-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.14.3)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -46,6 +46,14 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
+
+### 🌊 Novità v1.14.3 — Scroll Fix + Typing Indicator *(ultimo rilascio v1.x)*
+
+- **Typing indicator animato**: 3 pallini teal (⬤⬤⬤) con animazione bounce appaiono appena l'utente invia la domanda e spariscono al primo token ricevuto
+- **Scroll automatico**: la chat segue la risposta durante lo streaming — nessun salto manuale
+- **Cursore `▌`**: visibile durante tutto lo streaming, rimosso a completamento
+- **UX familiare**: esperienza analoga a Claude.ai e ChatGPT, riduce la curva di apprendimento
+- ⚠️ *Questa è l'ultima release del ciclo v1.x — il progetto entra in maintenance mode. Tutta l'energia creativa va su v2.0.*
 
 ### 🧠 Novità v1.14.2 — Vault Used Flag + Icona nel Selettore
 
@@ -215,7 +223,7 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.14.0
+## 🏗️ Architettura v1.14.3
 
 ```
 datapizza-streamlit-interface/
@@ -524,6 +532,9 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
+| v1.14.3 | 🌊 Scroll fix + Typing indicator animato *(ultimo v1.x — maintenance mode)* | ✅ |
+| v1.14.2 | 🧠 vault_used flag + icona nel selettore conversazioni | ✅ |
+| v1.14.1 | 🔧 UX fix KB Chat (ordine, caption, bulk-flag, warning) | ✅ |
 | v1.14.0 | 📚 Chat salvate come Knowledge Base epistemica | ✅ |
 | v1.13.9 | 🔧 Fix modello per esplorazione socratica specifica | ✅ |
 | v1.13.8 | 🔧 Fix nome modello nei bottoni socratici | ✅ |

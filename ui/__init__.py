@@ -13,6 +13,8 @@ from ui.chat import (
     render_chat_message,
     render_chat_area,
     render_empty_state,
+    show_typing_indicator,
+    inject_scroll_to_bottom,
 )
 
 from ui.sidebar import (
@@ -63,6 +65,8 @@ __all__ = [
     "render_chat_message",
     "render_chat_area",
     "render_empty_state",
+    "show_typing_indicator",
+    "inject_scroll_to_bottom",
     # Sidebar
     "render_llm_config",
     "render_knowledge_base_config",

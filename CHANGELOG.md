@@ -6,6 +6,19 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
+## [1.14.3] — 2026-04-04
+
+### Aggiunto
+- Typing indicator animato (tre pallini bounce teal) visibile durante la generazione della risposta
+- Scroll automatico a fondo pagina al termine dello streaming
+- Cursore lampeggiante `▌` durante lo streaming della risposta
+- Loop di streaming manuale con `st.empty()` al posto di `st.write_stream()` per supportare indicatori UX
+
+### Note
+- Ultimo rilascio del ciclo v1.x — il progetto entra in maintenance mode
+- Nessuna modifica alla logica applicativa: intervento puramente UX/CSS/JS
+
+---
 ## [1.14.2] — 2026-04-03
 
 ### Aggiunto

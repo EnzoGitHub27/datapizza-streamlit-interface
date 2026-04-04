@@ -1,10 +1,11 @@
 # ui/chat.py
-# DeepAiUG v1.9.1 - Rendering Chat + Socratic Buttons
+# DeepAiUG v1.14.3 - Rendering Chat + Socratic Buttons
 # ============================================================================
 # 🆕 v1.5.0: Aggiunto supporto per visualizzazione allegati nei messaggi
 # 🆕 v1.6.1: Aggiunto bottone "Genera alternative" (approccio socratico)
 # 🆕 v1.8.0: Passaggio user_question e socratic_mode ai bottoni socratici
 # 🆕 v1.9.1: Fix bubble rendering - singola st.markdown() per wrappare contenuto
+# 🆕 v1.14.3: Typing indicator animato + scroll automatico durante streaming
 # ============================================================================
 
 from datetime import datetime
@@ -12,6 +13,8 @@ from typing import Dict, Any, List, Optional
 
 import streamlit as st
 from markdown_it import MarkdownIt
+
+import streamlit.components.v1 as components
 
 from ui.socratic import render_socratic_buttons
 
@@ -150,3 +153,38 @@ def render_empty_state():
         st.info("👋 Knowledge Base attiva! Fai una domanda sui tuoi documenti.")
     else:
         st.info("👋 Inizia una conversazione!")
+
+
+# ── v1.14.3 — Typing indicator + Auto-scroll ────────────────────────────────
+
+def show_typing_indicator():
+    """
+    Mostra tre pallini animati (typing indicator) nell'area chat.
+    Usa il colore teal del tema Matrix DeepAiUG.
+    """
+    st.markdown("""
+    <div class="typing-indicator">
+        <span></span><span></span><span></span>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def inject_scroll_to_bottom():
+    """
+    Inietta JS che scrolla la finestra verso il basso.
+    Da chiamare durante lo streaming per seguire il testo in arrivo.
+    """
+    components.html(
+        """
+        <script>
+            const chatContainer = window.parent.document.querySelector(
+                'section.main [data-testid="stVerticalBlock"]'
+            );
+            if (chatContainer) {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+            window.parent.scrollTo(0, window.parent.document.body.scrollHeight);
+        </script>
+        """,
+        height=0,
+    )
