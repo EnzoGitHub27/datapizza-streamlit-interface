@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.14.2"
+VERSION = "1.14.3"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "vault_used flag + icona 🧠 nel selettore conversazioni"
+VERSION_DESCRIPTION = "scroll automatico + typing indicator animato durante streaming"
 
 # ============================================================================
 # PATHS
