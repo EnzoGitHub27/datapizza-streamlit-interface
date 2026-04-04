@@ -89,6 +89,8 @@ from ui import (
     render_conversations_manager,
     render_export_section,
     render_export_preview,
+    show_typing_indicator,
+    inject_scroll_to_bottom,
 )
 from ui.sidebar.kb_panel import render_kb_panel
 from ui.sidebar import render_socratic_mode_settings
@@ -796,27 +798,38 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                     else enriched_input
                 )
             
-            # Invoke LLM with streaming ✨ v1.6.0
+            # Invoke LLM with streaming ✨ v1.6.0 / v1.14.3
             # 🆕 TODO: Aggiungere supporto Vision API per immagini
             # Per ora le immagini vengono preparate ma non inviate (richiede modifiche a llm_client)
 
-            # Generator per estrarre solo il nuovo testo dai chunk
-            def response_generator():
-                """Yielda solo il nuovo testo incrementale dai chunk di streaming"""
+            # Display streaming response with typing indicator + auto-scroll
+            with st.chat_message("assistant"):
+                # v1.14.3 — Typing indicator: pallini animati prima del primo token
+                typing_placeholder = st.empty()
+                with typing_placeholder:
+                    show_typing_indicator()
+
+                placeholder = st.empty()
+                response_text = ""
                 previous_text = ""
+
                 for chunk in client.stream_invoke(full_prompt):
-                    # Estrai testo dal chunk
+                    # Prima iterazione: rimuovi typing indicator
+                    typing_placeholder.empty()
+
                     current_text = getattr(chunk, "text", str(chunk))
                     if current_text:
-                        # Yielda solo la differenza (nuovo testo)
                         new_text = current_text[len(previous_text):]
                         if new_text:
-                            yield new_text
+                            response_text += new_text
                             previous_text = current_text
+                            # v1.14.3 — Cursore ▌ durante lo streaming
+                            placeholder.markdown(response_text + "▌")
 
-            # Display streaming response
-            with st.chat_message("assistant"):
-                response_text = st.write_stream(response_generator())
+                # Risposta finale senza cursore
+                placeholder.markdown(response_text)
+                # v1.14.3 — Scroll finale a fondo pagina
+                inject_scroll_to_bottom()
 
             # Add response with sources to conversation
             add_message(

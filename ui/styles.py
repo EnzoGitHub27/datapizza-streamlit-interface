@@ -1,8 +1,9 @@
 # ui/styles.py
-# DeepAiUG v1.9.1 - Stili CSS
+# DeepAiUG v1.14.3 - Stili CSS
 # ============================================================================
 # 🆕 v1.9.1: Bubble colors use Streamlit CSS variables for automatic theming
 # 🆕 v1.9.1: Typography rules for HTML content rendered inside bubbles
+# 🆕 v1.14.3: Typing indicator animato (bounce teal)
 # ============================================================================
 
 # CSS principale dell'applicazione
@@ -109,6 +110,32 @@ MAIN_CSS = """
     font-size: 0.85em;
     opacity: 0.8;
     margin-bottom: 0.3rem !important;
+}
+
+/* ── Typing indicator (v1.14.3) ───────────────────────────────────────── */
+
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 16px;
+    margin: 4px 0;
+}
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #00d4aa;
+    display: inline-block;
+    animation: typing-bounce 1.2s infinite ease-in-out;
+}
+.typing-indicator span:nth-child(1) { animation-delay: 0s; }
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30%            { transform: translateY(-6px); opacity: 1; }
 }
 
 /* ── Light theme overrides ─────────────────────────────────────────────── */

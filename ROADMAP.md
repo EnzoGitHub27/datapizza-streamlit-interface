@@ -86,6 +86,7 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    ├─→ v1.14.0 ✅ (2026-03-16)  + 📚 Chat salvate come KB epistemica
    ├─→ v1.14.1 ✅ (2026-03-16)  + 🔧 KB Chat UX fix
    ├─→ v1.14.2 ✅ (2026-04-03)  + 🧠 vault_used flag + icona selettore
+   ├─→ v1.14.3 ✅ (2026-04-04)  + 🎨 Scroll fix + typing indicator — ultimo v1.x
    │
    └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
 
@@ -99,6 +100,19 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 ---
 
 ## ✅ Completate
+
+### v1.14.3 — Scroll fix + Typing Indicator ✅ *(ultimo rilascio v1.x)*
+**Data:** 2026-04-04
+
+UX fix per rendere l'esperienza streaming più familiare. Nessuna modifica alla logica applicativa.
+
+- Typing indicator animato (tre pallini bounce teal) durante la generazione
+- Scroll automatico a fondo pagina al termine dello streaming
+- Cursore lampeggiante `▌` durante lo streaming
+- Loop manuale con `st.empty()` al posto di `st.write_stream()`
+
+> **v1.x entra in maintenance mode.** Questo è l'ultimo rilascio del ciclo v1.x.
+> Il prossimo sviluppo attivo sarà v2.0.0 — Semantic Layer + Knowledge Graph.
 
 ### v1.14.0 — Chat Salvate come Knowledge Base Epistemica ✅
 **Data:** 2026-03-16
@@ -475,5 +489,5 @@ Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per dettagli.
 
 ---
 
-*Ultimo aggiornamento: 2026-03-16*
+*Ultimo aggiornamento: 2026-04-04*
 *DeepAiUG Streamlit Interface © 2026*
