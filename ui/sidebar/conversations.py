@@ -14,6 +14,7 @@ from core import (
     get_kb_metadata,
 )
 from rag import KnowledgeBaseManager, TextChunker, LocalFolderAdapter
+from rag.embeddings import get_seconds_per_file, format_eta, get_active_model_tag
 from config.constants import VAULT_SESSION_KEY, VAULT_LAST_SYNC_KEY, VAULT_FILE_COUNT_KEY
 from rag.vault import detect_vault_type, scan_vault_files
 import time
@@ -39,8 +40,10 @@ def render_conversations_manager():
         st.sidebar.info("💡 Nessuna conversazione salvata")
         return
     
-    # Detect if current provider is cloud (for lock icon + load blocking)
-    is_cloud = st.session_state.get("connection_type", "") != "Local (Ollama)"
+    # Detect if current provider is Cloud — solo "Cloud provider" blocca il
+    # caricamento di chat con dati locali / wiki / vault. "Remote host" è
+    # un server aziendale fidato e va trattato come Local. (Fix v1.15.0)
+    is_cloud = st.session_state.get("connection_type", "") == "Cloud provider"
 
     # Build selectbox options with content-type icons
     conv_options: list[dict] = []
@@ -225,20 +228,17 @@ def _show_load_warning(conversation_id: str):
     file_list = scan_vault_files(folder_path, vault_info)
     n_files = len(file_list)
 
-    # Stima tempo: ~0.4 secondi per file (basato su benchmark reale)
-    stima_sec = max(5, int(n_files * 0.4))
-    if stima_sec < 60:
-        stima_str = f"~{stima_sec}s"
-    elif stima_sec < 300:
-        minuti = stima_sec // 60
-        stima_str = f"~{minuti} min"
-    else:
-        minuti = stima_sec // 60
-        stima_str = f"~{minuti} min (operazione lunga)"
+    # v1.15.0 — stima adattiva al modello di embedding attivo
+    # (era hardcoded 0.4 s/file pre-1.15.0, troppo ottimistica per e5-small)
+    stima_sec = max(10, int(n_files * get_seconds_per_file()))
+    stima_str = format_eta(stima_sec)
+    model_tag = get_active_model_tag()
+    short_model = model_tag.rsplit("/", 1)[-1] if "/" in model_tag else model_tag
 
     st.sidebar.info(
         f"{vault_info['icon']} **{vault_info['label']}** — {n_files} file  \n"
-        f"⏱️ Ri-indicizzazione stimata: {stima_str}"
+        f"⏱️ Ri-indicizzazione stimata: **{stima_str}** "
+        f"(modello: `{short_model}`)"
     )
 
 

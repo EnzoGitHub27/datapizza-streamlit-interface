@@ -210,6 +210,13 @@ Tarata su misurazione reale: laptop **i7-8565U** (mobile gen 8, no GPU), vault O
 > [!note] Calibrazione futura
 > Le stime sono volutamente conservative — meglio dire "~10 min" e finire in 8 che promettere 4 e finire in 18. Se in futuro arrivano misurazioni reali da CPU desktop più potenti, si potranno introdurre fattori per "tier" hardware.
 
+**Allineamento dei due punti di stima.** Lo stesso fattore `get_seconds_per_file()` è usato in due posti:
+
+1. `_sync_source` in `ui/sidebar/knowledge_base.py` — quando l'utente clicca "Indicizza" / "Sincronizza" sulla sidebar
+2. `_show_load_warning` in `ui/sidebar/conversations.py` — quando l'utente carica una conversazione salvata che ha la KB attiva con vault associato (la chat triggererà una ri-indicizzazione)
+
+Pre-v1.15.0, il secondo banner aveva una stima hardcoded `0.4 s/file` (residuo di v1.13.5 tarato su MiniLM). v1.15.0 li ha unificati: cambiare modello di embedding ora aggiorna entrambi i banner automaticamente.
+
 Per le wiki, la stima per pagina è `request_delay + s/file × 0.3` — il throttling HTTP è dominante. Sopra i 5 minuti totali compare l'etichetta `(operazione lunga)`, coerente col pattern già presente in `conversations.py` per il caricamento conversazioni con KB.
 
 Helper esportati da `rag/embeddings.py`:
