@@ -220,9 +220,24 @@ echo [PIP] Aggiornamento datapizza-ai >> "!LOG!"
 .\!VENV!\Scripts\pip.exe install datapizza-ai --upgrade --quiet >> "!LOG!" 2>&1
 echo   [OK] datapizza-ai aggiornato.
 
-echo   Aggiornamento dipendenze da requirements.txt...
+echo.
+echo   Aggiornamento dipendenze da requirements.txt
+echo.
+echo   ATTESA LUNGA possibile su update v1.15.0+ (5-15 min, fino a 30 min).
+echo   Nuovo: sentence-transformers scarica torch (anche oltre 1 GB) + altri.
+echo   Vedrai le barre di pip a schermo. NON CHIUDERE LA FINESTRA.
+echo.
 echo [PIP] Aggiornamento requirements.txt >> "!LOG!"
-.\!VENV!\Scripts\pip.exe install -r requirements.txt --upgrade --quiet >> "!LOG!" 2>&1
+:: v1.15.1 - output a schermo (no redirect su LOG, no --quiet) per visibilita'.
+:: --prefer-binary preferisce wheel pre-compilati, accelera l'install.
+.\!VENV!\Scripts\pip.exe install -r requirements.txt --upgrade --prefer-binary
+
+if !errorlevel! neq 0 (
+    echo   [ERRORE] Aggiornamento dipendenze fallito.
+    echo [PIP] ERRORE requirements.txt >> "!LOG!"
+    pause
+    exit /b 1
+)
 echo   [OK] Dipendenze aggiornate.
 echo [PIP] Aggiornamento completato >> "!LOG!"
 echo.

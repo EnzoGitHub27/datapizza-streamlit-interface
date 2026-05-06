@@ -205,9 +205,22 @@ echo "[PIP] Aggiornamento datapizza-ai" >> "$LOG"
 pip install datapizza-ai --upgrade --quiet >> "$LOG" 2>&1
 check_ok "datapizza-ai aggiornato."
 
-log "  Aggiornamento dipendenze da requirements.txt..."
+log "  Aggiornamento dipendenze da requirements.txt"
+echo ""
+echo -e "  ${YELLOW}ATTESA LUNGA possibile su update v1.15.0+ (5-15 min, fino a 30).${NC}"
+echo -e "  ${YELLOW}Nuovo: 'sentence-transformers' scarica torch (~888 MB su Linux) + altri.${NC}"
+echo -e "  ${YELLOW}Vedrai le barre di pip a schermo. NON CHIUDERE LA FINESTRA.${NC}"
+echo ""
 echo "[PIP] Aggiornamento requirements.txt" >> "$LOG"
-pip install -r requirements.txt --upgrade --quiet >> "$LOG" 2>&1
+# v1.15.1 — output a schermo + tee. Rimosso --quiet (mascherava lo stato).
+# --prefer-binary preferisce wheel pre-compilati, accelera l'install.
+pip install -r requirements.txt --upgrade --prefer-binary 2>&1 | tee -a "$LOG"
+PIP_RC=${PIPESTATUS[0]}
+if [[ $PIP_RC -ne 0 ]]; then
+    echo -e "  ${RED}[ERRORE]${NC} pip aggiornamento fallito (codice $PIP_RC)"
+    echo "[PIP] ERRORE requirements.txt (rc=$PIP_RC)" >> "$LOG"
+    exit 1
+fi
 check_ok "Dipendenze aggiornate."
 echo "[PIP] Aggiornamento completato" >> "$LOG"
 

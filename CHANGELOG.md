@@ -6,6 +6,24 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
+## [1.15.1] — 2026-05-06
+
+### Fix
+- **Installer/updater bloccati visivamente durante `pip install -r requirements.txt`**: tutti i 6 script (`installa_*` + `aggiorna_*` Linux/Mac/Windows) redirigevano l'output di pip su file di log silenzioso. Con l'aggiunta di `sentence-transformers` in v1.15.0 (porta `torch` come transitiva, ~250 MB - 1 GB), pip può richiedere 5-15 minuti — durante i quali l'utente vedeva il terminale "bloccato" e premeva Ctrl+C
+- Output pip ora visibile a schermo (con `tee -a $LOG` su Linux/Mac, no redirect su Windows) — l'utente vede le barre di download in tempo reale
+- Banner di avviso prima del comando: "ATTESA LUNGA possibile (5-15 min, fino a 30) — NON CHIUDERE LA FINESTRA"
+- Aggiunto flag `--prefer-binary` per privilegiare wheel pre-compilati ed evitare build da source di alcune transitive
+- Rimosso flag `--quiet` dagli script di update (mascherava lo stato)
+- Aggiunti `if [[ $PIP_RC -ne 0 ]]` / `if !errorlevel! neq 0` con exit pulito + log esplicito sull'errore di pip
+
+### Modificato
+- `installer/INIZIA-QUI.txt`: nota in apertura sul tempo di installazione post v1.15.0
+
+### Note
+- Nessuna modifica al codice runtime. Solo installer/updater + bump versione
+- v1.15.1 è una patch dedicata interamente alla UX dell'installer: errore funzionale di v1.15.0 emerso al primo test su laptop secondario (terminale appariva bloccato durante il download di torch)
+
+---
 ## [1.15.0] — 2026-05-06
 
 ### Aggiunto

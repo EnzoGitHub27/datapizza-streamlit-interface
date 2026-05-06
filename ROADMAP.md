@@ -89,6 +89,7 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    ├─→ v1.14.3 ✅ (2026-04-04)  + 🎨 Scroll fix + typing indicator
    ├─→ v1.14.4 ✅ (2026-05-06)  + 🩹 Fix visibilità sezione Knowledge Base in sidebar
    ├─→ v1.15.0 ✅ (2026-05-06)  + 🌍 Embedding multilingua e5-small (qualità retrieval IT)
+   ├─→ v1.15.1 ✅ (2026-05-06)  + 🩹 Fix installer "bloccato" durante pip install
    │
    └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
 
@@ -102,6 +103,18 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 ---
 
 ## ✅ Completate
+
+### v1.15.1 — Fix installer "bloccato" durante pip install ✅
+**Data:** 2026-05-06
+
+Patch dedicata interamente alla UX dell'installer. Bug emerso al test su laptop secondario: dopo l'introduzione di `sentence-transformers` in v1.15.0 (porta `torch` come transitiva ~250 MB - 1 GB), tutti i 6 script `installa_*` e `aggiorna_*` apparivano completamente bloccati durante il download — perché redirigevano l'output di pip su file di log silenzioso.
+
+- Output pip ora visibile a schermo (`tee -a $LOG` Linux/Mac, no redirect Windows)
+- Banner esplicito: "ATTESA LUNGA possibile (5-15 min, fino a 30) — NON CHIUDERE LA FINESTRA"
+- Flag `--prefer-binary` per privilegiare wheel pre-compilati
+- Rimosso `--quiet` dagli script di update
+- Gestione errori pip esplicita con codice di ritorno
+- Aggiornato `INIZIA-QUI.txt` con nota sui tempi
 
 ### v1.15.0 — Embedding multilingua per RAG ✅
 **Data:** 2026-05-06
