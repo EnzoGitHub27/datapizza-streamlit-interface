@@ -1,8 +1,16 @@
 ============================================================
   DEEPAIUG - INIZIA QUI
   AI locale, privacy-first. Installazione automatica.
-  v1.11.2
+  v1.15.1
 ============================================================
+
+  IMPORTANTE da v1.15.0 (embedding multilingua per RAG):
+  l'installazione e l'aggiornamento delle dipendenze possono
+  richiedere 5-15 minuti (fino a 30 su connessioni lente),
+  perche' viene scaricato torch (~250 MB - 1 GB a seconda OS)
+  come transitiva di sentence-transformers.
+  La finestra mostrera' le barre di download di pip:
+  e' normale che scorrano lentamente. NON CHIUDERLA.
 
 
 WINDOWS 11

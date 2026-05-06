@@ -355,10 +355,23 @@ echo "[PIP] Installazione datapizza-ai" >> "$LOG"
 ./$VENV/bin/pip install datapizza-ai >> "$LOG" 2>&1
 check_ok "datapizza-ai installato."
 
-log "  Installazione dipendenze da requirements.txt... attendere..."
-log "  (potrebbe richiedere qualche minuto)"
+log "  Installazione dipendenze da requirements.txt"
+echo ""
+echo -e "  ${YELLOW}ATTESA LUNGA possibile (5-15 min, fino a 30 min su connessioni lente).${NC}"
+echo -e "  ${YELLOW}Il pacchetto 'sentence-transformers' scarica torch (~250 MB su Mac) + altri.${NC}"
+echo -e "  ${YELLOW}Vedrai le barre di pip a schermo: e' normale che scorrano lentamente.${NC}"
+echo -e "  ${YELLOW}NON CHIUDERE LA FINESTRA. Anche se sembra bloccato, sta lavorando.${NC}"
+echo ""
 echo "[PIP] Installazione requirements.txt" >> "$LOG"
-./$VENV/bin/pip install -r requirements.txt >> "$LOG" 2>&1
+# v1.15.1 — output a schermo con tee per visibilita' + log salvato.
+# --prefer-binary evita build da source (preferisce wheel) accelerando install.
+./$VENV/bin/pip install -r requirements.txt --prefer-binary 2>&1 | tee -a "$LOG"
+PIP_RC=${PIPESTATUS[0]}
+if [[ $PIP_RC -ne 0 ]]; then
+    echo -e "  ${RED}[ERRORE]${NC} pip install requirements.txt fallito (codice $PIP_RC)"
+    echo "[PIP] ERRORE requirements.txt (rc=$PIP_RC)" >> "$LOG"
+    exit 1
+fi
 check_ok "Librerie installate."
 echo "[PIP] Tutte le dipendenze installate" >> "$LOG"
 echo ""

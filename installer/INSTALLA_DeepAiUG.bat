@@ -340,10 +340,17 @@ echo   [OK] datapizza-ai installato.
 echo [PIP] datapizza-ai installato >> "!LOG!"
 
 echo.
-echo   Installazione dipendenze da requirements.txt... attendere...
-echo   (potrebbe richiedere qualche minuto)
+echo   Installazione dipendenze da requirements.txt
+echo.
+echo   ATTESA LUNGA possibile (5-15 min, fino a 30 min su connessioni lente).
+echo   Il pacchetto sentence-transformers scarica torch (anche oltre 1 GB) + altri.
+echo   Vedrai le barre di download di pip a schermo - e' normale che scorrano lente.
+echo   NON CHIUDERE LA FINESTRA: anche se sembra bloccata, sta lavorando.
+echo.
 echo [PIP] Installazione requirements.txt >> "!LOG!"
-.\!VENV!\Scripts\pip.exe install -r requirements.txt >> "!LOG!" 2>&1
+:: v1.15.1 - output a schermo (no redirect su LOG) per visibilita'.
+:: --prefer-binary evita build da source preferendo wheel (piu' veloce).
+.\!VENV!\Scripts\pip.exe install -r requirements.txt --prefer-binary
 
 if !errorlevel! neq 0 (
     echo   [ERRORE] Installazione dipendenze fallita.

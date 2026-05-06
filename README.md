@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.15.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.15.0)
+[![Version](https://img.shields.io/badge/version-1.15.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.15.1)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -46,6 +46,14 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
+
+### 🩹 Novità v1.15.1 — Fix installer "bloccato" durante `pip install`
+
+- **Problema**: dopo il merge di `sentence-transformers` (che porta `torch` ~250 MB - 1 GB), gli installer e gli updater apparivano congelati per 5-15 minuti durante il download. L'output di pip veniva redirezionato silenziosamente su un log → schermo immobile → utenti convinti che fosse un blocco
+- **Fix**: output pip ora visibile a schermo (con `tee` su Linux/Mac, no redirect su Windows), banner esplicito "ATTESA LUNGA possibile, NON CHIUDERE LA FINESTRA", flag `--prefer-binary` per accelerare l'install, rimosso `--quiet` dagli script di update
+- Pulizia generale: gestione errori pip esplicita con codice di ritorno e exit pulito su tutti i 6 script
+- Aggiornato `INIZIA-QUI.txt` con nota sui tempi di installazione post v1.15.0
+- *Patch UX dedicata, nessuna modifica al codice runtime*
 
 ### 🌍 Novità v1.15.0 — Embedding multilingua per RAG (qualità retrieval IT)
 
@@ -240,7 +248,7 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.15.0
+## 🏗️ Architettura v1.15.1
 
 ```
 datapizza-streamlit-interface/
@@ -549,6 +557,7 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
+| v1.15.1 | 🩹 Fix installer/updater "bloccato" durante pip install (output visibile a schermo) | ✅ |
 | v1.15.0 | 🌍 Embedding multilingua e5-small per RAG (qualità retrieval IT) | ✅ |
 | v1.14.4 | 🩹 Fix visibilità Knowledge Base sidebar + icone installer Linux/Win/Mac | ✅ |
 | v1.14.3 | 🌊 Scroll fix + Typing indicator animato | ✅ |
