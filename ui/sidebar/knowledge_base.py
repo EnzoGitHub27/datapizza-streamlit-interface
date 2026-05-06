@@ -60,6 +60,10 @@ def render_knowledge_base_config(connection_type: str, container=None):
     st.session_state["use_knowledge_base"] = use_kb
 
     if not use_kb:
+        _container.caption(
+            "Disponibili: 📁 Cartella locale · 🌐 MediaWiki · 📖 DokuWiki · "
+            "🧠 Obsidian Vault · …  Attiva per configurare."
+        )
         return
 
     # Avviso privacy

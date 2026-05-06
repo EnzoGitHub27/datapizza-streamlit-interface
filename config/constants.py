@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.14.3"
+VERSION = "1.14.4"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "scroll automatico + typing indicator animato durante streaming"
+VERSION_DESCRIPTION = "fix visibilità sezione Knowledge Base (Wiki / Vault) nella sidebar"
 
 # ============================================================================
 # PATHS

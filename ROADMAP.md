@@ -86,7 +86,8 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    ├─→ v1.14.0 ✅ (2026-03-16)  + 📚 Chat salvate come KB epistemica
    ├─→ v1.14.1 ✅ (2026-03-16)  + 🔧 KB Chat UX fix
    ├─→ v1.14.2 ✅ (2026-04-03)  + 🧠 vault_used flag + icona selettore
-   ├─→ v1.14.3 ✅ (2026-04-04)  + 🎨 Scroll fix + typing indicator — ultimo v1.x
+   ├─→ v1.14.3 ✅ (2026-04-04)  + 🎨 Scroll fix + typing indicator
+   ├─→ v1.14.4 ✅ (2026-05-06)  + 🩹 Fix visibilità sezione Knowledge Base in sidebar
    │
    └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
 
@@ -101,7 +102,16 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 
 ## ✅ Completate
 
-### v1.14.3 — Scroll fix + Typing Indicator ✅ *(ultimo rilascio v1.x)*
+### v1.14.4 — Fix Visibilità Knowledge Base in Sidebar ✅
+**Data:** 2026-05-06
+
+Fix UX puramente di sidebar. La sezione di configurazione delle sorgenti (wiki + vault) era stata spostata in v1.12.0 dentro l'expander "⚙️ Configurazione" chiuso di default, diventando di fatto invisibile.
+
+- Expander dedicato `📚 Knowledge Base (Wiki / Vault)` aperto di default in sidebar
+- Caption con elenco sorgenti disponibili anche quando il toggle "Usa Knowledge Base" è off (discoverability)
+- Toggle, gate privacy su Cloud provider e logica di retrieval invariati
+
+### v1.14.3 — Scroll fix + Typing Indicator ✅
 **Data:** 2026-04-04
 
 UX fix per rendere l'esperienza streaming più familiare. Nessuna modifica alla logica applicativa.

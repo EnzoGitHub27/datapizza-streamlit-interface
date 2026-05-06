@@ -320,7 +320,10 @@ config_expander = st.sidebar.expander("⚙️ Configurazione", expanded=False)
     temperature,
     max_messages,
 ) = render_llm_config(container=config_expander)
-render_knowledge_base_config(connection_type, container=config_expander)
+
+# 1b. 📚 Knowledge Base — Wiki / Vault (aperta di default per renderla visibile)
+kb_expander = st.sidebar.expander("📚 Knowledge Base (Wiki / Vault)", expanded=True)
+render_knowledge_base_config(connection_type, container=kb_expander)
 
 # 2. 💬 Conversazione (aperta)
 render_conversations_manager()
