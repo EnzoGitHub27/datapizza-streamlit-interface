@@ -15,7 +15,7 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 - Costante `DEFAULT_EMBEDDING_MODEL` in `config/constants.py` + override via env var `DEEPAIUG_EMBEDDING_MODEL` (es. `intfloat/multilingual-e5-base` per qualità superiore)
 - Migration check automatico nelle collection ChromaDB: rileva mismatch del modello di embedding e ricrea la collection (re-indicizzazione richiesta). Tratta anche le collection legacy senza il campo `embedding_model` come "da migrare" (presumibilmente costruite con MiniLM pre-1.15.0)
 - Indicatore del modello embedding attivo nelle statistiche KB della sidebar (utile per debug e verifica)
-- **Banner stima tempo di indicizzazione** prima dello start, adattivo al modello attivo. Compare per tutti i tipi di sorgente: cartella locale, vault Obsidian/LogSeq/Notion, MediaWiki, DokuWiki. Usa fattori secondi/file specifici per ciascun modello (`e5-small`, `e5-base`, `e5-large`, `MiniLM-L12`, default ChromaDB) e per le wiki considera anche il delay HTTP. Sopra i 5 minuti aggiunge l'etichetta "operazione lunga"
+- **Banner stima tempo di indicizzazione** prima dello start, adattivo al modello attivo. Compare per tutti i tipi di sorgente: cartella locale, vault Obsidian/LogSeq/Notion, MediaWiki, DokuWiki. Usa fattori secondi/file specifici per ciascun modello (`e5-small`, `e5-base`, `e5-large`, `MiniLM-L12`, default ChromaDB) e per le wiki considera anche il delay HTTP. Sopra i 5 minuti aggiunge l'etichetta "operazione lunga". Stessa stima viene usata anche nel banner di **ri-indicizzazione al caricamento conversazione** (`_show_load_warning` in `ui/sidebar/conversations.py`), prima hardcoded a `0.4 s/file` ora allineato agli helper centralizzati
 - Helper `get_seconds_per_file()`, `get_seconds_per_wiki_page()`, `format_eta()` in `rag/embeddings.py`
 - Vettori normalizzati (`normalize_embeddings=True`) per cosine similarity ottimizzata
 
@@ -27,6 +27,9 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 ### ⚠️ Breaking change (semantico, non API)
 - Le collection ChromaDB esistenti pre-1.15.0 contengono vettori MiniLM inglese: dopo l'aggiornamento le query verranno embedded con e5 in spazio vettoriale diverso → risultati casuali. **L'utente deve re-indicizzare** cliccando "Indicizza" sui propri vault/wiki/cartelle e "🔄 Aggiorna KB Chat" per la KB epistemica
 - Al primo avvio post-aggiornamento il modello e5 viene scaricato da HuggingFace (~118 MB, una sola volta, cached in `~/.cache/huggingface/`)
+
+### Fix
+- **Caricamento chat archiviate con KB su Remote host**: il check privacy in `ui/sidebar/conversations.py` trattava erroneamente "Remote host" come Cloud, bloccando il caricamento. Solo "Cloud provider" deve bloccare (`is_cloud = connection_type == "Cloud provider"` invece del precedente `!= "Local (Ollama)"`). Anche l'icona 🔒 sul selettore conversazioni ora compare solo per Cloud, non per Remote
 
 ### Note
 - Indicizzazione ~1.5× più lenta per il modello più ricco; ricerca pochi ms più lenta per query (trascurabile)
