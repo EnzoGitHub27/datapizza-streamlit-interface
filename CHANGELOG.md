@@ -6,6 +6,34 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
+## [1.15.0] — 2026-05-06
+
+### Aggiunto
+- **Embedding multilingua per RAG**: ChromaDB ora usa `intfloat/multilingual-e5-small` al posto del default `all-MiniLM-L6-v2` (principalmente inglese). Migliora significativamente la qualità del retrieval su contenuti italiani (vault, wiki, cartelle, Chat-KB)
+- Nuovo modulo `rag/embeddings.py` con helper, EmbeddingFunction ChromaDB-compatible, singleton e fallback graceful
+- Strategia prefix `passage:` per i documenti in indicizzazione e `query:` per le query (richiesta dai modelli e5 per retrieval ottimale)
+- Costante `DEFAULT_EMBEDDING_MODEL` in `config/constants.py` + override via env var `DEEPAIUG_EMBEDDING_MODEL` (es. `intfloat/multilingual-e5-base` per qualità superiore)
+- Migration check automatico nelle collection ChromaDB: rileva mismatch del modello di embedding e ricrea la collection (re-indicizzazione richiesta). Tratta anche le collection legacy senza il campo `embedding_model` come "da migrare" (presumibilmente costruite con MiniLM pre-1.15.0)
+- Indicatore del modello embedding attivo nelle statistiche KB della sidebar (utile per debug e verifica)
+- **Banner stima tempo di indicizzazione** prima dello start, adattivo al modello attivo. Compare per tutti i tipi di sorgente: cartella locale, vault Obsidian/LogSeq/Notion, MediaWiki, DokuWiki. Usa fattori secondi/file specifici per ciascun modello (`e5-small`, `e5-base`, `e5-large`, `MiniLM-L12`, default ChromaDB) e per le wiki considera anche il delay HTTP. Sopra i 5 minuti aggiunge l'etichetta "operazione lunga"
+- Helper `get_seconds_per_file()`, `get_seconds_per_wiki_page()`, `format_eta()` in `rag/embeddings.py`
+- Vettori normalizzati (`normalize_embeddings=True`) per cosine similarity ottimizzata
+
+### Modificato
+- `rag/vector_store.py`: `_init_store` con embedding_function multilingua + migration; `add_chunks` pre-computa embedding con prefix "passage:"; `clear` preserva embedding_function
+- `core/kb_chat_indexer.py`: stesso pattern applicato alla collection `deepaiug_chat_kb`
+- `requirements.txt`: aggiunto `sentence-transformers>=2.2.0` (porta `torch` come dipendenza transitiva)
+
+### ⚠️ Breaking change (semantico, non API)
+- Le collection ChromaDB esistenti pre-1.15.0 contengono vettori MiniLM inglese: dopo l'aggiornamento le query verranno embedded con e5 in spazio vettoriale diverso → risultati casuali. **L'utente deve re-indicizzare** cliccando "Indicizza" sui propri vault/wiki/cartelle e "🔄 Aggiorna KB Chat" per la KB epistemica
+- Al primo avvio post-aggiornamento il modello e5 viene scaricato da HuggingFace (~118 MB, una sola volta, cached in `~/.cache/huggingface/`)
+
+### Note
+- Indicizzazione ~1.5× più lenta per il modello più ricco; ricerca pochi ms più lenta per query (trascurabile)
+- Fallback automatico a default ChromaDB se `sentence-transformers` non disponibile (warning a console, sistema funzionante con qualità ridotta)
+- Documentazione tecnica completa in `docs/SPEC_v1.15.0_multilingual_embeddings.md`
+
+---
 ## [1.14.4] — 2026-05-06
 
 ### Fix

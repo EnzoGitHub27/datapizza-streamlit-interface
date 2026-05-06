@@ -193,6 +193,7 @@ class KnowledgeBaseManager:
             "using_chromadb": vs_stats.get("using_chromadb", False),
             "last_indexed": self.last_indexed,
             "persist_path": vs_stats.get("persist_path"),
+            "embedding_model": vs_stats.get("embedding_model"),
         }
     
     def is_indexed(self) -> bool:

@@ -1,8 +1,9 @@
 # core/kb_chat_indexer.py
-# DeepAiUG v1.14.0 - Indicizzazione chat salvate come KB epistemica
+# DeepAiUG v1.15.0 - Indicizzazione chat salvate come KB epistemica
 # ============================================================================
 # Gestisce la collection ChromaDB "deepaiug_chat_kb" separata dalla wiki.
 # Pattern replicato da rag/vector_store.py, con metadati specifici per chat.
+# v1.15.0: usa embedding multilingua e5-small (vedi rag/embeddings.py).
 # ============================================================================
 
 import hashlib
@@ -14,6 +15,11 @@ from typing import Dict, Any, List, Optional
 
 from config import KNOWLEDGE_BASE_DIR
 from core.persistence import get_kb_metadata, list_saved_conversations, load_conversation
+from rag.embeddings import (
+    get_embedding_function,
+    get_embeddings_helper,
+    get_active_model_tag,
+)
 
 CHAT_KB_META_FILE = KNOWLEDGE_BASE_DIR / "chat_kb_meta.json"
 
@@ -33,6 +39,9 @@ def _get_chroma_collection():
     Ottiene la collection ChromaDB per le chat-KB.
     Usa lo stesso pattern di SimpleVectorStore: PersistentClient + get_or_create.
 
+    v1.15.0 — passa embedding_function multilingua e gestisce migrazione
+    automatica se cambia il modello di embedding (re-indicizzazione richiesta).
+
     Returns:
         Tupla (client, collection) o (None, None) se ChromaDB non disponibile.
     """
@@ -41,10 +50,35 @@ def _get_chroma_collection():
 
         Path(CHAT_KB_PERSIST_PATH).mkdir(parents=True, exist_ok=True)
         client = chromadb.PersistentClient(path=CHAT_KB_PERSIST_PATH)
-        collection = client.get_or_create_collection(
-            name=CHAT_KB_COLLECTION,
-            metadata={"description": "Knowledge Base epistemica da chat salvate"},
-        )
+
+        embedding_fn = get_embedding_function()
+        active_tag = get_active_model_tag()
+
+        # Migrazione: ricrea se modello diverso (o legacy senza tag)
+        try:
+            existing = client.get_collection(name=CHAT_KB_COLLECTION)
+            stored_tag = (existing.metadata or {}).get("embedding_model")
+            if stored_tag != active_tag:
+                legacy_label = stored_tag or "<legacy/sconosciuto>"
+                print(
+                    f"⚠️ Embedding model chat-KB cambiato ({legacy_label} → {active_tag}). "
+                    f"Reset collection — re-indicizzazione richiesta."
+                )
+                client.delete_collection(CHAT_KB_COLLECTION)
+        except Exception:
+            pass  # collection non esistente, ok
+
+        collection_kwargs = {
+            "name": CHAT_KB_COLLECTION,
+            "metadata": {
+                "description": "Knowledge Base epistemica da chat salvate",
+                "embedding_model": active_tag,
+            },
+        }
+        if embedding_fn is not None:
+            collection_kwargs["embedding_function"] = embedding_fn
+
+        collection = client.get_or_create_collection(**collection_kwargs)
         return client, collection
     except ImportError:
         print("⚠️ ChromaDB non installato. Chat KB non disponibile.")
@@ -175,6 +209,8 @@ def index_chat_to_kb(chat_json: dict) -> int:
     total = len(chunks)
     n_batches = math.ceil(total / CHROMA_BATCH_SIZE)
 
+    helper = get_embeddings_helper()  # None se sentence-transformers non disp.
+
     for b in range(n_batches):
         s = b * CHROMA_BATCH_SIZE
         e = min(s + CHROMA_BATCH_SIZE, total)
@@ -195,8 +231,13 @@ def index_chat_to_kb(chat_json: dict) -> int:
             for i in range(len(batch))
         ]
 
+        # v1.15.0 — pre-computa embedding con prefix "passage:" se helper disp.
+        add_kwargs = {"ids": ids, "documents": documents, "metadatas": metadatas}
+        if helper is not None:
+            add_kwargs["embeddings"] = helper.encode_passages(documents)
+
         try:
-            collection.add(ids=ids, documents=documents, metadatas=metadatas)
+            collection.add(**add_kwargs)
         except Exception as exc:
             print(f"❌ Errore batch ChromaDB chat-KB: {exc}")
             return 0

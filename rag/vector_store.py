@@ -1,5 +1,5 @@
 # rag/vector_store.py
-# DeepAiUG v1.4.0 - Vector Store per RAG
+# DeepAiUG v1.15.0 - Vector Store per RAG (embedding multilingua)
 # ============================================================================
 
 import math
@@ -7,9 +7,15 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional, Callable
 
 from .models import Chunk
+from .embeddings import (
+    get_embedding_function,
+    get_embeddings_helper,
+    get_active_model_tag,
+)
 from config import KNOWLEDGE_BASE_DIR, DEFAULT_TOP_K_RESULTS
 
 CHROMA_BATCH_SIZE = 500
+COLLECTION_NAME = "wiki_knowledge_base"
 
 
 class SimpleVectorStore:
@@ -42,25 +48,61 @@ class SimpleVectorStore:
         self._init_store()
     
     def _init_store(self):
-        """Inizializza ChromaDB se disponibile."""
+        """
+        Inizializza ChromaDB se disponibile.
+
+        v1.15.0 — usa embedding_function multilingua (e5-small) e gestisce
+        la migrazione automatica delle collection costruite con un modello
+        di embedding diverso (ricreazione → re-indicizzazione richiesta).
+        """
         try:
             import chromadb
-            
+
             # Crea directory se non esiste
             Path(self.persist_path).mkdir(parents=True, exist_ok=True)
-            
+
             self.client = chromadb.PersistentClient(path=self.persist_path)
-            self.collection = self.client.get_or_create_collection(
-                name="wiki_knowledge_base",
-                metadata={"description": "Knowledge Base for Wiki RAG"}
-            )
+
+            embedding_fn = get_embedding_function()  # None se st non installato
+            active_tag = get_active_model_tag()
+
+            # Migrazione: se la collection esistente è stata costruita con un
+            # modello diverso (o nessuno tracciato = collection legacy
+            # pre-v1.15.0, presumibilmente MiniLM-L6 inglese), ricreala —
+            # i vettori sarebbero in spazi vettoriali diversi e il retrieval
+            # restituirebbe risultati casuali.
+            try:
+                existing = self.client.get_collection(name=COLLECTION_NAME)
+                stored_tag = (existing.metadata or {}).get("embedding_model")
+                if stored_tag != active_tag:
+                    legacy_label = stored_tag or "<legacy/sconosciuto>"
+                    print(
+                        f"⚠️ Embedding model cambiato ({legacy_label} → {active_tag}). "
+                        f"Reset collection '{COLLECTION_NAME}' — re-indicizzazione richiesta."
+                    )
+                    self.client.delete_collection(COLLECTION_NAME)
+            except Exception:
+                # Collection non esistente: ok, verrà creata sotto
+                pass
+
+            collection_kwargs = {
+                "name": COLLECTION_NAME,
+                "metadata": {
+                    "description": "Knowledge Base for Wiki RAG",
+                    "embedding_model": active_tag,
+                },
+            }
+            if embedding_fn is not None:
+                collection_kwargs["embedding_function"] = embedding_fn
+
+            self.collection = self.client.get_or_create_collection(**collection_kwargs)
             self.use_chromadb = True
-            
+
         except ImportError:
             print("⚠️ ChromaDB non installato. Usando store in memoria. "
                   "Installa con: pip install chromadb")
             self.use_chromadb = False
-            
+
         except Exception as e:
             print(f"⚠️ Errore inizializzazione ChromaDB: {e}. "
                   "Usando store in memoria.")
@@ -87,6 +129,7 @@ class SimpleVectorStore:
             try:
                 total = len(chunks)
                 n_batches = math.ceil(total / CHROMA_BATCH_SIZE)
+                helper = get_embeddings_helper()  # None se st non disponibile
 
                 for b in range(n_batches):
                     start = b * CHROMA_BATCH_SIZE
@@ -97,20 +140,27 @@ class SimpleVectorStore:
                     documents = [chunk.text for chunk in batch]
                     metadatas = [chunk.to_dict() for chunk in batch]
 
+                    # Determina gli embedding del batch:
+                    # 1. Espliciti (passati dal chiamante) → usa quelli
+                    # 2. Helper multilingua disponibile → pre-computa con prefix "passage:"
+                    # 3. Altrimenti → ChromaDB userà la sua embedding_function
+                    #    di default (no prefix, qualità inferiore su IT)
                     if embeddings:
                         batch_emb = embeddings[start:end]
-                        self.collection.add(
-                            ids=ids,
-                            documents=documents,
-                            metadatas=metadatas,
-                            embeddings=batch_emb
-                        )
+                    elif helper is not None:
+                        batch_emb = helper.encode_passages(documents)
                     else:
-                        self.collection.add(
-                            ids=ids,
-                            documents=documents,
-                            metadatas=metadatas
-                        )
+                        batch_emb = None
+
+                    add_kwargs = {
+                        "ids": ids,
+                        "documents": documents,
+                        "metadatas": metadatas,
+                    }
+                    if batch_emb is not None:
+                        add_kwargs["embeddings"] = batch_emb
+
+                    self.collection.add(**add_kwargs)
 
                     if progress_callback:
                         progress_callback(
@@ -213,33 +263,46 @@ class SimpleVectorStore:
         if self.use_chromadb and self.collection:
             try:
                 count = self.collection.count()
+                stored_meta = self.collection.metadata or {}
                 return {
                     "chunk_count": count,
                     "using_chromadb": True,
-                    "persist_path": self.persist_path
+                    "persist_path": self.persist_path,
+                    "embedding_model": stored_meta.get("embedding_model"),
                 }
             except:
                 pass
-        
+
         return {
             "chunk_count": len(self.chunks),
             "using_chromadb": False,
-            "persist_path": None
+            "persist_path": None,
+            "embedding_model": None,
         }
     
     def clear(self):
-        """Svuota il vector store."""
+        """Svuota il vector store, preservando embedding_function e metadata."""
         if self.use_chromadb and self.collection:
             try:
-                # Elimina e ricrea collection
-                self.client.delete_collection("wiki_knowledge_base")
-                self.collection = self.client.get_or_create_collection(
-                    name="wiki_knowledge_base",
-                    metadata={"description": "Knowledge Base for Wiki RAG"}
-                )
+                self.client.delete_collection(COLLECTION_NAME)
+
+                embedding_fn = get_embedding_function()
+                active_tag = get_active_model_tag()
+
+                collection_kwargs = {
+                    "name": COLLECTION_NAME,
+                    "metadata": {
+                        "description": "Knowledge Base for Wiki RAG",
+                        "embedding_model": active_tag,
+                    },
+                }
+                if embedding_fn is not None:
+                    collection_kwargs["embedding_function"] = embedding_fn
+
+                self.collection = self.client.get_or_create_collection(**collection_kwargs)
             except Exception as e:
                 print(f"❌ Errore clear ChromaDB: {e}")
-        
+
         self.chunks = []
         self.embeddings = []
     

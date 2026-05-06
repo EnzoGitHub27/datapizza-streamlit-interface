@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.14.4-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.14.4)
+[![Version](https://img.shields.io/badge/version-1.15.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.15.0)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -46,6 +46,16 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
+
+### 🌍 Novità v1.15.0 — Embedding multilingua per RAG (qualità retrieval IT)
+
+- **Sostituito il modello di embedding di default di ChromaDB** (`all-MiniLM-L6-v2`, principalmente inglese) con `intfloat/multilingual-e5-small`, multilingua nativo
+- **Risultato**: retrieval significativamente migliore su contenuti italiani — vault Obsidian/LogSeq, wiki MediaWiki/DokuWiki, cartelle locali e Chat-KB epistemica
+- **Strategia prefix**: `passage:` per i documenti in indicizzazione, `query:` per le query (richiesto dai modelli e5 per retrieval ottimale)
+- **Override via env var** `DEEPAIUG_EMBEDDING_MODEL` per sperimentare con `e5-base`/`e5-large` o altri sentence-transformers
+- **Migration automatica**: collection ChromaDB pre-esistenti vengono ricreate al cambio di modello (re-indicizzazione richiesta una volta sola)
+- **First-run**: ~118 MB scaricati da HuggingFace al primo avvio, una sola volta
+- ⚠️ *Breaking semantico*: utenti esistenti devono cliccare "Indicizza" sui propri vault/wiki e "🔄 Aggiorna KB Chat" per re-indicizzare con il nuovo modello
 
 ### 🩹 Novità v1.14.4 — Fix Visibilità Knowledge Base in Sidebar
 
@@ -230,7 +240,7 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.14.4
+## 🏗️ Architettura v1.15.0
 
 ```
 datapizza-streamlit-interface/
@@ -539,7 +549,8 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
-| v1.14.4 | 🩹 Fix visibilità sezione Knowledge Base (Wiki / Vault) nella sidebar | ✅ |
+| v1.15.0 | 🌍 Embedding multilingua e5-small per RAG (qualità retrieval IT) | ✅ |
+| v1.14.4 | 🩹 Fix visibilità Knowledge Base sidebar + icone installer Linux/Win/Mac | ✅ |
 | v1.14.3 | 🌊 Scroll fix + Typing indicator animato | ✅ |
 | v1.14.2 | 🧠 vault_used flag + icona nel selettore conversazioni | ✅ |
 | v1.14.1 | 🔧 UX fix KB Chat (ordine, caption, bulk-flag, warning) | ✅ |
