@@ -88,6 +88,7 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    ├─→ v1.14.2 ✅ (2026-04-03)  + 🧠 vault_used flag + icona selettore
    ├─→ v1.14.3 ✅ (2026-04-04)  + 🎨 Scroll fix + typing indicator
    ├─→ v1.14.4 ✅ (2026-05-06)  + 🩹 Fix visibilità sezione Knowledge Base in sidebar
+   ├─→ v1.15.0 ✅ (2026-05-06)  + 🌍 Embedding multilingua e5-small (qualità retrieval IT)
    │
    └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
 
@@ -101,6 +102,20 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 ---
 
 ## ✅ Completate
+
+### v1.15.0 — Embedding multilingua per RAG ✅
+**Data:** 2026-05-06
+
+Sostituito il modello di embedding default di ChromaDB (`all-MiniLM-L6-v2`, inglese) con `intfloat/multilingual-e5-small` (multilingua, ottimo su IT). Single intervento con il maggior impatto sulla qualità del retrieval su contenuti italiani.
+
+- Nuovo modulo `rag/embeddings.py` con helper, EmbeddingFunction ChromaDB, fallback graceful
+- Strategia prefix `passage:` / `query:` per modelli e5
+- Migration check automatico: collection con metadata `embedding_model` diverso vengono ricreate
+- Override del modello via env var `DEEPAIUG_EMBEDDING_MODEL`
+- Aggiunto `sentence-transformers` come dipendenza esplicita
+- ⚠️ Re-indicizzazione richiesta per utenti esistenti
+
+Documentazione tecnica: `docs/SPEC_v1.15.0_multilingual_embeddings.md`
 
 ### v1.14.4 — Fix Visibilità Knowledge Base in Sidebar ✅
 **Data:** 2026-05-06

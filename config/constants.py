@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.14.4"
+VERSION = "1.15.0"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "fix visibilità sezione Knowledge Base (Wiki / Vault) nella sidebar"
+VERSION_DESCRIPTION = "embedding multilingua e5-small per RAG (qualità retrieval su contenuti italiani)"
 
 # ============================================================================
 # PATHS
@@ -47,6 +47,15 @@ DEFAULT_MAX_TOKENS_ESTIMATE = 8000
 DEFAULT_CHUNK_SIZE = 1000  # caratteri
 DEFAULT_CHUNK_OVERLAP = 200  # caratteri
 DEFAULT_TOP_K_RESULTS = 5  # documenti per query
+
+# v1.15.0 — Modello di embedding multilingua usato da ChromaDB
+# Override possibile via env var DEEPAIUG_EMBEDDING_MODEL.
+# Vedi rag/embeddings.py per dettagli e modelli alternativi.
+import os as _os
+DEFAULT_EMBEDDING_MODEL = _os.environ.get(
+    "DEEPAIUG_EMBEDDING_MODEL",
+    "intfloat/multilingual-e5-small",
+)
 
 # ============================================================================
 # FORMATI FILE SUPPORTATI

@@ -31,6 +31,12 @@ from rag import (
 )
 from config.constants import VAULT_SESSION_KEY, VAULT_LAST_SYNC_KEY, VAULT_FILE_COUNT_KEY
 from rag.vault import detect_vault_type, scan_vault_files
+from rag.embeddings import (
+    get_seconds_per_file,
+    get_seconds_per_wiki_page,
+    format_eta,
+    get_active_model_tag,
+)
 import time
 
 # Container di modulo — settato da render_knowledge_base_config()
@@ -567,6 +573,73 @@ def _render_dokuwiki_custom_config():
             _container.error("❌ Specifica un URL wiki valido")
 
 
+def _show_indexing_eta(source_type: str, config: dict):
+    """
+    Mostra un banner con stima del tempo di indicizzazione adattiva al
+    modello di embedding attivo.
+
+    - Per cartelle/vault: conta i file presenti applicando estensioni e
+      pattern di esclusione, moltiplica per il fattore secondi/file.
+    - Per wiki: usa max_pages (se impostato) e considera anche il delay HTTP.
+      Senza max_pages mostra un avviso generico.
+    """
+    model_tag = get_active_model_tag()
+    short_model = model_tag.rsplit("/", 1)[-1] if "/" in model_tag else model_tag
+
+    # ---- Local folder / vault ----
+    if source_type == "local":
+        folder = config.get("folder_path", "")
+        if not folder or not Path(folder).exists():
+            return
+
+        extensions = config.get("extensions", [".md"])
+        exclude_patterns = config.get("exclude_patterns", [])
+        recursive = config.get("recursive", True)
+
+        files = []
+        glob_fn = Path(folder).rglob if recursive else Path(folder).glob
+        for ext in extensions:
+            for f in glob_fn(f"*{ext}"):
+                if exclude_patterns and any(p in str(f) for p in exclude_patterns):
+                    continue
+                files.append(f)
+
+        n_files = len(files)
+        if n_files == 0:
+            _container.warning("⚠️ Nessun file trovato con le estensioni configurate")
+            return
+
+        eta_sec = max(10, int(n_files * get_seconds_per_file()))
+        _container.info(
+            f"📁 **{n_files} file** da indicizzare  \n"
+            f"⏱️ Tempo stimato: **{format_eta(eta_sec)}** "
+            f"(modello: `{short_model}`)  \n"
+            f"💡 CPU al 100% durante l'embedding — è normale, non chiudere l'app"
+        )
+        return
+
+    # ---- MediaWiki / DokuWiki ----
+    if source_type in ("mediawiki", "dokuwiki"):
+        max_pages = int(config.get("max_pages", 0) or 0)
+        request_delay = float(config.get("request_delay", 0.5) or 0.5)
+
+        if max_pages > 0:
+            spp = get_seconds_per_wiki_page(request_delay)
+            eta_sec = max(10, int(max_pages * spp))
+            _container.info(
+                f"🌐 **{max_pages} pagine wiki** (max)  \n"
+                f"⏱️ Tempo stimato: **{format_eta(eta_sec)}** "
+                f"(modello: `{short_model}`, delay HTTP: {request_delay}s)  \n"
+                f"💡 Il throttling HTTP è dominante, l'embedding è veloce"
+            )
+        else:
+            _container.warning(
+                "⚠️ **Numero pagine non limitato** — durata variabile\n\n"
+                "Imposta un `max_pages` nei parametri avanzati per una stima affidabile."
+            )
+        return
+
+
 def _sync_source(source_type: str, config: dict):
     """
     Sincronizza una sorgente creando l'adapter appropriato.
@@ -591,6 +664,9 @@ def _sync_source(source_type: str, config: dict):
         return
 
     kb_manager.set_adapter(adapter)
+
+    # 🆕 v1.15.0 — banner stima tempo prima dell'indicizzazione (adattivo al modello)
+    _show_indexing_eta(source_type, config)
 
     # Indicizza con progress bar
     progress_bar = _container.progress(0, text="🔄 Avvio sincronizzazione...")
@@ -694,6 +770,19 @@ def _render_kb_stats():
             _container.caption("💾 Storage: ChromaDB (persistente)")
         else:
             _container.caption("⚠️ Storage: Memoria (temporaneo)")
+
+        # v1.15.0 — modello embedding effettivamente attivo nella collection
+        emb_model = stats.get("embedding_model")
+        if emb_model:
+            if emb_model == "chromadb_default":
+                _container.caption("🔤 Embedding: ChromaDB default (MiniLM-L6, EN)")
+            else:
+                short_name = emb_model.rsplit("/", 1)[-1]
+                _container.caption(f"🌍 Embedding: `{short_name}`")
+        else:
+            _container.caption(
+                "⚠️ Embedding: legacy (pre-1.15.0) — re-indicizza per usare e5"
+            )
 
         # Parametri RAG
         _container.markdown("#### ⚙️ Parametri RAG")
