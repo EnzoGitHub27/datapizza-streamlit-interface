@@ -493,11 +493,76 @@ chmod +x "$DEST/DeepAiUG.command"
 check_ok "Launcher creato: $DEST/DeepAiUG.command"
 echo "[LAUNCHER] Launcher creato" >> "$LOG"
 
+# --- Crea wrapper DeepAiUG.app con icona personalizzata (best-effort) ---
+APP_BUNDLE="$DEST/DeepAiUG.app"
+LOGO_PNG="$DEST/deepaiug-logo.png"
+
+if [[ -f "$LOGO_PNG" ]] && command -v sips &>/dev/null && command -v iconutil &>/dev/null; then
+    log "  Creazione DeepAiUG.app con icona personalizzata..."
+    echo "[LAUNCHER] Creazione .app bundle" >> "$LOG"
+
+    rm -rf "$APP_BUNDLE"
+    mkdir -p "$APP_BUNDLE/Contents/MacOS" "$APP_BUNDLE/Contents/Resources"
+
+    ICONSET_TMP="$(mktemp -d)/DeepAiUG.iconset"
+    mkdir -p "$ICONSET_TMP"
+    for s in 16 32 128 256 512; do
+        sips -z $s $s "$LOGO_PNG" --out "$ICONSET_TMP/icon_${s}x${s}.png" >/dev/null 2>&1
+        sips -z $((s*2)) $((s*2)) "$LOGO_PNG" --out "$ICONSET_TMP/icon_${s}x${s}@2x.png" >/dev/null 2>&1
+    done
+
+    if iconutil -c icns "$ICONSET_TMP" -o "$APP_BUNDLE/Contents/Resources/deepaiug-logo.icns" >> "$LOG" 2>&1; then
+        cat > "$APP_BUNDLE/Contents/Info.plist" << 'PLIST_EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>DeepAiUG</string>
+    <key>CFBundleIconFile</key>
+    <string>deepaiug-logo.icns</string>
+    <key>CFBundleIdentifier</key>
+    <string>org.deepaiug.launcher</string>
+    <key>CFBundleName</key>
+    <string>DeepAiUG</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+</dict>
+</plist>
+PLIST_EOF
+
+        cat > "$APP_BUNDLE/Contents/MacOS/DeepAiUG" << LAUNCHER_EOF
+#!/bin/bash
+osascript <<OSA
+tell application "Terminal"
+    activate
+    do script "bash '$DEST/DeepAiUG.command'"
+end tell
+OSA
+LAUNCHER_EOF
+        chmod +x "$APP_BUNDLE/Contents/MacOS/DeepAiUG"
+        xattr -dr com.apple.quarantine "$APP_BUNDLE" 2>/dev/null || true
+
+        check_ok "App con icona creata: $APP_BUNDLE"
+        echo "[LAUNCHER] .app bundle creato" >> "$LOG"
+    else
+        log "  [WARN] Conversione PNG->ICNS fallita, salto creazione .app"
+        echo "[LAUNCHER] iconutil fallito, salto .app" >> "$LOG"
+        rm -rf "$APP_BUNDLE"
+    fi
+
+    rm -rf "$(dirname "$ICONSET_TMP")"
+fi
+
 echo ""
 echo -e "  ${YELLOW}NOTA Gatekeeper:${NC}"
 echo "  Per avviare DeepAiUG la prima volta:"
 echo "    1. Vai in $DEST nel Finder"
-echo "    2. Tasto destro su DeepAiUG.command"
+echo "    2. Tasto destro su DeepAiUG.app (o DeepAiUG.command)"
 echo "    3. Scegli 'Apri' (non doppio click)"
 echo "    4. Conferma nella finestra di sicurezza"
 echo "    Le volte successive potrai fare doppio click normalmente."
@@ -517,7 +582,8 @@ echo -e "  Percorso installazione:  ${CYAN}$DEST${NC}"
 echo -e "  Modello installato:      ${CYAN}$MODELLO${NC}"
 echo ""
 echo "  COME AVVIARE:"
-echo "    Doppio click su $DEST/DeepAiUG.command"
+echo "    Doppio click su $DEST/DeepAiUG.app  (icona personalizzata)"
+echo "    oppure: $DEST/DeepAiUG.command"
 echo "    (prima volta: tasto destro > Apri)"
 echo "    La prima volta attendi 20-30 secondi."
 echo ""

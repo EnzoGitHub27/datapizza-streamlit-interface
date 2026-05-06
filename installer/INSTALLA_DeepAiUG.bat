@@ -507,6 +507,7 @@ set "VBS_TEMP=!DEST!\create_shortcut.vbs"
     echo oLink.TargetPath = "!DEST!\DeepAiUG.bat"
     echo oLink.WorkingDirectory = "!DEST!"
     echo oLink.Description = "Avvia DeepAiUG - AI locale privacy-first"
+    echo If CreateObject^("Scripting.FileSystemObject"^).FileExists^("!DEST!\deepaiug-logo.ico"^) Then oLink.IconLocation = "!DEST!\deepaiug-logo.ico, 0"
     echo oLink.Save
 ) > "!VBS_TEMP!"
 

@@ -455,6 +455,7 @@ cat > "$DESKTOP_DIR/deepaiug.desktop" << DESKTOP_EOF
 Name=DeepAiUG
 Comment=AI locale privacy-first
 Exec=bash $HOME/DeepAiUG/avvia_deepaiug.sh
+Icon=$HOME/DeepAiUG/deepaiug-logo.png
 Terminal=true
 Type=Application
 Categories=Utility;

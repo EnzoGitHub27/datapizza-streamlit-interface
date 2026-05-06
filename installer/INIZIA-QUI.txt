@@ -25,7 +25,8 @@ MAC
      Oppure: bash installa_deepaiug_mac.sh
   3. Segui le istruzioni a schermo
 
-  Prima apertura: tasto destro su DeepAiUG.command -> "Apri"
+  Prima apertura: tasto destro su DeepAiUG.app (con icona) -> "Apri"
+                  oppure tasto destro su DeepAiUG.command -> "Apri"
   Problemi: bash check_deepaiug.sh
 
 
