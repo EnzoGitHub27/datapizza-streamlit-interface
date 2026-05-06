@@ -234,6 +234,37 @@ Aggiunta una riga nelle statistiche KB della sidebar che mostra quale modello è
 
 Reso `embedding_model` accessibile via `KnowledgeBaseManager.get_stats()` (proveniente da `SimpleVectorStore.get_stats()` → `collection.metadata`).
 
+### Bugfix Remote host: `is_cloud` non doveva includere "Remote host"
+
+Bug emerso al test in produzione su Remote host (server aziendale fidato): il caricamento di chat archiviate con KB/wiki/vault associati veniva bloccato con il messaggio *"Non può essere caricata con un provider cloud per motivi di privacy"* — comportamento corretto solo per Cloud provider, non per Remote host.
+
+**Causa.** In [`ui/sidebar/conversations.py:44`](../ui/sidebar/conversations.py#L44) la variabile `is_cloud` era definita per **negazione** di Local:
+
+```python
+# pre-fix (errato)
+is_cloud = st.session_state.get("connection_type", "") != "Local (Ollama)"
+```
+
+Questo trattava sia "Remote host" sia "Cloud provider" come `is_cloud=True`, attivando lo stesso lock 🔒 e lo stesso blocco al caricamento.
+
+**Fix.** Definizione **per affermazione**:
+
+```python
+# v1.15.0
+is_cloud = st.session_state.get("connection_type", "") == "Cloud provider"
+```
+
+| Provider | Carica chat con KB/wiki/vault | Icona 🔒 selettore |
+|---|---|---|
+| Local (Ollama) | ✅ | ❌ |
+| Remote host | ✅ *(corretto)* | ❌ *(corretto)* |
+| Cloud provider | ❌ (privacy) | ✅ |
+
+> [!note] Principio sotto al fix
+> Il check di privacy deve essere definito su ciò che è "non fidato" (Cloud), non su ciò che è "fidato di certo" (Local). Definire per negazione del fidato fa sì che ogni nuovo provider trustato venga erroneamente bloccato finché non si aggiorna la lista. Definire per affermazione del non-fidato è più sicuro a lungo termine: aggiungere un nuovo provider trusted (es. "Self-hosted Ollama remoto") non richiede toccare questo codice.
+
+Pattern verificato anche con `grep -rn '!= "Local (Ollama)"' --include="*.py"` su tutto il progetto: l'occorrenza era unica, nessun altro punto era affetto.
+
 ---
 
 ## Performance attese
@@ -285,6 +316,9 @@ Indicizzazione BM25 parallela su disco, fusione `Reciprocal Rank Fusion` con i r
 | `config/constants.py` | Aggiunta `DEFAULT_EMBEDDING_MODEL`, bump `VERSION = "1.15.0"` |
 | `config/__init__.py` | Esporto `DEFAULT_EMBEDDING_MODEL` |
 | `requirements.txt` | `sentence-transformers>=2.2.0` |
+| `rag/manager.py` | `get_stats()` espone `embedding_model` per la UI diagnostica |
+| `ui/sidebar/knowledge_base.py` | Banner stima tempo `_show_indexing_eta` in `_sync_source` (copre vault/cartella/wiki/yaml in un solo punto); riga indicatore embedding model in `_render_kb_stats` |
+| `ui/sidebar/conversations.py` | (a) banner `_show_load_warning` ora usa `get_seconds_per_file()` adattivo; (b) bugfix `is_cloud` — solo Cloud provider blocca il caricamento di chat con KB, Remote host trattato come Local |
 | `CHANGELOG.md`, `README.md`, `ROADMAP.md` | Sezione v1.15.0 |
 | `docs/SPEC_v1.15.0_multilingual_embeddings.md` | Questo documento |
 
