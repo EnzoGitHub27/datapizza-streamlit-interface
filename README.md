@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.14.3-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.14.3)
+[![Version](https://img.shields.io/badge/version-1.14.4-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.14.4)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -46,6 +46,13 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
+
+### 🩹 Novità v1.14.4 — Fix Visibilità Knowledge Base in Sidebar
+
+- **Sezione Knowledge Base di nuovo visibile**: la configurazione di sorgenti wiki + vault era nascosta dentro l'expander "⚙️ Configurazione" (chiuso di default) dalla v1.12.0 e di fatto irraggiungibile a colpo d'occhio
+- **Expander dedicato `📚 Knowledge Base (Wiki / Vault)`** aperto di default nella sidebar
+- **Caption con elenco sorgenti** (Cartella locale, MediaWiki, DokuWiki, Obsidian Vault, …) mostrata anche quando il toggle è off, per migliorare la discoverability senza dover attivare la KB
+- **Nessuna modifica** a routing wiki/vault, gate privacy, logica retrieval — intervento puramente UX
 
 ### 🌊 Novità v1.14.3 — Scroll Fix + Typing Indicator *(ultimo rilascio v1.x)*
 
@@ -223,7 +230,7 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.14.3
+## 🏗️ Architettura v1.14.4
 
 ```
 datapizza-streamlit-interface/
@@ -532,7 +539,8 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
-| v1.14.3 | 🌊 Scroll fix + Typing indicator animato *(ultimo v1.x — maintenance mode)* | ✅ |
+| v1.14.4 | 🩹 Fix visibilità sezione Knowledge Base (Wiki / Vault) nella sidebar | ✅ |
+| v1.14.3 | 🌊 Scroll fix + Typing indicator animato | ✅ |
 | v1.14.2 | 🧠 vault_used flag + icona nel selettore conversazioni | ✅ |
 | v1.14.1 | 🔧 UX fix KB Chat (ordine, caption, bulk-flag, warning) | ✅ |
 | v1.14.0 | 📚 Chat salvate come Knowledge Base epistemica | ✅ |

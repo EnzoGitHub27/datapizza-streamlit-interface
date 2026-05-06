@@ -6,6 +6,18 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
+## [1.14.4] — 2026-05-06
+
+### Fix
+- Sidebar: la sezione Knowledge Base (sorgenti wiki + vault) era nascosta dentro l'expander "⚙️ Configurazione" (chiuso di default) e diventata di fatto invisibile dopo v1.12.0
+- Spostata in un proprio expander dedicato `📚 Knowledge Base (Wiki / Vault)` aperto di default
+- Aggiunta caption con elenco delle sorgenti disponibili (Cartella locale, MediaWiki, DokuWiki, Obsidian Vault, …) anche quando il toggle "Usa Knowledge Base" è off, per migliorare la discoverability senza dover attivare la KB
+
+### Note
+- Intervento puramente UX: nessuna modifica a routing wiki/vault, gate privacy o logica di retrieval
+- Toggle `🔍 Usa Knowledge Base` invariato — resta come interruttore esplicito e gate del warning privacy su Cloud provider
+
+---
 ## [1.14.3] — 2026-04-04
 
 ### Aggiunto
