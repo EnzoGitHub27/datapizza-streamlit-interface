@@ -136,3 +136,5 @@ htmlcov/
 # File specifici da ignorare
 # =============================================================================
 # Aggiungi qui file specifici del tuo ambiente se necessario
+.claude/
+SECURITY_AUDIT.md
