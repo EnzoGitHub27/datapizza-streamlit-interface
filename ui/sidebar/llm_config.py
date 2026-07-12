@@ -93,9 +93,9 @@ def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, flo
     st.session_state["connection_type"] = connection_type
 
     # Blocco Cloud se Knowledge Base attiva (PRIVACY)
-    if st.session_state.get("use_knowledge_base") and connection_type == "Cloud provider":
-        container.error("🔒 **Cloud bloccato**: Knowledge Base attiva. I tuoi documenti rimangono privati!")
-        container.info("Disattiva Knowledge Base o usa Local/Remote")
+    if (st.session_state.get("use_knowledge_base") or st.session_state.get("use_chat_kb")) and connection_type == "Cloud provider":
+        container.error("🔒 **Cloud bloccato**: Knowledge Base o KB Chat attiva. I tuoi dati locali rimangono privati!")
+        container.info("Disattiva Knowledge Base e KB Chat, oppure usa Local/Remote")
         connection_type = "Local (Ollama)"
         st.session_state["connection_type"] = connection_type
 

@@ -686,8 +686,8 @@ if submit and user_input.strip():
         st.error("❌ Seleziona un modello!")
     elif connection_type == "Cloud provider" and not api_key:
         st.error("❌ Inserisci API key!")
-    elif connection_type == "Cloud provider" and st.session_state.get("use_knowledge_base"):
-        st.error("🔒 Cloud bloccato con Knowledge Base attiva!")
+    elif connection_type == "Cloud provider" and (st.session_state.get("use_knowledge_base") or st.session_state.get("use_chat_kb")):
+        st.error("🔒 Cloud bloccato con Knowledge Base o KB Chat attiva!")
     else:
         try:
             # 🆕 v1.5.0 - Recupera file da session_state
