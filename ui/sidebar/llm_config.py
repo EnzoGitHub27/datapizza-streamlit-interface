@@ -84,10 +84,11 @@ def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, flo
                 icons.append("📎")
             icon_str = "🔒" + "".join(dict.fromkeys(icons))  # deduplicate
             container.warning(
-                f"⚠️ La conversazione attuale contiene **{sensitivity['reason']}** "
-                f"({icon_str}).\n\n"
-                "I messaggi con contenuti locali non verranno inviati al provider cloud. "
-                "Per sicurezza, avvia una nuova conversazione oppure torna a un server locale."
+                f"⚠️ Questa conversazione contiene **{sensitivity['reason']}** ({icon_str}).\n\n"
+                "Procedendo su Cloud, l'intera cronologia dei messaggi — incluso il testo "
+                "derivato da questi contenuti locali — verrà inviata al provider esterno. "
+                "Non c'è alcun filtro che escluda i contenuti locali.\n\n"
+                "Per mantenerli privati, avvia una nuova conversazione oppure usa un server locale."
             )
 
     st.session_state["connection_type"] = connection_type
