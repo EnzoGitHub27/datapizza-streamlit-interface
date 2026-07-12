@@ -327,6 +327,7 @@ def save_api_key_to_file(provider_name: str, api_key: str) -> bool:
         key_file = SECRETS_DIR / f"{provider_name}_key.txt"
         with open(key_file, "w", encoding="utf-8") as f:
             f.write(api_key)
+        os.chmod(key_file, 0o600)
         return True
     except Exception:
         return False
