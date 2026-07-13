@@ -7,7 +7,7 @@ from typing import List, Any
 
 import requests
 
-from core.url_validator import is_blocked
+from core.url_validator import is_blocked, BlockedURLError
 
 from datapizza.clients import ClientFactory
 from datapizza.clients.factory import Provider
@@ -147,6 +147,10 @@ def create_client(
             )
         else:
             # Custom provider
+            # H1c: blocco SSRF — base_url arbitrario verso endpoint metadati cloud
+            blocked, reason = is_blocked(base_url)
+            if blocked:
+                raise BlockedURLError(f"🔒 Connessione bloccata per sicurezza: {reason}")
             return OpenAILikeClient(
                 api_key=api_key, 
                 model=model, 
@@ -156,6 +160,10 @@ def create_client(
             )
     else:
         # Local (Ollama) o Remote host
+        # H1c: blocco SSRF — base_url arbitrario verso endpoint metadati cloud
+        blocked, reason = is_blocked(base_url)
+        if blocked:
+            raise BlockedURLError(f"🔒 Connessione bloccata per sicurezza: {reason}")
         return OpenAILikeClient(
             api_key=api_key or "ollama", 
             model=model, 

@@ -25,6 +25,11 @@ ALLOWED_SCHEMES = ("http", "https")
 CGNAT_NET = ipaddress.ip_network("100.64.0.0/10")
 
 
+class BlockedURLError(ValueError):
+    """URL bloccato per policy di sicurezza (es. metadati cloud)."""
+    pass
+
+
 def classify_url(url: str) -> Dict[str, Any]:
     """
     Classifica un URL in base all'IP a cui risolve l'hostname.

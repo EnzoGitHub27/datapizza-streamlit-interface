@@ -59,6 +59,7 @@ from core import (
 
 # 🆕 v1.5.0 - File processors
 from core.file_processors import get_attachment_names
+from core.url_validator import is_blocked
 
 # ============================================================================
 # RAG
@@ -682,12 +683,22 @@ with col_reset:
 # ============================================================================
 
 if submit and user_input.strip():
+    # H1c: base_url è usato solo per Local/Remote e Cloud "Custom" —
+    # per i provider cloud fissi il check non si applica
+    _uses_base_url = (
+        connection_type != "Cloud provider"
+        or provider not in ("OpenAI", "Anthropic (Claude)", "Google Gemini")
+    )
+    _url_blocked, _url_block_reason = is_blocked(base_url) if _uses_base_url else (False, "")
+
     if not model:
         st.error("❌ Seleziona un modello!")
     elif connection_type == "Cloud provider" and not api_key:
         st.error("❌ Inserisci API key!")
     elif connection_type == "Cloud provider" and (st.session_state.get("use_knowledge_base") or st.session_state.get("use_chat_kb")):
         st.error("🔒 Cloud bloccato con Knowledge Base o KB Chat attiva!")
+    elif _url_blocked:
+        st.error(f"🔒 Connessione bloccata per sicurezza: {_url_block_reason}")
     else:
         try:
             # 🆕 v1.5.0 - Recupera file da session_state
