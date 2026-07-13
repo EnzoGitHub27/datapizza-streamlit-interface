@@ -8,6 +8,7 @@
 # 🆕 v1.14.3: Typing indicator animato + scroll automatico durante streaming
 # ============================================================================
 
+import html
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 
@@ -19,7 +20,7 @@ import streamlit.components.v1 as components
 from ui.socratic import render_socratic_buttons
 
 # Markdown-to-HTML converter (tables + fenced code blocks enabled)
-_md = MarkdownIt("commonmark", {"html": True}).enable("table")
+_md = MarkdownIt("commonmark", {"html": False}).enable("table")
 
 
 def render_chat_message(
@@ -75,7 +76,7 @@ def render_chat_message(
 
         # v1.5.0 - Attachments line (user messages only)
         if attachments and role == "user":
-            attachments_str = ", ".join(attachments)
+            attachments_str = html.escape(", ".join(attachments))
             bubble_parts.append(
                 f'<p class="bubble-attachments">📎 <strong>Allegati:</strong> {attachments_str}</p>'
             )

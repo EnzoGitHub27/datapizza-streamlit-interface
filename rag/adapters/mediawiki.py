@@ -12,6 +12,7 @@ from typing import Dict, Any, List, Optional
 
 from .base import WikiAdapter
 from ..models import Document
+from core.url_validator import is_blocked
 from config import (
     WIKI_CACHE_DIR,
     MEDIAWIKI_DEFAULT_USER_AGENT,
@@ -108,7 +109,14 @@ class MediaWikiAdapter(WikiAdapter):
         if not self.wiki_url:
             print("❌ URL wiki non specificato")
             return False
-        
+
+        # 🔒 H1d — blocco SSRF: deve stare prima di mwclient.Site, che fa
+        # la prima richiesta di rete già nel costruttore (do_init=True)
+        blocked, reason = is_blocked(self.wiki_url)
+        if blocked:
+            print(f"⚠️ Connessione wiki bloccata: {reason}")
+            return False
+
         try:
             import mwclient
             from urllib.parse import urlparse

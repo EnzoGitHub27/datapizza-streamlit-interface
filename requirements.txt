@@ -1,38 +1,43 @@
 # =============================================================================
-# Datapizza Streamlit LLM Interface v1.5.1
+# Datapizza Streamlit LLM Interface v1.15.1
 # =============================================================================
-# IMPORTANTE: Ordine di installazione!
-# 1. Prima: datapizza-ai
-# 2. Dopo: datapizza-ai-clients-openai-like
+# Dipendenze PINNATE (==) per build riproducibili.
+# IMPORTANTE: Ordine di installazione datapizza!
+# 1. Prima: datapizza-ai (+ sotto-componenti)
+# 2. Dopo:  datapizza-ai-clients-openai-like
 # =============================================================================
 
 # Core Framework
-streamlit>=1.28.0
-python-dotenv>=1.0.0
-pyyaml>=6.0
+streamlit==1.53.1
+python-dotenv==1.2.2
+pyyaml==6.0.3
 
 # Datapizza AI (installare PRIMA dei clients!)
-datapizza-ai
+datapizza-ai==0.0.9
+datapizza-ai-core==0.1.3
+datapizza-ai-embedders-openai==0.0.6
+datapizza-ai-vectorstores-qdrant==0.0.9
+datapizza-ai-clients-openai==0.0.13
 
 # Datapizza Clients (installare DOPO datapizza-ai!)
-datapizza-ai-clients-openai-like
+datapizza-ai-clients-openai-like==0.0.11
 
 # Knowledge Base / RAG
-chromadb>=0.4.0
-beautifulsoup4>=4.12.0
-PyPDF2>=3.0.0
+chromadb==1.4.1
+beautifulsoup4==4.15.0
+pypdf==6.14.2
 
 # v1.15.0 - Embedding multilingua per RAG (sostituisce default ChromaDB)
 # Modello scaricato al primo uso: ~118MB (intfloat/multilingual-e5-small)
-sentence-transformers>=2.2.0
+sentence-transformers==5.4.1
 
 # Wiki Adapters
-mwclient>=0.10.0      # MediaWiki
-dokuwiki>=0.1.0       # DokuWiki
+mwclient==0.11.0      # MediaWiki
+dokuwiki==1.3.3       # DokuWiki
 
 # Export
-reportlab>=4.0.0
+reportlab==4.4.9
 
 # v1.5.0 - File Upload
-python-docx>=0.8.0
-Pillow>=10.0.0
+python-docx==1.2.0
+Pillow==12.3.0

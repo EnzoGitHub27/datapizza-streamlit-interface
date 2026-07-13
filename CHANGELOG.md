@@ -6,6 +6,29 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
+## [1.15.2] — 2026-07-13
+
+### Sicurezza
+Audit di sicurezza completo su branch dedicato (`security-audit-1.15.1`). 12 finding analizzati (0 Critical, 4 High, 4 Medium, 4 Low), nessuna RCE. Fix applicati con verifica funzionale per ciascuno.
+
+**High**
+- **Blocco cloud esteso a KB Chat (H2)**: il blocco privacy-first verso il cloud controllava solo `use_knowledge_base`. Ora copre anche `use_chat_kb`: le conversazioni locali indicizzate non vengono più inviate al provider cloud in silenzio
+- **SSRF — classificatore URL e blocco metadati cloud (H1a-H1d)**: nuovo modulo `core/url_validator.py` che classifica gli host (loopback/private/link-local/public). Blocco degli endpoint metadati cloud (`169.254.0.0/16`) su tutti i punti di egress: fetch modelli remoti, creazione client chat, adapter MediaWiki e DokuWiki. Per DokuWiki il check precede l'invio delle credenziali. Range CGNAT/Tailscale (`100.64.0.0/10`) riconosciuto come rete fidata
+- **Banner privacy onesti (H3a, H3b)**: i banner di connessione riflettono ora la destinazione reale dell'URL (`classify_url`) invece dell'etichetta della modalità. Corretto un testo fuorviante che dichiarava falsamente che i contenuti locali non venivano inviati al cloud
+
+**Medium**
+- **HTML injection nel renderer chat (M1)**: disabilitato il rendering di HTML grezzo (`html=False`, le tabelle restano attive) ed escape dei nomi dei file allegati
+- **Permessi API key (M2)**: le chiavi salvate in `secrets/` ora hanno permessi `0600` (solo proprietario)
+- **Migrazione PyPDF2 → pypdf (M4a)**: sostituita la libreria PDF deprecata con `pypdf` manutenuto
+- **Aggiornamenti di sicurezza dipendenze (M4b)**: `streamlit` 1.53.1 e `python-dotenv` 1.2.2 (CVE note); tutte le dipendenze pinnate con `==` per build riproducibili
+
+### Note
+- **Rischi accettati/documentati**: limiti TOCTOU/DNS-rebinding e IPv4-only del classificatore URL (adeguati allo scopo di bloccare gli endpoint metadati); finding Low L1/L2/L4 valutati come falsi positivi allo stato attuale
+- **Rimandato a v2.0**: allowlist di host fidati configurabile (utile in scenari multi-utente/deployer)
+- Nessuna modifica al comportamento per l'uso legittimo (Ollama locale, host in LAN, Tailscale): i fix bloccano solo gli endpoint metadati cloud e rendono onesta la UI
+
+---
+
 ## [1.15.1] — 2026-05-06
 
 ### Fix

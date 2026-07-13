@@ -12,6 +12,7 @@ from typing import Dict, Any, List, Optional
 
 from .base import WikiAdapter
 from ..models import Document
+from core.url_validator import is_blocked
 from config import (
     WIKI_CACHE_DIR,
     MEDIAWIKI_DEFAULT_REQUEST_DELAY,
@@ -99,7 +100,15 @@ class DokuWikiAdapter(WikiAdapter):
         if not self.wiki_url:
             print("❌ URL wiki non specificato")
             return False
-        
+
+        # 🔒 H1d — blocco SSRF: deve stare qui perché dokuwiki.DokuWiki
+        # incorpora user:password nell'URL e fa la prima richiesta di rete
+        # (con credenziali) già nel costruttore
+        blocked, reason = is_blocked(self.wiki_url)
+        if blocked:
+            print(f"⚠️ Connessione DokuWiki bloccata (credenziali NON inviate): {reason}")
+            return False
+
         try:
             import dokuwiki
             
