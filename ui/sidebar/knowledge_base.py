@@ -30,6 +30,7 @@ from rag import (
     DokuWikiAdapter,
 )
 from config.constants import VAULT_SESSION_KEY, VAULT_LAST_SYNC_KEY, VAULT_FILE_COUNT_KEY
+from core.url_validator import is_blocked
 from rag.vault import detect_vault_type, scan_vault_files
 from rag.embeddings import (
     get_seconds_per_file,
@@ -651,6 +652,14 @@ def _sync_source(source_type: str, config: dict):
         chunk_size=st.session_state.get("kb_chunk_size", DEFAULT_CHUNK_SIZE),
         chunk_overlap=st.session_state.get("kb_chunk_overlap", DEFAULT_CHUNK_OVERLAP)
     )
+
+    # 🔒 H1d — blocco SSRF wiki: messaggio in UI prima di istanziare
+    # l'adapter (il blocco di sicurezza vero è dentro connect())
+    if source_type in ("mediawiki", "dokuwiki"):
+        blocked, reason = is_blocked(config.get("url", ""))
+        if blocked:
+            _container.error(f"🔒 Connessione bloccata per sicurezza: {reason}")
+            return
 
     # Crea adapter in base al tipo
     if source_type == "local":
