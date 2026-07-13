@@ -90,6 +90,7 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    ├─→ v1.14.4 ✅ (2026-05-06)  + 🩹 Fix visibilità sezione Knowledge Base in sidebar
    ├─→ v1.15.0 ✅ (2026-05-06)  + 🌍 Embedding multilingua e5-small (qualità retrieval IT)
    ├─→ v1.15.1 ✅ (2026-05-06)  + 🩹 Fix installer "bloccato" durante pip install
+   ├─→ v1.15.2 ✅ (2026-07-13)  + 🔒 Security Audit (SSRF, cloud-block, permessi, deps)
    │
    └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
 
@@ -103,6 +104,19 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 ---
 
 ## ✅ Completate
+
+### v1.15.2 — Security Audit ✅
+
+Audit di sicurezza completo su branch dedicato (`security-audit-1.15.1`): 12 finding (0 Critical, 4 High, 4 Medium, 4 Low), nessuna RCE. Fix con verifica funzionale per ciascuno, commit atomici.
+
+- **SSRF**: nuovo `core/url_validator.py`, blocco endpoint metadati cloud (169.254.0.0/16) su tutti i punti di egress (fetch modelli, chat, adapter wiki); protezione credenziali DokuWiki; Tailscale/CGNAT riconosciuto come rete fidata
+- **Privacy-first**: blocco cloud esteso a KB Chat (H2); banner di connessione onesti basati sulla destinazione reale dell'URL (H3)
+- **Hardening**: HTML injection chat (M1), permessi 0600 API key (M2), migrazione pypdf (M4a), bump dipendenze + pinning (M4b)
+- Rimandato a v2.0: allowlist host configurabile
+
+Documentazione: `SECURITY_AUDIT_RESOLUTION.md`
+
+---
 
 ### v1.15.1 — Fix installer "bloccato" durante pip install ✅
 **Data:** 2026-05-06
