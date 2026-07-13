@@ -8,7 +8,7 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.15.1"
+VERSION = "1.15.2"
 VERSION_STRING = f"v{VERSION}"
 VERSION_DESCRIPTION = "fix installer/updater: pip install visibile a schermo + flag --prefer-binary"
 

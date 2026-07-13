@@ -18,7 +18,7 @@ class LocalFolderAdapter(WikiAdapter):
     - File .md (Markdown)
     - File .txt (Testo puro)
     - File .html/.htm (HTML - richiede beautifulsoup4)
-    - File .pdf (PDF - richiede PyPDF2)
+    - File .pdf (PDF - richiede pypdf)
     
     Attributes:
         folder_path: Percorso della cartella da scansionare
@@ -185,7 +185,7 @@ class LocalFolderAdapter(WikiAdapter):
         """
         Carica file PDF.
         
-        Richiede PyPDF2.
+        Richiede pypdf.
         
         Args:
             file_path: Path del file PDF
@@ -194,7 +194,7 @@ class LocalFolderAdapter(WikiAdapter):
             Testo estratto dal PDF
         """
         try:
-            from PyPDF2 import PdfReader
+            from pypdf import PdfReader
             reader = PdfReader(str(file_path))
             text_parts = []
             for page in reader.pages:
@@ -203,7 +203,7 @@ class LocalFolderAdapter(WikiAdapter):
                     text_parts.append(text)
             return "\n\n".join(text_parts)
         except ImportError:
-            print("⚠️ PyPDF2 non installato. Installa con: pip install PyPDF2")
+            print("⚠️ pypdf non installato. Installa con: pip install pypdf")
         except Exception as e:
             print(f"⚠️ Errore lettura PDF {file_path}: {e}")
         return ""

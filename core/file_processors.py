@@ -108,9 +108,9 @@ def extract_text_from_txt(file_bytes: bytes, encoding: str = "utf-8") -> str:
 
 def extract_text_from_pdf(file_bytes: bytes) -> str:
     """
-    Estrae testo da PDF usando PyPDF2.
+    Estrae testo da PDF usando pypdf.
     
-    PyPDF2 è già nelle dipendenze del progetto.
+    pypdf è già nelle dipendenze del progetto.
     
     Args:
         file_bytes: Contenuto del PDF in bytes
@@ -119,7 +119,7 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
         Testo estratto con indicazione pagine
     """
     try:
-        from PyPDF2 import PdfReader
+        from pypdf import PdfReader
         
         reader = PdfReader(io.BytesIO(file_bytes))
         text_parts = []
@@ -135,7 +135,7 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
         return "\n\n".join(text_parts)
     
     except ImportError:
-        return "[Errore: PyPDF2 non installato. Installa con: pip install PyPDF2]"
+        return "[Errore: pypdf non installato. Installa con: pip install pypdf]"
     except Exception as e:
         return f"[Errore estrazione PDF: {e}]"
 

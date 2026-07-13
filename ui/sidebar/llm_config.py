@@ -18,6 +18,7 @@ from config.settings import (
     get_api_key_message
 )
 from core import get_local_ollama_models
+from core.url_validator import is_blocked
 
 
 def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, float, int]:
@@ -84,18 +85,19 @@ def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, flo
                 icons.append("📎")
             icon_str = "🔒" + "".join(dict.fromkeys(icons))  # deduplicate
             container.warning(
-                f"⚠️ La conversazione attuale contiene **{sensitivity['reason']}** "
-                f"({icon_str}).\n\n"
-                "I messaggi con contenuti locali non verranno inviati al provider cloud. "
-                "Per sicurezza, avvia una nuova conversazione oppure torna a un server locale."
+                f"⚠️ Questa conversazione contiene **{sensitivity['reason']}** ({icon_str}).\n\n"
+                "Procedendo su Cloud, l'intera cronologia dei messaggi — incluso il testo "
+                "derivato da questi contenuti locali — verrà inviata al provider esterno. "
+                "Non c'è alcun filtro che escluda i contenuti locali.\n\n"
+                "Per mantenerli privati, avvia una nuova conversazione oppure usa un server locale."
             )
 
     st.session_state["connection_type"] = connection_type
 
     # Blocco Cloud se Knowledge Base attiva (PRIVACY)
-    if st.session_state.get("use_knowledge_base") and connection_type == "Cloud provider":
-        container.error("🔒 **Cloud bloccato**: Knowledge Base attiva. I tuoi documenti rimangono privati!")
-        container.info("Disattiva Knowledge Base o usa Local/Remote")
+    if (st.session_state.get("use_knowledge_base") or st.session_state.get("use_chat_kb")) and connection_type == "Cloud provider":
+        container.error("🔒 **Cloud bloccato**: Knowledge Base o KB Chat attiva. I tuoi dati locali rimangono privati!")
+        container.info("Disattiva Knowledge Base e KB Chat, oppure usa Local/Remote")
         connection_type = "Local (Ollama)"
         st.session_state["connection_type"] = connection_type
 
@@ -228,8 +230,12 @@ def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, flo
             col_r, col_c = container.columns([3, 1])
             with col_r:
                 if st.button("🔄 Aggiorna modelli", use_container_width=True, key="refresh_remote"):
-                    with st.spinner("Recupero modelli..."):
-                        st.session_state["models_remote"] = get_remote_ollama_models(base_url)
+                    blocked, reason = is_blocked(base_url)
+                    if blocked:
+                        container.error(f"🔒 Connessione bloccata per sicurezza: {reason}")
+                    else:
+                        with st.spinner("Recupero modelli..."):
+                            st.session_state["models_remote"] = get_remote_ollama_models(base_url)
 
             models_remote = st.session_state.get("models_remote", [])
 
