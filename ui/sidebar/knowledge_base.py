@@ -30,7 +30,7 @@ from rag import (
     DokuWikiAdapter,
 )
 from config.constants import VAULT_SESSION_KEY, VAULT_LAST_SYNC_KEY, VAULT_FILE_COUNT_KEY
-from core.url_validator import is_blocked
+from core.url_validator import is_blocked, classify_url
 from rag.vault import detect_vault_type, scan_vault_files
 from rag.embeddings import (
     get_seconds_per_file,
@@ -44,13 +44,14 @@ import time
 _container = None
 
 
-def render_knowledge_base_config(connection_type: str, container=None):
+def render_knowledge_base_config(connection_type: str, base_url: str = "", container=None):
     """
     Renderizza la sezione Knowledge Base nella sidebar.
     Supporta: Cartella Locale, MediaWiki, DokuWiki.
 
     Args:
         connection_type: Tipo connessione corrente (per privacy check)
+        base_url: URL del server modelli attivo (per il banner privacy H3b)
         container: Container Streamlit in cui renderizzare (default: st.sidebar)
     """
     global _container
@@ -73,11 +74,22 @@ def render_knowledge_base_config(connection_type: str, container=None):
         )
         return
 
-    # Avviso privacy
+    # Avviso privacy — 🔒 H3b: basato sulla destinazione reale dell'URL modello
     if connection_type == "Cloud provider":
         _container.error("🔒 Cloud provider bloccato per privacy!")
     else:
-        _container.success("🔒 Privacy OK - Dati locali")
+        url_info = classify_url(base_url)
+        cat = url_info["category"]
+        if cat in ("loopback", "private"):
+            _container.success("🔒 Privacy reale - dati e chat restano nella tua rete")
+        elif cat == "public":
+            _container.warning(
+                f"⚠️ La chat che usa la KB va a un host esterno ({url_info['hostname']})"
+            )
+        elif cat == "link_local":
+            _container.error("🔒 Connessione bloccata - endpoint metadati cloud")
+        else:  # invalid
+            _container.info("ℹ️ URL modello non valido - verifica l'indirizzo")
 
     # Carica config sorgenti
     sources_config = load_wiki_config()

@@ -59,7 +59,7 @@ from core import (
 
 # 🆕 v1.5.0 - File processors
 from core.file_processors import get_attachment_names
-from core.url_validator import is_blocked
+from core.url_validator import is_blocked, classify_url
 
 # ============================================================================
 # RAG
@@ -324,7 +324,7 @@ config_expander = st.sidebar.expander("⚙️ Configurazione", expanded=False)
 
 # 1b. 📚 Knowledge Base — Wiki / Vault (aperta di default per renderla visibile)
 kb_expander = st.sidebar.expander("📚 Knowledge Base (Wiki / Vault)", expanded=True)
-render_knowledge_base_config(connection_type, container=kb_expander)
+render_knowledge_base_config(connection_type, base_url=base_url, container=kb_expander)
 
 # 2. 💬 Conversazione (aperta)
 render_conversations_manager()
@@ -565,10 +565,20 @@ else:
 # CONNECTION INDICATOR
 # ============================================================================
 
-if connection_type == "Local (Ollama)":
-    st.success("💻 **Locale** - Privacy totale")
-elif connection_type == "Remote host":
-    st.info("🌐 **Remote** - Rete locale")
+# 🔒 H3b — il banner riflette la destinazione reale (classify_url),
+# non l'etichetta della modalità
+if connection_type in ("Local (Ollama)", "Remote host"):
+    url_info = classify_url(base_url)
+    cat = url_info["category"]
+    host = url_info["hostname"]
+    if cat in ("loopback", "private"):
+        st.success(f"🔒 **Rete fidata** - i dati restano nella tua rete ({host})")
+    elif cat == "public":
+        st.warning(f"⚠️ **Host esterno** - i dati escono dalla tua rete verso {host}")
+    elif cat == "link_local":
+        st.error("🔒 **Connessione bloccata** - endpoint metadati cloud")
+    else:  # invalid
+        st.info("ℹ️ **URL non valido o non risolvibile** - verifica l'indirizzo")
 else:
     st.warning("☁️ **Cloud** - Dati esterni (KB e Upload disabilitati)")
 
