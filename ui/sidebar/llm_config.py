@@ -18,6 +18,7 @@ from config.settings import (
     get_api_key_message
 )
 from core import get_local_ollama_models
+from core.url_validator import is_blocked
 
 
 def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, float, int]:
@@ -229,8 +230,12 @@ def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, flo
             col_r, col_c = container.columns([3, 1])
             with col_r:
                 if st.button("🔄 Aggiorna modelli", use_container_width=True, key="refresh_remote"):
-                    with st.spinner("Recupero modelli..."):
-                        st.session_state["models_remote"] = get_remote_ollama_models(base_url)
+                    blocked, reason = is_blocked(base_url)
+                    if blocked:
+                        container.error(f"🔒 Connessione bloccata per sicurezza: {reason}")
+                    else:
+                        with st.spinner("Recupero modelli..."):
+                            st.session_state["models_remote"] = get_remote_ollama_models(base_url)
 
             models_remote = st.session_state.get("models_remote", [])
 

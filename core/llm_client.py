@@ -7,6 +7,8 @@ from typing import List, Any
 
 import requests
 
+from core.url_validator import is_blocked
+
 from datapizza.clients import ClientFactory
 from datapizza.clients.factory import Provider
 from datapizza.clients.openai_like import OpenAILikeClient
@@ -63,6 +65,12 @@ def get_remote_ollama_models(base_url: str) -> List[str]:
     try:
         # Rimuovi /v1 se presente, aggiungi /api/tags
         api_url = base_url.replace("/v1", "").rstrip("/") + "/api/tags"
+
+        # H1b: blocco SSRF verso endpoint metadati cloud (link-local)
+        blocked, reason = is_blocked(api_url)
+        if blocked:
+            print(f"⚠️ Richiesta non eseguita verso {api_url}: {reason}")
+            return []
 
         response = requests.get(api_url, timeout=10)
         response.raise_for_status()
