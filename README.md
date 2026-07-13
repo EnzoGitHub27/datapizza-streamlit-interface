@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.15.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.15.1)
+[![Version](https://img.shields.io/badge/version-1.15.2-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.15.2)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -46,6 +46,12 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
+
+### 🔒 Novità v1.15.2 — Security Audit (SSRF, privacy-first, hardening)
+- **SSRF**: nuovo classificatore URL (`core/url_validator.py`) che blocca gli endpoint metadati cloud (`169.254.0.0/16`) su tutti i punti di uscita di rete — fetch modelli, chat, adapter MediaWiki/DokuWiki. Ollama locale, host in LAN e Tailscale restano pienamente supportati
+- **Privacy-first rafforzata**: il blocco verso il cloud ora copre anche la KB Chat (le conversazioni locali indicizzate non partono più in silenzio); i banner di connessione riflettono la destinazione reale dell'URL invece dell'etichetta della modalità
+- **Hardening**: HTML injection nel renderer chat neutralizzata, API key salvate con permessi `0600`, migrazione da PyPDF2 (deprecato) a `pypdf`, dipendenze aggiornate (CVE) e pinnate
+- *12 finding analizzati (0 Critical, 4 High, 4 Medium, 4 Low), fix con verifica funzionale e commit atomici. Vedi [CHANGELOG.md](CHANGELOG.md)*
 
 ### 🩹 Novità v1.15.1 — Fix installer "bloccato" durante `pip install`
 
@@ -248,7 +254,7 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.15.1
+## 🏗️ Architettura v1.15.2
 
 ```
 datapizza-streamlit-interface/
@@ -557,6 +563,7 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
+| v1.15.2 | 🔒 Security Audit — SSRF, cloud-block esteso a KB Chat, banner onesti, hardening | ✅ |
 | v1.15.1 | 🩹 Fix installer/updater "bloccato" durante pip install (output visibile a schermo) | ✅ |
 | v1.15.0 | 🌍 Embedding multilingua e5-small per RAG (qualità retrieval IT) | ✅ |
 | v1.14.4 | 🩹 Fix visibilità Knowledge Base sidebar + icone installer Linux/Win/Mac | ✅ |
