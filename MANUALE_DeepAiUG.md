@@ -5,13 +5,13 @@
 | | |
 |---|---|
 | **Prodotto** | DeepAiUG Chat 🧠 |
-| **Versione documentata** | v1.15.1 |
-| **Data manuale** | 2026-07-12 |
+| **Versione documentata** | v1.15.2 |
+| **Data manuale** | 2026-07-13 |
 | **Repository** | https://github.com/EnzoGitHub27/datapizza-streamlit-interface |
 | **Licenza** | MIT |
 | **Autore progetto** | Vincenzo Iodice (EnzoGitHub27) — community DeepAiUG |
 
-> Questo manuale è stato generato analizzando il codice sorgente in sola lettura. Documenta esclusivamente le funzionalità effettivamente presenti nella versione 1.15.1; le funzionalità pianificate per v2.0.0 (Semantic Layer, Knowledge Graph, Docker, API REST, journaling riflessivo) **non** sono trattate perché non ancora implementate.
+> Questo manuale è stato generato analizzando il codice sorgente in sola lettura. Documenta esclusivamente le funzionalità effettivamente presenti nella versione 1.15.2; le funzionalità pianificate per v2.0.0 (Semantic Layer, Knowledge Graph, Docker, API REST, journaling riflessivo) **non** sono trattate perché non ancora implementate.
 
 ---
 
@@ -68,7 +68,7 @@ DeepAiUG è un'interfaccia web (basata su Streamlit) per dialogare con modelli l
 - **Persistenza e export**: salvataggio automatico delle conversazioni, esportazione in Markdown, JSON, TXT, PDF e ZIP batch.
 - **Branding personalizzabile** (titolo, icona, banner, tema "Matrix" con pioggia di caratteri).
 
-**Nota sui nomi:** la cartella/repository si chiama `datapizza-streamlit-interface` (usa il framework `datapizza-ai` per i client LLM), ma il prodotto si chiama **DeepAiUG** e l'installer lo colloca in `~/DeepAiUG`. La versione autorevole è quella dichiarata in `config/constants.py` (`VERSION = "1.15.1"`); il campo `version = "0.1.0"` in `pyproject.toml` è solo metadato del pacchetto Poetry e va ignorato.
+**Nota sui nomi:** la cartella/repository si chiama `datapizza-streamlit-interface` (usa il framework `datapizza-ai` per i client LLM), ma il prodotto si chiama **DeepAiUG** e l'installer lo colloca in `~/DeepAiUG`. La versione autorevole è quella dichiarata in `config/constants.py` (`VERSION = "1.15.2"`); il campo `version = "0.1.0"` in `pyproject.toml` è solo metadato del pacchetto Poetry e va ignorato.
 
 ---
 
@@ -92,14 +92,16 @@ DeepAiUG è un'interfaccia web (basata su Streamlit) per dialogare con modelli l
 
 ## 2.3 Dipendenze principali (`requirements.txt`)
 
-| Area | Pacchetti |
+Dalla v1.15.2 il `requirements.txt` **pinna tutte le dipendenze** (`==`) per build riproducibili (fix M4 dell'audit di sicurezza). Il requisito minimo di compatibilità resta `streamlit>=1.28.0`, ma la v1.15.2 pinna `streamlit==1.53.1`. Nella stessa versione il deprecato `PyPDF2` è stato sostituito dal fork manutenuto `pypdf`.
+
+| Area | Pacchetti (pin v1.15.2) |
 |---|---|
-| Core | `streamlit>=1.28.0`, `python-dotenv>=1.0.0`, `pyyaml>=6.0` |
-| Framework LLM | `datapizza-ai` (da installare **prima**), `datapizza-ai-clients-openai-like` |
-| RAG | `chromadb>=0.4.0`, `sentence-transformers>=2.2.0`, `beautifulsoup4>=4.12.0`, `PyPDF2>=3.0.0` |
-| Wiki | `mwclient>=0.10.0`, `dokuwiki>=0.1.0` |
-| Export | `reportlab>=4.0.0` |
-| Upload file | `python-docx>=0.8.0`, `Pillow>=10.0.0` |
+| Core | `streamlit==1.53.1`, `python-dotenv==1.2.2`, `pyyaml==6.0.3` |
+| Framework LLM | `datapizza-ai==0.0.9` (da installare **prima**, con `datapizza-ai-core`, `datapizza-ai-embedders-openai`, `datapizza-ai-vectorstores-qdrant`, `datapizza-ai-clients-openai`), poi `datapizza-ai-clients-openai-like==0.0.11` |
+| RAG | `chromadb==1.4.1`, `sentence-transformers==5.4.1`, `beautifulsoup4==4.15.0`, `pypdf==6.14.2` |
+| Wiki | `mwclient==0.11.0`, `dokuwiki==1.3.3` |
+| Export | `reportlab==4.4.9` |
+| Upload file | `python-docx==1.2.0`, `Pillow==12.3.0` |
 
 ⚠️ **Ordine di installazione critico**: `datapizza-ai` va installato **prima** di `requirements.txt`, perché `datapizza-ai-clients-openai-like` ne dipende. Gli installer ufficiali rispettano già quest'ordine.
 
@@ -226,7 +228,7 @@ app:
 news_banner:
   enabled: true               # banner novità in alto
   # text: "..."               # testo personalizzato (commentato = default di versione)
-  # version: "1.15.1"
+  # version: "1.15.2"
 matrix_rain: true             # effetto "pioggia Matrix" sullo sfondo
 matrix_rain_intensity: 0.055  # opacità; range consigliato 0.01–0.20
 ```
@@ -423,7 +425,7 @@ L'orchestrazione è in `rag/manager.py` (`KnowledgeBaseManager`). Ogni indicizza
 
 # Capitolo 10 — Sicurezza e raccomandazioni operative
 
-Sintesi dell'audit statico `SECURITY_AUDIT.md` (v1.15.1, 2026-07-07): **nessun RCE** (assenti `pickle`/`eval`/`exec`/`os.system`; YAML sempre con `safe_load`; unico subprocess `ollama list` senza shell; upload mai scritti su disco; export senza zip-slip; nessuna chiave hardcoded). Rilevati 0 Critical, 4 High, 4 Medium, 4 Low.
+Sintesi dell'audit statico `SECURITY_AUDIT.md` (v1.15.1, 2026-07-07): **nessun RCE** (assenti `pickle`/`eval`/`exec`/`os.system`; YAML sempre con `safe_load`; unico subprocess `ollama list` senza shell; upload mai scritti su disco; export senza zip-slip; nessuna chiave hardcoded). Rilevati 0 Critical, 4 High, 4 Medium, 4 Low. **La v1.15.2 corregge i finding H1–H4 e M1–M4** (blocco endpoint metadati cloud, blocco cloud esteso a KB Chat, banner basati sulla destinazione reale, chiavi API a permessi 0600, migrazione a `pypdf`, dipendenze pinnate).
 
 ## 10.1 Modello di minaccia
 
@@ -433,10 +435,10 @@ L'app è pensata per **uso mono-utente locale**. Non ha login: "utente" è chiun
 
 1. **Non esporre la porta 8501** fuori dall'host o dalla LAN fidata; per accessi multipli usare un reverse proxy con autenticazione (es. nginx + basic auth/SSO) e binding su `127.0.0.1`.
 2. **Chiavi API**: `chmod 600 secrets/*.txt`; preferire `.env`/variabili d'ambiente; `show_saved_keys: false`.
-3. **Consapevolezza dei limiti del blocco privacy** (findings H2/H3): il blocco verso il cloud è ancorato alla Knowledge Base documentale; il toggle "Usa KB Chat" non è incluso nel blocco, e gli URL di "Remote host"/"Local" sono testo libero trattato come fidato. Istruire gli utenti a non puntare host "remote" verso endpoint Internet e a disattivare "Usa KB Chat" prima di passare al cloud se le chat indicizzate sono sensibili.
-4. **SSRF (H1)**: gli URL (server remoti, wiki, base_url) non sono validati; su host esposti o in cloud questo permette scansioni interne. Limitare la rete in uscita dell'host se l'app è raggiungibile da terzi.
+3. **Blocco privacy** (findings H2/H3, corretti in v1.15.2): il blocco verso il cloud copre ora sia la Knowledge Base documentale sia il toggle "Usa KB Chat"; i banner di connessione riflettono la destinazione reale dell'URL (classificatore, Cap. 20.0) e avvisano se un host "Remote"/"Local" risolve a un indirizzo esterno. L'avviso per host esterni non è bloccante: istruire comunque gli utenti a non puntare host "remote" verso endpoint Internet.
+4. **SSRF (H1, mitigato in v1.15.2)**: gli URL (server remoti, wiki, base_url) sono classificati e gli endpoint metadati cloud (`169.254.0.0/16`) sono bloccati; gli altri indirizzi interni restano raggiungibili per design (Ollama locale/LAN). Su host esposti a terzi limitare comunque la rete in uscita.
 5. **Percorsi cartelle RAG (H4)**: l'utente può indicizzare qualunque cartella leggibile dal processo; in contesti multi-utente eseguire l'app con un utente di sistema dedicato con permessi minimi.
-6. **Dipendenze (M4)**: `PyPDF2` è deprecato e le dipendenze non sono pinnate; valutare lock file e scansioni periodiche (`pip-audit`).
+6. **Dipendenze (M4, corretto in v1.15.2)**: `PyPDF2` (deprecato) è stato sostituito da `pypdf` e le dipendenze sono pinnate (`==`) in `requirements.txt`; mantenere scansioni periodiche (`pip-audit`).
 7. Dopo gli aggiornamenti, verificare l'installazione con `installer/check_deepaiug.sh`.
 
 ---
@@ -450,12 +452,14 @@ L'app è pensata per **uso mono-utente locale**. Non ha login: "utente" è chiun
 All'apertura del browser (di norma `http://localhost:8501`) trovi:
 
 - **Tema "Matrix"**: sfondo verde scurissimo, testo verde-teal, titoli con effetto glitch e, se abilitata, la "pioggia" di caratteri in sottofondo (personalizzabile o disattivabile dal sistemista via `branding.yaml`).
-- **Titolo dinamico** che indica il backend attivo: `🧠 DeepAiUG Chat → Ollama v1.15.1` (locale), `→ Remote` o `→ {provider}` (cloud).
+- **Titolo dinamico** che indica il backend attivo: `🧠 DeepAiUG Chat → Ollama v1.15.2` (locale), `→ Remote` o `→ {provider}` (cloud).
 - **Banner novità** con le note della versione (se non è attiva la Knowledge Base).
-- **Indicatore di connessione**:
-  - `💻 Locale - Privacy totale` (verde)
-  - `🌐 Remote - Rete locale` (azzurro)
-  - `☁️ Cloud - Dati esterni (KB e Upload disabilitati)` (giallo)
+- **Indicatore di connessione** — dalla v1.15.2 per Local/Remote riflette la **destinazione reale** dell'URL (Cap. 20.0), non l'etichetta della modalità:
+  - `🔒 Rete fidata - i dati restano nella tua rete ({host})` (verde: loopback, LAN, Tailscale)
+  - `⚠️ Host esterno - i dati escono dalla tua rete verso {host}` (giallo: IP pubblico)
+  - `🔒 Connessione bloccata - endpoint metadati cloud` (rosso: 169.254.x, connessione rifiutata)
+  - `ℹ️ URL non valido o non risolvibile - verifica l'indirizzo` (informativo)
+  - `☁️ Cloud - Dati esterni (KB e Upload disabilitati)` (giallo, per i provider cloud)
 - **Quattro contatori**: `📝 Messaggi` (totale), `👤 Domande` (tuoi messaggi), `🪙 Token` (stima, ~4 caratteri per token), `🆔 ID` (identificativo della conversazione).
 - L'**area conversazione** (vuota: "👋 Inizia una conversazione!") e in fondo la sezione **✍️ Messaggio** con allegati e campo di invio.
 - A sinistra la **sidebar** con tutte le impostazioni: ⚙️ Configurazione, 📚 Knowledge Base, 💬 Conversazione, 🧠 Modalità Socratica, 📊 Mappa sessione, 📤 Export.
@@ -531,14 +535,14 @@ Ogni file allegato appare in un'**anteprima** richiudibile: thumbnail per le imm
 
 **Modelli Vision**: le immagini sono accettate solo se il nome del modello è riconosciuto come multimodale (LLaVA e varianti, Granite3-Vision, Moondream, BakLLaVA, CogVLM, Fuyu, MiniCPM-V). Con un modello non-Vision compare l'avviso "⚠️ Immagini rilevate ma il modello non supporta Vision" e le immagini vengono ignorate.
 
-> ℹ️ **Limite noto (v1.15.1)**: anche con un modello Vision le immagini vengono preparate ma **non ancora inviate** al modello — l'integrazione dell'API Vision è segnata come TODO nel codice. Ciò che arriva effettivamente all'LLM è il testo dei documenti.
+> ℹ️ **Limite noto (presente anche in v1.15.2)**: anche con un modello Vision le immagini vengono preparate ma **non ancora inviate** al modello — l'integrazione dell'API Vision è segnata come TODO nel codice. Ciò che arriva effettivamente all'LLM è il testo dei documenti.
 
 **Su cloud** l'upload è disabilitato: "📎 Upload file disabilitato per privacy".
 
 ## 13.2 Inviare e ricevere
 
 - Scrivi nel campo (placeholder "Scrivi il tuo messaggio...", oppure "Chiedi qualcosa sui tuoi documenti..." se la KB è attiva) e premi **🚀 Invia**.
-- Prima dell'invio l'app verifica: modello selezionato ("❌ Seleziona un modello!"), chiave API per il cloud ("❌ Inserisci API key!"), blocco KB+cloud ("🔒 Cloud bloccato con Knowledge Base attiva!").
+- Prima dell'invio l'app verifica: modello selezionato ("❌ Seleziona un modello!"), chiave API per il cloud ("❌ Inserisci API key!"), blocco KB+cloud ("🔒 Cloud bloccato con Knowledge Base o KB Chat attiva!").
 - Se la Knowledge Base è attiva vedrai gli spinner "🔍 Ricerca documenti rilevanti..." e/o "📚 Ricerca nella KB Chat...", con il conteggio dei documenti trovati; le **fonti** usate compaiono sotto la risposta nell'expander **"📎 Fonti (N)"**.
 - Il bottone **🔄 Nuova** azzera tutto e apre una conversazione nuova (messaggi, contatori, allegati, storico socratico, mappa sessione).
 
@@ -617,7 +621,7 @@ L'indicizzazione **non è automatica**: dopo aver flaggato le chat premi **"🔄
 
 Attiva il toggle **"📚 Usa KB Chat"** per includere le chat indicizzate nel recupero. Puoi **filtrare per tipo** (es. solo `decisione`). Durante l'invio vedrai "📚 Ricerca nella KB Chat..." e le fonti appariranno come `💬 {titolo della chat}`.
 
-> ⚠️ **Attenzione privacy**: a differenza della KB documentale, il toggle "Usa KB Chat" **non blocca automaticamente il cloud** (limite noto v1.15.1). Se le tue chat indicizzate contengono informazioni riservate, disattivalo prima di passare a un provider cloud.
+> 🔒 **Privacy**: dalla v1.15.2 il toggle "Usa KB Chat" **è coperto dal blocco cloud** come la KB documentale: con il toggle attivo il passaggio a un provider cloud è impedito ("🔒 Cloud bloccato: Knowledge Base o KB Chat attiva"). Nella v1.15.1 questo blocco non esisteva (limite noto, risolto).
 
 ---
 
@@ -743,11 +747,22 @@ Esporta **tutte** le conversazioni salvate in un colpo solo: scegli il **Formato
 
 # Capitolo 20 — Privacy: come DeepAiUG protegge i tuoi dati
 
-DeepAiUG applica tre livelli di protezione quando entrano in gioco provider cloud:
+DeepAiUG applica quattro livelli di protezione quando entrano in gioco provider cloud o connessioni di rete:
+
+## 20.0 Verifica della destinazione reale (novità v1.15.2)
+
+Dalla v1.15.2 un **classificatore URL** (`core/url_validator.py`) verifica dove risolve **davvero** l'host di ogni connessione Local/Remote, indipendentemente dall'etichetta della modalità:
+
+- **Rete fidata** — loopback (`127.x`), rete privata (`10/8`, `172.16/12`, `192.168/16`) e range CGNAT/VPN mesh come Tailscale (`100.64.0.0/10`): banner verde "🔒 **Rete fidata** - i dati restano nella tua rete";
+- **Host esterno** — l'host risolve a un IP pubblico: banner giallo "⚠️ **Host esterno** - i dati escono dalla tua rete verso {host}";
+- **Bloccato** — range link-local `169.254.0.0/16` (endpoint metadati cloud, es. `169.254.169.254`): la connessione è **rifiutata** ovunque (chat, fetch modelli, adapter wiki) come protezione anti-SSRF;
+- **URL non valido** — schema non http/https o host non risolvibile: banner informativo.
+
+I banner di connessione riflettono quindi la **destinazione reale** dell'URL, non l'etichetta della modalità: se in "Remote host" inserisci un indirizzo Internet, l'interfaccia te lo segnala.
 
 ## 20.1 Blocco totale: Knowledge Base + cloud
 
-Con la **Knowledge Base attiva** il passaggio a un provider cloud è **impedito**: "🔒 Cloud bloccato: Knowledge Base attiva. I tuoi documenti rimangono privati!" e la connessione torna su Local. Analogamente, su cloud l'upload di file è disabilitato.
+Con la **Knowledge Base attiva** il passaggio a un provider cloud è **impedito**: "🔒 Cloud bloccato: Knowledge Base o KB Chat attiva. I tuoi dati locali rimangono privati!" e la connessione torna su Local. Dalla v1.15.2 il blocco copre anche il toggle **"📚 Usa KB Chat"** (`use_chat_kb`). Analogamente, su cloud l'upload di file è disabilitato.
 
 ## 20.2 Conferma esplicita: documenti in memoria
 
@@ -763,10 +778,15 @@ Ogni nuovo documento caricato azzera un eventuale consenso precedente.
 
 Le chat che contengono dati locali (allegati, KB, vault) sono marcate con 🔒 quando sei su cloud e **non possono essere caricate** finché non torni in locale/remoto.
 
-## 20.4 Cosa devi comunque sapere (limiti noti in v1.15.1)
+## 20.4 Cosa è cambiato in v1.15.2 (e cosa devi comunque sapere)
 
-- Il toggle **"📚 Usa KB Chat"** non è coperto dal blocco cloud: disattivalo prima di usare il cloud se le chat indicizzate sono riservate.
-- "Remote host" è considerato fidato per definizione: assicurati che l'host inserito sia davvero nella tua rete.
+Due dei tre limiti noti documentati per la v1.15.1 sono stati affrontati dall'audit di sicurezza v1.15.2:
+
+- ✅ **RISOLTO** — *"Il toggle 📚 Usa KB Chat non è coperto dal blocco cloud"*: dalla v1.15.2 il blocco cloud copre anche `use_chat_kb`. Con KB Chat attiva il passaggio al cloud è impedito, esattamente come per la KB documentale (vedi 20.1).
+- ✅ **MIGLIORATO** — *"Remote host è considerato fidato per definizione"*: ora il classificatore URL (vedi 20.0) verifica l'indirizzo a cui l'host risolve realmente e l'interfaccia ti avvisa con "⚠️ Host esterno" se la destinazione è fuori dalla tua rete; gli endpoint metadati cloud sono bloccati del tutto. Resta tua la decisione finale: l'avviso non impedisce di usare un host esterno.
+
+Limite ancora valido in v1.15.2:
+
 - La Mappa Sessione e i bottoni socratici usano il modello corrente: se sei su cloud, anche quelle richieste vanno al provider cloud.
 
 ---
@@ -801,12 +821,12 @@ Le chat che contengono dati locali (allegati, KB, vault) sono marcate con 🔒 q
 | "❌ Seleziona un modello!" | Nessun modello rilevato/scelto | Premere 🔄 Aggiorna; verificare `ollama list`; installare un modello (`ollama pull llama3.2:3b`) |
 | Nessun modello locale trovato | Ollama spento | Avviare Ollama (`ollama serve`); il launcher lo fa automaticamente |
 | "⚠️ Nessun server configurato in remote_servers.yaml" | YAML mancante/vuoto | Il sistemista deve configurare `remote_servers.yaml` (Cap. 6.3) |
-| "🔒 Cloud bloccato con Knowledge Base attiva!" | Comportamento voluto | Disattivare la KB o restare su Local/Remote |
+| "🔒 Cloud bloccato con Knowledge Base o KB Chat attiva!" | Comportamento voluto | Disattivare la KB documentale e/o il toggle "Usa KB Chat", o restare su Local/Remote |
 | "🔤 Embedding: ChromaDB default (MiniLM-L6, EN)" | `sentence-transformers` non installato o download fallito | Installare la dipendenza / verificare la connessione al primo avvio; qualità in italiano ridotta nel frattempo |
 | KB svuotata dopo aggiornamento a v1.15.x | Migrazione automatica per cambio modello embedding | Ri-indicizzare le sorgenti e premere 🔄 Aggiorna KB Chat |
 | "⚠️ Storage: Memoria (temporaneo)" | ChromaDB non installato | Installare `chromadb`; senza, l'indice si perde alla chiusura |
 | CPU al 100% durante l'indicizzazione | Normale: embedding in CPU | Attendere; non chiudere l'app |
-| Le immagini allegate vengono ignorate | Modello non-Vision, o limite noto v1.15.1 (Vision API non integrata) | Usare il testo dei documenti; le immagini non raggiungono ancora il modello |
+| Le immagini allegate vengono ignorate | Modello non-Vision, o limite noto v1.15.x (Vision API non integrata) | Usare il testo dei documenti; le immagini non raggiungono ancora il modello |
 | "❌ Pacchetto `mwclient` non installato" | Dipendenza wiki mancante | `pip install mwclient` (o `dokuwiki`) nel venv |
 | PDF non esportabile | `reportlab` mancante | `pip install reportlab` nel venv |
 | Verifica generale dell'installazione | — | Eseguire `installer/check_deepaiug.sh` |
@@ -831,4 +851,4 @@ Le chat che contengono dati locali (allegati, KB, vault) sono marcate con 🔒 q
 
 ---
 
-*Manuale generato dall'analisi del codice sorgente DeepAiUG v1.15.1 — 2026-07-12. Nessun file di codice è stato modificato.*
+*Manuale generato dall'analisi del codice sorgente DeepAiUG v1.15.2 — 2026-07-13. Nessun file di codice è stato modificato.*
