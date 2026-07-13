@@ -19,6 +19,11 @@ from typing import Dict, Any, Tuple
 
 ALLOWED_SCHEMES = ("http", "https")
 
+# RFC 6598 — Carrier-Grade NAT, usato da Tailscale e altre VPN mesh.
+# ipaddress non lo marca né is_private né is_global: senza questo check
+# finirebbe erroneamente in "public".
+CGNAT_NET = ipaddress.ip_network("100.64.0.0/10")
+
 
 def classify_url(url: str) -> Dict[str, Any]:
     """
@@ -80,9 +85,15 @@ def classify_url(url: str) -> Dict[str, Any]:
                 f"'{hostname}' risolve a {resolved_ip} (link-local 169.254.0.0/16, "
                 "range degli endpoint metadati cloud)"
             )
-        elif ip.is_private:
+        elif ip in CGNAT_NET or ip.is_private:
             category = "private"
-            reason = f"'{hostname}' risolve a {resolved_ip} (rete privata locale)"
+            if ip in CGNAT_NET:
+                reason = (
+                    f"'{hostname}' risolve a {resolved_ip} "
+                    "(CGNAT/VPN mesh 100.64.0.0/10, es. Tailscale)"
+                )
+            else:
+                reason = f"'{hostname}' risolve a {resolved_ip} (rete privata locale)"
         else:
             category = "public"
             reason = f"'{hostname}' risolve a {resolved_ip} (internet pubblico)"
@@ -139,6 +150,15 @@ if __name__ == "__main__":
 
     r = classify_url("http://10.0.0.5")
     assert r["category"] == "private", f"10.0.0.5 doveva essere private, ottenuto: {r}"
+
+    r = classify_url("http://100.64.0.5:11434/v1")
+    assert r["category"] == "private", f"100.64.0.5 (CGNAT) doveva essere private, ottenuto: {r}"
+
+    r = classify_url("http://100.100.100.100:11434")
+    assert r["category"] == "private", f"100.100.100.100 (CGNAT) doveva essere private, ottenuto: {r}"
+
+    r = classify_url("http://8.8.8.8")
+    assert r["category"] == "public", f"8.8.8.8 doveva essere public, ottenuto: {r}"
 
     r = classify_url("http://169.254.169.254/latest/meta-data")
     assert r["category"] == "link_local", f"169.254.169.254 doveva essere link_local, ottenuto: {r}"
