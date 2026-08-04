@@ -10,7 +10,7 @@ from pathlib import Path
 
 VERSION = "1.15.3"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "Vision local-only: immagini inviate ai modelli vision (llava/moondream), solo in locale"
+VERSION_DESCRIPTION = "👁️ Vision local-only: allega un'immagine e falla leggere a un modello vision locale (LLaVA, Moondream). Mai sul cloud."
 
 # ============================================================================
 # PATHS
