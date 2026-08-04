@@ -13,8 +13,12 @@
 # - v1.8.0: UI Socratica completa (Confuta, Rifletti, Toggle Mode)
 # ============================================================================
 
+import logging
 from datetime import datetime
 import streamlit as st
+
+# ADR-0001 - Vision local-only
+from datapizza.type import TextBlock
 
 # ============================================================================
 # CONFIG & CONSTANTS
@@ -45,6 +49,7 @@ from config import (
 
 from core import (
     create_client,
+    build_media_blocks,
     get_local_ollama_models,
     save_conversation,
     generate_conversation_id,
@@ -823,8 +828,19 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                 )
             
             # Invoke LLM with streaming ✨ v1.6.0 / v1.14.3
-            # 🆕 TODO: Aggiungere supporto Vision API per immagini
-            # Per ora le immagini vengono preparate ma non inviate (richiede modifiche a llm_client)
+            # ✅ ADR-0001 — Vision local-only: con modello vision e immagini allegate
+            # l'input diventa [TextBlock, MediaBlock...]; immagini effimere, mai su cloud.
+            llm_input = full_prompt
+            if can_use_images and images_data:
+                try:
+                    media_blocks = build_media_blocks(images_data)
+                    if media_blocks:
+                        llm_input = [TextBlock(content=full_prompt), *media_blocks]
+                except Exception as vision_err:
+                    logging.warning(
+                        "Vision: costruzione MediaBlock fallita (%s), fallback al prompt testuale",
+                        vision_err,
+                    )
 
             # Display streaming response with typing indicator + auto-scroll
             with st.chat_message("assistant"):
@@ -837,7 +853,7 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                 response_text = ""
                 previous_text = ""
 
-                for chunk in client.stream_invoke(full_prompt):
+                for chunk in client.stream_invoke(llm_input):
                     # Prima iterazione: rimuovi typing indicator
                     typing_placeholder.empty()
 
