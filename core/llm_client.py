@@ -12,6 +12,7 @@ from core.url_validator import is_blocked, BlockedURLError
 from datapizza.clients import ClientFactory
 from datapizza.clients.factory import Provider
 from datapizza.clients.openai_like import OpenAILikeClient
+from datapizza.type import Media, MediaBlock
 
 
 def get_local_ollama_models() -> List[str]:
@@ -171,3 +172,37 @@ def create_client(
             base_url=base_url, 
             temperature=temperature
         )
+
+
+# ADR-0001 — Vision local-only.
+# L'adapter openai_like ricostruisce il data URI come data:image/{extension};base64,...
+# quindi "extension" deve essere il sottotipo MIME (jpeg, non jpg).
+_MIME_TO_EXTENSION = {
+    "image/png": "png",
+    "image/jpeg": "jpeg",
+    "image/gif": "gif",
+    "image/webp": "webp",
+}
+
+
+def build_media_blocks(images_data: List[dict]) -> List[MediaBlock]:
+    """
+    Converte le immagini preparate da enrich_prompt_with_files in MediaBlock
+    Datapizza da passare a stream_invoke (ADR-0001).
+
+    Args:
+        images_data: Lista di dict con chiavi "base64" e "mime_type"
+
+    Returns:
+        Lista di MediaBlock (uno per immagine)
+    """
+    blocks = []
+    for img in images_data:
+        mime = img.get("mime_type", "")
+        blocks.append(MediaBlock(media=Media(
+            extension=_MIME_TO_EXTENSION.get(mime, mime.split("/")[-1] or "png"),
+            media_type="image",
+            source_type="base64",
+            source=img["base64"],
+        )))
+    return blocks

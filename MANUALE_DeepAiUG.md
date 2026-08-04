@@ -535,7 +535,7 @@ Ogni file allegato appare in un'**anteprima** richiudibile: thumbnail per le imm
 
 **Modelli Vision**: le immagini sono accettate solo se il nome del modello è riconosciuto come multimodale (LLaVA e varianti, Granite3-Vision, Moondream, BakLLaVA, CogVLM, Fuyu, MiniCPM-V). Con un modello non-Vision compare l'avviso "⚠️ Immagini rilevate ma il modello non supporta Vision" e le immagini vengono ignorate.
 
-> ℹ️ **Limite noto (presente anche in v1.15.2)**: anche con un modello Vision le immagini vengono preparate ma **non ancora inviate** al modello — l'integrazione dell'API Vision è segnata come TODO nel codice. Ciò che arriva effettivamente all'LLM è il testo dei documenti.
+> ✅ **Novità v1.15.3 (Vision local-only)**: con un modello Vision le immagini allegate vengono **inviate davvero al modello** insieme al testo (nelle versioni precedenti venivano preparate ma non inviate). Funziona solo su **Local (Ollama)** e **Remote host** — mai verso il cloud, dove l'upload resta disabilitato. Le immagini sono **effimere**: non vengono salvate in conversazioni, KB o vault; nella cronologia restano solo i nomi dei file allegati.
 
 **Su cloud** l'upload è disabilitato: "📎 Upload file disabilitato per privacy".
 

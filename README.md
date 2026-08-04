@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.15.2-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.15.2)
+[![Version](https://img.shields.io/badge/version-1.15.3-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.15.3)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -563,6 +563,7 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
+| v1.15.3 | 👁️ Vision local-only — immagini allegate inviate ai modelli vision (LLaVA/Moondream), mai su cloud | ✅ |
 | v1.15.2 | 🔒 Security Audit — SSRF, cloud-block esteso a KB Chat, banner onesti, hardening | ✅ |
 | v1.15.1 | 🩹 Fix installer/updater "bloccato" durante pip install (output visibile a schermo) | ✅ |
 | v1.15.0 | 🌍 Embedding multilingua e5-small per RAG (qualità retrieval IT) | ✅ |
