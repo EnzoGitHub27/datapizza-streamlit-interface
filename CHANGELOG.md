@@ -6,6 +6,19 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
+## [1.15.3] — 2026-08-04
+
+### Aggiunto
+- **Vision local-only (ADR-0001)**: le immagini allegate in chat vengono ora inviate davvero ai modelli vision (es. LLaVA, Moondream) — chiuso il TODO Vision di `app.py`. L'input passa al client Ollama esistente come lista `[TextBlock, MediaBlock...]` di Datapizza (nuovo helper `build_media_blocks` in `core/llm_client.py`), nessuna modifica al client
+- Funzionalità attiva **solo su Local (Ollama) / Remote host**: verso i provider cloud l'upload immagini resta bloccato (policy privacy-first)
+- **Immagini effimere**: mai persistite in conversazioni, KB o vault — nella cronologia restano solo i nomi dei file allegati
+- Decisione e collaudo documentati in `docs/adr/ADR-0001-vision-mediablock-local-only.md`
+
+### Note
+- Ramo testuale invariato (regressione zero): senza immagini, o con modello non-vision, il prompt resta una stringa come prima; se la costruzione dei MediaBlock fallisce, fallback automatico al percorso testuale con warning a log, senza rompere lo streaming
+- **Bug noto (preesistente)**: "Nuova conversazione" non ripulisce visivamente il widget allegati finché non si ricarica la pagina — da affrontare in branch dedicato
+
+---
 ## [1.15.2] — 2026-07-13
 
 ### Sicurezza
