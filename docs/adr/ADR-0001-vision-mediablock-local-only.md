@@ -1,6 +1,7 @@
 # ADR-0001 — Invio immagini al modello via MediaBlock Datapizza (vision local-only)
 
-**Stato:** Proposto · **Data:** 2026-08-04 · **Versione riferimento:** 1.15.2 · **Branch:** feat/vision-local
+**Stato:** Accettato · **Data:** 2026-08-04 · **Versione riferimento:** 1.15.2 · **Branch:** feat/vision-local
+Collaudato il 2026-08-04 con moondream/llava: vision, non-vision, cloud-block e reload chat verificati.
 
 ## Contesto
 

@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.15.2"
+VERSION = "1.15.3"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "fix installer/updater: pip install visibile a schermo + flag --prefer-binary"
+VERSION_DESCRIPTION = "Vision local-only: immagini inviate ai modelli vision (llava/moondream), solo in locale"
 
 # ============================================================================
 # PATHS
