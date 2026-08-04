@@ -31,7 +31,7 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 ## ✨ Features
 
 - 🤖 **Multi-provider**: Ollama (locale), Remote host, Cloud (OpenAI, Anthropic, Google)
-- 🧠 **Approccio Socratico** - Bottoni per esplorare prospettive alternative! ⭐ NEW
+- 🧠 **Approccio Socratico** - Bottoni per esplorare prospettive alternative!
 - 🌊 **Streaming Responses** - Risposte token-by-token in tempo reale!
 - 💬 **Conversazioni multi-turno** con memoria del contesto
 - 💾 **Persistenza** delle conversazioni su file JSON
@@ -41,11 +41,21 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 - 📚 **Chat KB** - Chat salvate come Knowledge Base epistemica con rilevanza e tipo
 - 🌐 **Multi-Wiki** - MediaWiki + DokuWiki support
 - 📎 **File Upload in Chat** - Allega PDF, DOCX, TXT, immagini
+- 👁️ **Vision local-only** - Immagini inviate ai modelli vision (LLaVA, Moondream) — mai su cloud! ⭐ NEW
 - 🔐 **Privacy-First Protection** - Sistema completo protezione dati sensibili
 - 🎨 **UI moderna** con temi chiaro/scuro
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
+
+### 👁️ Novità v1.15.3 — Vision local-only
+
+- **Vision collegata davvero**: le immagini allegate in chat vengono ora inviate ai modelli vision (LLaVA, Moondream) tramite `MediaBlock` di Datapizza — colma il TODO rimasto aperto nelle versioni precedenti
+- **Solo in locale**: funziona con provider Local (Ollama) e Remote host; verso il cloud l'upload immagini resta bloccato, coerente con l'approccio privacy-first
+- **Immagini effimere**: mai salvate in conversazioni, Knowledge Base o vault — in cronologia restano solo i nomi dei file
+- **Regressione zero**: il ramo testuale della chat è invariato, con fallback automatico in caso di errore
+
+*Dettagli in [CHANGELOG.md](CHANGELOG.md) e [ADR-0001](docs/adr/ADR-0001-vision-mediablock-local-only.md). Bug noto preesistente: "Nuova conversazione" non ripulisce visivamente il widget allegati — in lavorazione.*
 
 ### 🔒 Novità v1.15.2 — Security Audit (SSRF, privacy-first, hardening)
 - **SSRF**: nuovo classificatore URL (`core/url_validator.py`) che blocca gli endpoint metadati cloud (`169.254.0.0/16`) su tutti i punti di uscita di rete — fetch modelli, chat, adapter MediaWiki/DokuWiki. Ollama locale, host in LAN e Tailscale restano pienamente supportati
