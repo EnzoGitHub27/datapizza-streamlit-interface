@@ -81,6 +81,10 @@ except HybridSettingsError as _hybrid_exc:
     HYBRID_ERROR = str(_hybrid_exc)
 
 
+# letto dagli avvisi della sidebar e dal dialogo privacy (decisione 4)
+st.session_state["hybrid_pii_active"] = bool(HYBRID and HYBRID.pii.enabled)
+
+
 def _on_pii_anonymized(n_removed: int) -> None:
     """Metadati della conversazione: guard usato e quanti dati tolti (mai i valori)."""
     st.session_state["pii_guard"] = True
@@ -564,7 +568,9 @@ render_export_section()
 if st.session_state.get("show_privacy_dialog", False):
     st.title("🔐 Conferma Privacy Richiesta")
     
-    can_proceed, action = render_privacy_dialog()
+    can_proceed, action = render_privacy_dialog(
+        pii_active=st.session_state.get("hybrid_pii_active", False)  # v1.16.0
+    )
     
     if can_proceed and action:
         handle_privacy_action(action)
@@ -576,12 +582,15 @@ if st.session_state.get("show_privacy_dialog", False):
 # MAIN - TITLE AND INFO
 # ============================================================================
 
+# 🔒 v1.16.0 — il titolo dice anche dove va il testo (destinazione reale)
+_dest_mark = " ☁️" if destination["outside"] else ""
 if connection_type == "Cloud provider":
-    st.title(f"{APP_ICON} {APP_TITLE} → {provider} `{VERSION}`")
+    st.title(f"{APP_ICON} {APP_TITLE} → {provider}{_dest_mark} `{VERSION}`")
 elif connection_type == "Remote host":
-    st.title(f"{APP_ICON} {APP_TITLE} → Remote `{VERSION}`")
+    _remote = "Remote esterno" if destination["outside"] else "Remote"
+    st.title(f"{APP_ICON} {APP_TITLE} → {_remote}{_dest_mark} `{VERSION}`")
 else:
-    st.title(f"{APP_ICON} {APP_TITLE} → Ollama `{VERSION}`")
+    st.title(f"{APP_ICON} {APP_TITLE} → Ollama{_dest_mark} `{VERSION}`")
 
 # ============================================================================
 # 🆕 v1.5.0 - PRIVACY WARNING BANNER (se su Cloud con documenti)
@@ -992,9 +1001,9 @@ c1, c2, _ = st.columns([2, 8, 2])
 c1.caption("🤖 DeepAiUG by Gilles")
 c2.caption(f"{VERSION} - Socratic Mode | DeepAiUG © 2026")
 
-# Visual indicators
-if connection_type == "Cloud provider":
-    # Rosso per cloud (warning: dati esterni)
+# Visual indicators — 🔒 v1.16.0: la destinazione reale, non l'etichetta
+if destination["outside"]:
+    # Rosso fuori casa (cloud o host su internet: dati esterni)
     st.markdown(
         '<style>.stApp { border-top: 4px solid #ff6b6b !important; }</style>',
         unsafe_allow_html=True
