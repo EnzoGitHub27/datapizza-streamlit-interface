@@ -14,7 +14,7 @@ import pytest
 import requests
 
 from core.pii_client import PIIClient
-from core.pii_guard import GuardedClient, GuardedResponse, PIIGuardBlocked
+from core.pii_guard import PLACEHOLDER_NOTE, GuardedClient, GuardedResponse, PIIGuardBlocked
 from tests.fakes_http import FakeResponse, connection_refused
 
 # valori inventati → tipo
@@ -146,7 +146,7 @@ def test_system_prompt_and_prompt_share_numbering():
 
     assert len(rizzo.calls) == 1  # una chiamata, non due
     sp, prompt = cloud.sent[0]
-    assert sp == "Rispondi come assistente di [FULLNAME_1]."
+    assert sp == f"Rispondi come assistente di [FULLNAME_1].\n\n{PLACEHOLDER_NOTE}"
     assert prompt == "Prepara un preventivo per [FULLNAME_2] da parte di [FULLNAME_1]."
     assert _no_values(cloud.all_sent_text())
 
