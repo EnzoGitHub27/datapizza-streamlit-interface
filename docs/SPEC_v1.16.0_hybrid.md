@@ -1,8 +1,8 @@
 # SPEC v1.16.0 «ibrida» — rizzo-pii e Annona come servizi opzionali
 
-**Stato:** decisa; guard collegato (giro 4) · **Data:** 2026-11-05, aggiornata il 2026-11-06 · **Base:** v1.15.4 · **Ramo:** `feat/hybrid-pii-annona`
-**Cosa c'è già nel ramo:** questa SPEC, `core/pii_client.py`, `core/annona_client.py` e i loro test con i servizi simulati; il `NOTICE`; i blocchi decisi sulla destinazione reale (P2, `core/egress.py`); la sezione `hybrid:` di `security_settings.yaml` con il suo lettore (P5, `config/hybrid_settings.py`). Dal giro 4: il guard **collegato** (P6, `core/pii_guard.py`, `GuardedClient` in `create_client()`), gli avvisi sulla destinazione reale (dialogo privacy, chat caricata, icone 🔒, bordo, titolo), l'errore del cloud che resta accanto alla domanda (§8), `apply_to` non più configurabile, `.graphifyignore`.
-**Cosa non c'è:** P7-P9 (letture di Annona, gateway, badge «🛡️ N dati tolti» e riquadro «cosa ha visto il modello»), il cambio di versione, README, CHANGELOG e ROADMAP.
+**Stato:** decisa; guard, Annona e badge collegati (giro 5) · **Data:** 2026-11-05, aggiornata il 2026-11-06 · **Base:** v1.15.4 · **Ramo:** `feat/hybrid-pii-annona`
+**Cosa c'è già nel ramo:** questa SPEC, `core/pii_client.py`, `core/annona_client.py` e i loro test con i servizi simulati; il `NOTICE`; i blocchi decisi sulla destinazione reale (P2, `core/egress.py`); la sezione `hybrid:` di `security_settings.yaml` con il suo lettore (P5, `config/hybrid_settings.py`). Dal giro 4: il guard **collegato** (P6, `core/pii_guard.py`, `GuardedClient` in `create_client()`), gli avvisi sulla destinazione reale (dialogo privacy, chat caricata, icone 🔒, bordo, titolo), l'errore del cloud che resta accanto alla domanda (§8), `apply_to` non più configurabile, `.graphifyignore`. Dal giro 5: le letture di Annona nella sidebar (P7, `core/annona_bridge.py`, `ui/sidebar/annona_panel.py`), il gateway sperimentale (P8), il badge «🛡️ N dati tolti» e il riquadro «cosa ha visto il modello» (P9).
+**Cosa non c'è:** P10-P12 (prova dal vivo con rizzo-pii e Annona veri, documenti, cambio di versione con README, CHANGELOG e ROADMAP).
 **Giro 3:** le decisioni di Gilles sono nella §13; le correzioni dell'audit (`docs/AUDIT_pre_v1.16.0.md` §2.1) sono dentro le sezioni a cui si riferiscono.
 
 ---
@@ -154,6 +154,12 @@ Altre cose dal codice e dalle prove del 23/10:
 
 **Deciso (§13, decisioni 1 e 2):** rizzo-pii dentro il guard dell'Interface (§3), con la regola fissa «verso fuori casa solo testo anonimizzato»; di Annona, **le letture** (stato, registro, verifica della catena) in una sezione della sidebar, e la **strada A come opzione sperimentale**. La **C** si chiede ad Akaion (la richiesta la manda Gilles, con la dichiarazione della §10). La **B no**.
 
+### 5.4 Come è fatto (giro 5)
+
+**Letture (P7, `hybrid.annona.enabled`).** La sezione «🧭 Annona» della sidebar legge `/health`, `/api/kernel/status`, `/api/kernel/ledger` (ultime 8) e `/api/kernel/ledger/verify`, con timeout di 3 s e al massimo ogni 20 s (o «🔄 Aggiorna»). Del registro mostra solo `seq`, `ts`, `kind`, classe, esito, substrato, regola e motivo (accorciato): mai il testo, il `payload_digest` o i `detail`. Annona giù o senza policy: la sezione lo dice e l'app procede. In modo `read` Annona non vede i messaggi dell'Interface: una risposta arrivata da fuori casa porta «📒 non registrato in Annona» (`annona_recorded: false` nel messaggio, decisione 6).
+
+**Gateway (P8, `mode: gateway`, sperimentale).** Solo per le destinazioni **fuori casa** (§3.1): l'Interface chiama `POST /api/kernel/ask` con `max_iterations=1` e senza strumenti, al posto del suo client. Il prompt va ad Annona **in chiaro su loopback** (con il system prompt davanti se non c'è RAG): la redazione la fa Annona secondo la sua policy, non il guard dell'Interface. Niente streaming: un indicatore d'attesa. `held` → blocco con `placement.reason`; Annona giù, senza policy, in errore o passo annullato → blocco. In tutti i blocchi la domanda resta in chat segnata «non inviata» (§8). La pagina dice **«SPERIMENTALE»** e che cosa si perde: lo streaming, la scelta del modello (la fa la policy di Annona), le chiavi dei fornitori (stanno nella policy di Annona). La risposta porta «🧭 via Annona (sperimentale)» con classe, esito e substrato, e il modello salvato è `annona:<substrato>`. In casa si usa il client di sempre. **Non coperti dal gateway:** i bottoni socratici, il nudge e la mappa della sessione usano il client dell'Interface (con il guard, se rizzo-pii è acceso).
+
 Il client attuale (`core/annona_client.py`) serve già ad A e alle letture; `decide()`/`record()` restano pronti per C.
 
 ---
@@ -180,7 +186,7 @@ system_prompt ─┘                          │
 
 La tabella dei segnaposto **non** va nei log, nel registro di Annona, nella cronologia salvata, nella KB Chat né nell'export: vive solo per la durata della chiamata (`AnonymizedText.mapping` ha `repr=False`).
 
-**Nella UI** (decisioni 4 e 9): con rizzo-pii attivo il dialogo privacy offre **«Procedi con anonimizzazione»** al posto di «Procedi comunque»; dopo l'invio la risposta porta il badge **«🛡️ N dati tolti prima dell'invio»** e un riquadro richiudibile **«cosa ha visto il modello»** con il testo anonimizzato (solo in memoria, per la sessione). La tabella dei valori veri non si salva mai. Senza rizzo-pii, il dialogo di oggi.
+**Nella UI** (decisioni 4 e 9): con rizzo-pii attivo il dialogo privacy offre **«Procedi con anonimizzazione»** al posto di «Procedi comunque»; dopo l'invio la risposta porta il badge **«🛡️ N dati tolti prima dell'invio»** (`pii_removed` nel messaggio: si salva e resta ricaricando) e un riquadro richiudibile **«cosa ha visto il modello»** con il testo com'è partito, segnaposto compresi (con il gateway: l'`egress` di Annona). **Scelta dell'Hub, da confermare:** il riquadro vale solo nella sessione corrente (`egress_views` in memoria, svuotato con «Nuova» e al caricamento di una conversazione) e non si salva. La tabella dei valori veri non si salva mai. Senza rizzo-pii, il dialogo di oggi.
 
 **RAG e upload verso fuori casa restano bloccati nella 1.16.0**, anche con rizzo-pii attivo (decisione 3): lo sblocco si valuta in una 1.16.x, dopo aver misurato rizzo-pii sui documenti veri.
 
@@ -289,6 +295,8 @@ Lo stesso vale per la richiesta della strada C ad Akaion e per le segnalazioni e
 **Dal giro 3:** `tests/test_egress.py` (destinazioni finte: pubblica, LAN, Tailscale, localhost, cloud fisso, Custom, non risolvibile; i blocchi di KB e upload) e `tests/test_hybrid_settings.py` (file assente, sezione assente, `cloud: allow` rifiutato, tipi sbagliati).
 
 **Dal giro 4:** `tests/test_pii_guard.py` (rizzo-pii e cloud finti: solo segnaposto verso il cloud, una chiamata sola per system prompt e prompt, «Lucia D'Angelo», streaming pezzo per pezzo, servizio giù = zero chiamate, mappa ripristinata dopo il parsing, metadati), `tests/test_pii_guard_app.py` (app intera: invio bloccato, testo di nuovo nella casella), `tests/test_egress_labels.py`, `tests/test_cloud_error_visible.py`.
+
+**Dal giro 5:** `tests/test_annona_panel.py` (Annona finta accesa, spenta, senza policy; catena valida e rotta; il registro senza testo; «non registrato in Annona»), `tests/test_annona_gateway.py` (risposta, `held`, giù, errore, annullato; app: client dell'Interface mai chiamato fuori casa, usato in casa), `tests/test_pii_badge.py` (badge e riquadro con il guard, assenti con l'ibrido spento e in casa, riquadro solo nella sessione, gateway con l'`egress` di Annona; nei file salvati il conteggio sì, segnaposto e tabella no).
 
 **Il piano iniziale (P6), coperto dai test qui sopra:**
 1. `GuardedClient`: stringa e lista di blocchi; `system_prompt` e prompt in **una** chiamata a rizzo-pii (stessa numerazione); `invoke` → oggetto con `.text`; `MediaBlock` verso fuori casa → errore; destinazione da `classify_destination`; mappa della sessione ripristinata dopo il parsing («Lucia D'Angelo»); nessun log di prompt o tabella.
