@@ -184,6 +184,8 @@ system_prompt ─┘                          │
                                                  5. tabella buttata a fine chiamata
 ```
 
+**La riga sui segnaposto** (giro 7, dalla prova dal vivo): con il guard, al system prompt si aggiunge `PLACEHOLDER_NOTE` (`core/pii_guard.py`): i segnaposto fra parentesi quadre sono dati tolti di proposito, da usare così come sono, senza commentarli né inventare i valori. Passa da rizzo-pii nella stessa chiamata; gli esempi hanno `_N` e non un numero, quindi il ripristino non la tocca. Senza, il modello commentava i segnaposto e, ripristinata, la frase diventava «l'uso di segnaposto (ad esempio, Mario Rossi)». Vale per tutte le vie che passano dal guard.
+
 La tabella dei segnaposto **non** va nei log, nel registro di Annona, nella cronologia salvata, nella KB Chat né nell'export: vive solo per la durata della chiamata (`AnonymizedText.mapping` ha `repr=False`).
 
 **Nella UI** (decisioni 4 e 9): con rizzo-pii attivo il dialogo privacy offre **«Procedi con anonimizzazione»** al posto di «Procedi comunque»; dopo l'invio la risposta porta il badge **«🛡️ N dati tolti prima dell'invio»** (`pii_removed` nel messaggio: si salva e resta ricaricando) e un riquadro richiudibile **«cosa ha visto il modello»** con il testo com'è partito, segnaposto compresi (con il gateway: l'`egress` di Annona). **Confermato da Gilles (giro 5b):** il riquadro vale solo nella sessione corrente (`egress_views` in memoria, svuotato con «Nuova» e al caricamento di una conversazione) e non si salva. La tabella dei valori veri non si salva mai. Senza rizzo-pii, il dialogo di oggi.

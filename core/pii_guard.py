@@ -44,6 +44,17 @@ _SEP_MARK = "⟦DEEPAIUG·PARTE⟧"
 _SEP = f"\n\n{_SEP_MARK}\n\n"
 
 
+# v1.16.0 giro 7 — la riga che spiega i segnaposto al modello. Senza, il modello
+# li commenta («l'uso di segnaposto (ad esempio, [FULLNAME_1])») e, ripristinata,
+# la frase diventa «l'uso di segnaposto (ad esempio, Mario Rossi)». Gli esempi
+# hanno «_N», non un numero: non possono coincidere con un segnaposto vero.
+PLACEHOLDER_NOTE = (
+    "Nota: le parole fra parentesi quadre come [FULLNAME_N] o [CF_N] sono dati "
+    "personali tolti di proposito prima dell'invio. Usale così come sono, senza "
+    "commentarle, senza spiegarle e senza inventare i valori."
+)
+
+
 class PIIGuardBlocked(Exception):
     """Il testo non è partito verso fuori casa. Il messaggio è per l'utente."""
 
@@ -184,9 +195,14 @@ class GuardedClient:
 
     def _prepare(self, llm_input: Any) -> Tuple[Any, str, AnonymizedText]:
         texts, rebuild = self._split_input(llm_input)
-        joined = _SEP.join([self._system_prompt, *texts])
         if _SEP_MARK in self._system_prompt or any(_SEP_MARK in t for t in texts):
             raise PIIGuardBlocked("🔒 Testo non anonimizzabile: il messaggio non è stato inviato.")
+        # la riga sui segnaposto passa da rizzo-pii insieme al resto (stessa chiamata)
+        system_prompt = (
+            f"{self._system_prompt.rstrip()}\n\n{PLACEHOLDER_NOTE}"
+            if self._system_prompt.strip() else PLACEHOLDER_NOTE
+        )
+        joined = _SEP.join([system_prompt, *texts])
 
         try:
             anon = self._pii.anonymize(joined, exclude_tags=self._exclude_tags)
