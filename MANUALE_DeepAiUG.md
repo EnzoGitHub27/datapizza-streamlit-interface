@@ -930,6 +930,13 @@ Da sapere:
 - **Le prestazioni**: rizzo-pii gira sul processore e a ogni turno anonimizza di nuovo tutta la cronologia. Con conversazioni lunghe può essere lento.
 - **Knowledge Base e allegati verso il cloud restano bloccati** nella 1.16.0: lo sblocco si valuterà dopo aver misurato rizzo-pii sui documenti veri.
 
+Dalla prova dal vivo (06/11/2026, rizzo-pii vero e OpenAI):
+
+- **Le date spezzate**: «12 novembre» può diventare due segnaposto, e il modello può leggerli come giorno e ora («il 12 alle novembre»). Se la data serve, lasciala in chiaro con `exclude_tags: ["DATE"]` o rileggi la risposta.
+- **La seconda passata**: un bottone come «Limiti» manda di nuovo al cloud il testo scritto dal modello, ripristinato. rizzo-pii lo anonimizza di nuovo, ma il modello può aver scritto i dati in forme che rizzo-pii non riconosce (nella prova una data storpiata è uscita in chiaro).
+- **I log del fornitore**: il fornitore cloud conserva nei suoi log la domanda e la risposta; con rizzo-pii acceso sono a soli segnaposto.
+- **I segnaposto spiegati al modello**: senza istruzioni il modello li commentava («l'uso di segnaposto, ad esempio Mario Rossi»). Dalla 1.16.0 il system prompt ha una riga che gli dice di usarli così come sono; resta un'istruzione, non una garanzia.
+
 ---
 
 # Appendice A — Tabella dei limiti e valori predefiniti
