@@ -6,6 +6,30 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
+## [1.15.4] — 2026-11-06
+
+Versione di sole correzioni, dall'audit `docs/AUDIT_pre_v1.16.0.md` (ramo `feat/hybrid-pii-annona`).
+
+### Corretto
+- **Blocchi di codice e «[object Object]»** (`ui/chat.py`, `ui/styles.py`): copiando dalla chat il codice scritto dal modello (es. Python) e incollandolo in un editor comparivano scritte «[object Object]». Causa: il Markdown veniva convertito in HTML (`markdown_it`) e `st.markdown` lo rileggeva come Markdown; alla prima riga vuota del codice il blocco HTML si chiudeva, il resto diventava un blocco annidato e il frontend di Streamlit scriveva «[object Object]», anche nel testo copiato. Ora la bolla è un contenitore Streamlit con `key` e il contenuto passa a `st.markdown` nativo (lo stesso dello streaming), senza HTML grezzo; il CSS delle bolle è sulle classi `st-key-*-bubble-N`
+- **«🗑️ Elimina» non toglieva la chat dalla KB Chat** (`core/kb_chat_indexer.py`, `ui/sidebar/conversations.py`): veniva cancellato solo il file, i pezzi indicizzati restavano recuperabili dalla ricerca e la chat spariva dal pannello di gestione. Nuova `delete_conversation_and_kb()`: prima i chunk, poi il file. «🗑️ Elimina» ora chiede conferma
+- **«🔄 Aggiorna KB Chat» toglie le chat orfane** (`remove_orphan_chats_from_kb()`): file eliminato o `includi_in_kb` spento. Decide chat per chat dal file; nel dubbio (file illeggibile) tiene
+- **Il modello in testata era quello della sidebar, non quello che aveva risposto** (`app.py`, `core/conversation.py`, `core/persistence.py`, export): cambiando modello dopo una risposta, il salvataggio scriveva in testa il modello e il provider scelti in quel momento (es. «gpt-4o-mini» per una chat a cui aveva risposto `llama3.2:3b`), e il pannello KB lo mostrava. Ora ogni risposta registra anche `provider`; la testata prende modello e provider dall'ultima risposta (`conversation_models()`), con `models_used` se hanno risposto più modelli; senza risposte resta la sidebar. Per le chat vecchie lista, pannello KB ed export ricavano il modello dai messaggi, senza riscrivere i file; il provider resta vuoto se non è ricavabile
+- **Indicizzazione in errore sulle GPU che torch non supporta** (`rag/embeddings.py`): con `torch 2.13.0+cu130` (sm_75 e superiori) `torch.cuda.is_available()` risponde True anche su una MX250 (sm_61), `SentenceTransformer` sceglieva la GPU e «🔄 Aggiorna KB Chat» e l'indicizzazione fallivano in `torch.gather` («no kernel image»). Ora `select_device()` usa `cuda` solo se l'architettura della scheda è nella `get_arch_list()` di torch (anche via stessa generazione o PTX), altrimenti `cpu`; ogni errore nel controllo → `cpu`; `DEEPAIUG_EMBEDDINGS_DEVICE=cpu|cuda` forza la scelta; una riga nel terminale dice device e motivo. Non era una regressione della 1.15.4
+
+### Aggiunto
+- **`LICENSE`** (MIT): il README lo citava ma il file mancava
+- **`requirements-dev.txt`** con `pytest`, e `tests/conftest.py`: i test girano con `venv/bin/python -m pytest`, sempre su CPU (con la build di torch installata alcune GPU, es. MX250, davano «CUDA error: no kernel image» negli embedding)
+- Test: `tests/test_chat_render.py` (AppTest), `tests/test_delete_kb_chat.py`, `tests/test_embeddings_device.py`, `tests/test_conversation_model_label.py`
+- `graphify-out/` nel `.gitignore`
+
+### Documentazione
+- **`MANUALE_DeepAiUG.md`** allineato alla v1.15.4: tutte le voci di gravità alta e media dell'audit (limiti privacy scritti come stanno, limite file reale 200 MB, Anthropic/Google con pacchetti aggiuntivi, Windows, Poetry non supportato, KB con una sola sorgente attiva, finding di sicurezza, ecc.)
+
+### Note
+- **Limiti noti ancora aperti** (scritti nel manuale): il widget allegati non si svuota dopo l'invio né con «Nuova»; `MAX_FILE_SIZE_MB` non è controllato; Anthropic e Google richiedono `datapizza-ai-clients-anthropic` / `-google`; un Remote host su IP pubblico riceve KB, allegati e immagini con il solo banner «Host esterno»; una chat caricata e poi usata sul cloud manda tutta la cronologia
+
+---
 ## [1.15.3] — 2026-08-04
 
 ### Aggiunto
