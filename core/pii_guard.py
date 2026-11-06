@@ -120,6 +120,10 @@ class GuardedClient:
         self._pii = pii
         self._exclude_tags = list(exclude_tags)
         self._on_anonymized = on_anonymized
+        # P9 — l'ultimo invio, solo in memoria: quanti dati tolti e il testo
+        # com'è partito (con i segnaposto). Mai la tabella.
+        self.last_removed: Optional[int] = None
+        self.last_egress: str = ""
 
     # -- preparazione: una chiamata sola a rizzo-pii -------------------------
 
@@ -180,6 +184,11 @@ class GuardedClient:
                 "🛡️ Risposta di rizzo-pii non coerente: il messaggio non è stato inviato."
             )
         clean_sp, clean_texts = parts[0].strip(), parts[1:]
+        self.last_removed = anon.n_entities
+        self.last_egress = (
+            (f"[system prompt]\n{clean_sp}\n\n" if clean_sp else "")
+            + "[messaggio]\n" + "\n\n".join(clean_texts)
+        )
         if self._on_anonymized is not None:
             self._on_anonymized(anon.n_entities)
         return rebuild(clean_texts), clean_sp, anon
