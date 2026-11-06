@@ -31,6 +31,7 @@ from rag import (
 )
 from config.constants import VAULT_SESSION_KEY, VAULT_LAST_SYNC_KEY, VAULT_FILE_COUNT_KEY
 from core.url_validator import is_blocked, classify_url
+from core.egress import classify_destination, outside_label  # v1.16.0 P2
 from rag.vault import detect_vault_type, scan_vault_files
 from rag.embeddings import (
     get_seconds_per_file,
@@ -74,22 +75,18 @@ def render_knowledge_base_config(connection_type: str, base_url: str = "", conta
         )
         return
 
-    # Avviso privacy — 🔒 H3b: basato sulla destinazione reale dell'URL modello
-    if connection_type == "Cloud provider":
-        _container.error("🔒 Cloud provider bloccato per privacy!")
-    else:
-        url_info = classify_url(base_url)
-        cat = url_info["category"]
-        if cat in ("loopback", "private"):
-            _container.success("🔒 Privacy reale - dati e chat restano nella tua rete")
-        elif cat == "public":
-            _container.warning(
-                f"⚠️ La chat che usa la KB va a un host esterno ({url_info['hostname']})"
-            )
-        elif cat == "link_local":
+    # Avviso privacy — 🔒 v1.16.0 P2: la destinazione reale (core.egress).
+    # Fuori casa la KB non si usa: la sidebar LLM torna a Ollama locale.
+    destination = st.session_state.get("egress_destination") or classify_destination(
+        connection_type, None, base_url
+    )
+    if destination["outside"]:
+        if destination["category"] == "link_local":
             _container.error("🔒 Connessione bloccata - endpoint metadati cloud")
-        else:  # invalid
-            _container.info("ℹ️ URL modello non valido - verifica l'indirizzo")
+        else:
+            _container.error(f"🔒 {outside_label(destination)}: KB bloccata per privacy!")
+    else:
+        _container.success("🔒 Privacy reale - dati e chat restano nella tua rete")
 
     # Carica config sorgenti
     sources_config = load_wiki_config()

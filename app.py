@@ -66,6 +66,7 @@ from core import (
 # 🆕 v1.5.0 - File processors
 from core.file_processors import get_attachment_names
 from core.url_validator import is_blocked, classify_url
+from core.egress import classify_destination, outside_label  # v1.16.0 P2
 
 # ============================================================================
 # RAG
@@ -336,6 +337,11 @@ config_expander = st.sidebar.expander("⚙️ Configurazione", expanded=False)
     max_messages,
 ) = render_llm_config(container=config_expander)
 
+# 🔒 v1.16.0 P2 — dove va davvero il testo (calcolato dalla sidebar LLM)
+destination = st.session_state.get("egress_destination") or classify_destination(
+    connection_type, provider, base_url
+)
+
 # 1b. 📚 Knowledge Base — Wiki / Vault (aperta di default per renderla visibile)
 kb_expander = st.sidebar.expander("📚 Knowledge Base (Wiki / Vault)", expanded=True)
 render_knowledge_base_config(connection_type, base_url=base_url, container=kb_expander)
@@ -595,8 +601,11 @@ if connection_type in ("Local (Ollama)", "Remote host"):
         st.error("🔒 **Connessione bloccata** - endpoint metadati cloud")
     else:  # invalid
         st.info("ℹ️ **URL non valido o non risolvibile** - verifica l'indirizzo")
-else:
+elif destination["outside"]:
     st.warning("☁️ **Cloud** - Dati esterni (KB e Upload disabilitati)")
+else:
+    # v1.16.0 P2 — cloud «Custom» su localhost/LAN (es. LM Studio): in casa
+    st.success(f"🔒 **Rete fidata** - endpoint «Custom» nella tua rete ({destination['host']})")
 
 # ============================================================================
 # STATS
@@ -662,7 +671,8 @@ st.subheader("✍️ Messaggio")
 processed_files, has_images, upload_warning = render_file_upload_widget(
     connection_type=connection_type,
     current_model=model,
-    key="chat_file_upload"
+    key="chat_file_upload",
+    outside=destination["outside"],  # v1.16.0 P2
 )
 
 # Salva file in session_state per uso nel submit
@@ -721,8 +731,9 @@ if submit and user_input.strip():
         st.error("❌ Seleziona un modello!")
     elif connection_type == "Cloud provider" and not api_key:
         st.error("❌ Inserisci API key!")
-    elif connection_type == "Cloud provider" and (st.session_state.get("use_knowledge_base") or st.session_state.get("use_chat_kb")):
-        st.error("🔒 Cloud bloccato con Knowledge Base o KB Chat attiva!")
+    elif destination["outside"] and (st.session_state.get("use_knowledge_base") or st.session_state.get("use_chat_kb")):
+        # 🔒 v1.16.0 P2 — destinazione reale, non l'etichetta
+        st.error(f"🔒 {outside_label(destination)} bloccato con Knowledge Base o KB Chat attiva!")
     elif _url_blocked:
         st.error(f"🔒 Connessione bloccata per sicurezza: {_url_block_reason}")
     else:

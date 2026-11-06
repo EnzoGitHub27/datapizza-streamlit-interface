@@ -19,6 +19,7 @@ from config.settings import (
 )
 from core import get_local_ollama_models
 from core.url_validator import is_blocked
+from core.egress import classify_destination, outside_label  # v1.16.0 P2
 
 
 def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, float, int]:
@@ -94,12 +95,15 @@ def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, flo
 
     st.session_state["connection_type"] = connection_type
 
-    # Blocco Cloud se Knowledge Base attiva (PRIVACY)
-    if (st.session_state.get("use_knowledge_base") or st.session_state.get("use_chat_kb")) and connection_type == "Cloud provider":
-        container.error("🔒 **Cloud bloccato**: Knowledge Base o KB Chat attiva. I tuoi dati locali rimangono privati!")
-        container.info("Disattiva Knowledge Base e KB Chat, oppure usa Local/Remote")
-        connection_type = "Local (Ollama)"
-        st.session_state["connection_type"] = connection_type
+    # Blocco fuori casa se Knowledge Base attiva (PRIVACY) — 🔒 v1.16.0 P2:
+    # deciso sulla destinazione reale più sotto; qui solo il messaggio
+    _kb_blocked_label = st.session_state.pop("_egress_kb_blocked", None)
+    if _kb_blocked_label:
+        container.error(
+            f"🔒 **{_kb_blocked_label} bloccato**: Knowledge Base o KB Chat attiva. "
+            "I tuoi dati locali rimangono privati!"
+        )
+        container.info("Disattiva Knowledge Base e KB Chat, oppure usa una destinazione in casa (Ollama locale, LAN, Tailscale)")
 
     # Variabili default
     base_url = "http://localhost:11434/v1"
@@ -411,6 +415,19 @@ def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, flo
             model = container.text_input("Modello", value=dm)
 
         base_url = db
+
+    # 🔒 v1.16.0 P2 — dove va davvero il testo (SPEC §3.1). Con KB o KB Chat
+    # attive, una destinazione fuori casa torna a Ollama locale, come nella
+    # 1.15.x faceva il solo «Cloud provider»: ora vale anche per un Remote
+    # host su IP pubblico, e non per un cloud «Custom» su localhost.
+    destination = classify_destination(connection_type, provider, base_url)
+    if destination["outside"] and (
+        st.session_state.get("use_knowledge_base") or st.session_state.get("use_chat_kb")
+    ):
+        st.session_state["connection_type"] = "Local (Ollama)"
+        st.session_state["_egress_kb_blocked"] = outside_label(destination)
+        st.rerun()
+    st.session_state["egress_destination"] = destination
 
     # Salva modello corrente
     st.session_state["current_model"] = model
