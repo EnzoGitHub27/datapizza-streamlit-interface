@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.15.4"
+VERSION = "1.16.0"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "🧩 Codice copiato intero dalla chat, niente più «[object Object]»; «Elimina» toglie la chat anche dalla KB Chat."
+VERSION_DESCRIPTION = "🛡️ Ambiente ibrido (opzionale, spento per default): con rizzo-pii al cloud vanno solo segnaposto, e i valori veri tornano sul tuo computer."
 
 # ============================================================================
 # PATHS

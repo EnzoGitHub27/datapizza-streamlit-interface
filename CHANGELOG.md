@@ -6,9 +6,9 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
-## [1.16.0] — non ancora rilasciata
+## [1.16.0] — 2026-11-06
 
-Ambiente ibrido, **opzionale e spento per default** (sezione `hybrid:` di `security_settings.yaml`): con l'ibrido spento l'app si comporta come la 1.15.4, salvo la destinazione reale (sotto, «Cambiato»). Ramo `feat/hybrid-pii-annona`; dettagli in `docs/SPEC_v1.16.0_hybrid.md` e nel Capitolo 21 di `MANUALE_DeepAiUG.md`.
+Ambiente ibrido, **opzionale e spento per default** (sezione `hybrid:` di `security_settings.yaml`): con l'ibrido spento l'app si comporta come la 1.15.4, salvo la destinazione reale (sotto, «Cambiato»). Provata dal vivo con rizzo-pii vero e OpenAI: al fornitore solo segnaposto, nella chat e con «Limiti», e la risposta torna con i valori veri. Dettagli in `docs/SPEC_v1.16.0_hybrid.md` e nel Capitolo 21 di `MANUALE_DeepAiUG.md`.
 
 ### Aggiunto
 - **rizzo-pii prima del cloud** (`core/pii_client.py`, `core/pii_guard.py`, `GuardedClient` dentro `create_client()`): verso fuori casa partono solo i segnaposto (`[FULLNAME_1]`, `[CF_1]`…), system prompt compreso, in una chiamata sola; la risposta, anche in streaming, torna con i valori veri ripristinati in locale. Coperte tutte le vie verso il modello: chat, bottoni socratici, nudge, generazione e rigenerazione della mappa, mappa progressiva. rizzo-pii giù, in modalità definitiva o con risposta rotta → **niente parte** e il testo torna nella casella. La tabella segnaposto → valore vive solo durante la chiamata: mai in log, cronologia, KB Chat o export
@@ -22,7 +22,8 @@ Ambiente ibrido, **opzionale e spento per default** (sezione `hybrid:` di `secur
 ### Cambiato
 - **La destinazione reale** (`core/egress.py`, `classify_destination()`): blocchi di KB, KB Chat, allegati e immagini, anonimizzazione, dialogo privacy, icone 🔒, bordo e titolo guardano dove va davvero il testo, non l'etichetta. Cloud OpenAI/Anthropic/Google sempre fuori casa; loopback, LAN e Tailscale in casa; **un Remote host su IP pubblico ora si comporta come il cloud** (prima riceveva KB e allegati con il solo banner «Host esterno»), anche con l'ibrido spento; nel dubbio (nome non risolvibile, URL rotto) si blocca
 
-### Corretto (dalla prova dal vivo, giro 6)
+### Corretto (dalla prova dal vivo)
+- **I segnaposto spiegati al modello** (`core/pii_guard.py`, `PLACEHOLDER_NOTE`): il modello commentava i segnaposto e, ripristinata, la frase diventava «l'uso di segnaposto (ad esempio, Mario Rossi, via Garibaldi)». Con il guard il system prompt ha ora una riga: usali così come sono, senza commentarli né inventare valori. Passa da rizzo-pii nella stessa chiamata e il ripristino non la tocca. Test: `test_placeholder_instruction`
 - **Il testo rimesso nella casella dopo un blocco ci resta** (`app.py`): prima spariva al primo rerun, anche per un'azione nella sidebar, e «Invia» partiva a vuoto. Ora la casella ha una chiave e il testo resta finché non invii di nuovo o non la svuoti tu; lo rimettono anche i blocchi prima dell'invio (modello, chiave, KB fuori casa, URL bloccato, configurazione ibrida illeggibile)
 - **La domanda bloccata non resta nella stima dei token**: tolta dalla chat, esce anche dal contatore «🪙 Token»
 - **Niente chiamate a huggingface.co all'avvio con il modello già sul disco** (`rag/embeddings.py`, `load_sentence_transformer()`): prima `SentenceTransformer` faceva oltre trenta richieste a ogni avvio; ora dalla cache si carica con `local_files_only=True` e si va in rete solo al primo uso o con la cache incompleta, con una riga nel terminale. Test: `test_restore_input`, `test_embeddings_offline`
@@ -33,7 +34,8 @@ Ambiente ibrido, **opzionale e spento per default** (sezione `hybrid:` di `secur
 - **rizzo-pii su codice e testo tecnico** toglie troppo; importi, date e URL si tolgono per default (`exclude_tags` per lasciarli)
 - **Con il gateway** la domanda arriva ad Annona in chiaro su loopback e Annona scrive il testo del passo nel suo log
 - **RAG e upload verso il cloud restano bloccati**, anche con rizzo-pii
-- Le prestazioni di rizzo-pii con cronologie lunghe sono da misurare; manca la prova dal vivo con rizzo-pii e Annona veri
+- **Dalla prova dal vivo**: una data come «12 novembre» può diventare due segnaposto e il modello leggerli come giorno e ora; una seconda passata (es. «Limiti») anonimizza il testo del modello, che può avere forme che rizzo-pii non riconosce (una data storpiata è uscita in chiaro); il fornitore conserva input e output nei suoi log, a soli segnaposto
+- Le prestazioni di rizzo-pii con cronologie lunghe sono da misurare
 
 ---
 ## [1.15.4] — 2026-11-06
