@@ -792,7 +792,11 @@ if _guard_notice:
 if "_restore_input" in st.session_state:
     st.session_state["msg_input"] = st.session_state.pop("_restore_input")
 
-with st.form("msg_form", clear_on_submit=True):
+# v1.16.0 giro 7c — niente clear_on_submit: lo svuotamento lo fa il browser, che
+# al rerun successivo (es. la temperatura nella sidebar) rimanda alla casella il
+# suo valore vuoto e copre il testo rimesso dal server. La casella la svuota il
+# server dopo un invio partito (_restore_input = "" più sotto).
+with st.form("msg_form", clear_on_submit=False):
     placeholder = (
         "Chiedi qualcosa sui tuoi documenti..." 
         if st.session_state.get("use_knowledge_base") 
