@@ -130,3 +130,32 @@ def test_blocked_question_not_in_token_estimate(app):
 
     assert at.session_state["total_tokens_estimate"] == before + sum(
         estimate_tokens(m["content"]) for m in at.session_state["messages"])
+
+
+# --- giro 7c: nel browser vero -------------------------------------------------------
+# Nel browser, con clear_on_submit=True, il frontend svuota la casella all'invio e
+# al rerun successivo (la temperatura nella sidebar) rimanda il valore vuoto, che
+# copre il testo rimesso dal server. AppTest non simula il frontend: si controlla
+# che il form non lo chieda (questo test fallisce con il codice di prima). La prova
+# nel browser vero è descritta nel CHANGELOG [1.16.0].
+
+def _forms(node, out):
+    proto = getattr(node, "proto", None)
+    try:
+        is_form = proto is not None and proto.WhichOneof("type") == "form"
+    except (AttributeError, ValueError):  # elementi senza il campo «type»
+        is_form = False
+    if is_form:
+        out[proto.form.form_id] = proto.form.clear_on_submit
+    children = getattr(node, "children", None)
+    if isinstance(children, dict):
+        for child in children.values():
+            _forms(child, out)
+    return out
+
+
+def test_message_form_is_not_cleared_by_the_browser(app):
+    start, _, _ = app
+    at = start({"pii": {"enabled": True}})
+    forms = _forms(at._tree, {})
+    assert forms.get("msg_form") is False
