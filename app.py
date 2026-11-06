@@ -86,6 +86,16 @@ except HybridSettingsError as _hybrid_exc:
 st.session_state["hybrid_pii_active"] = bool(HYBRID and HYBRID.pii.enabled)
 
 
+def _answer_extra(client, destination) -> dict:
+    """Metadati della risposta: niente valori, solo stato (v1.16.0)."""
+    extra = {}
+    # 🧭 P7, decisione 6: Annona in sola lettura non vede gli invii fuori casa
+    if (HYBRID is not None and HYBRID.annona.enabled and HYBRID.annona.mode == "read"
+            and destination["outside"]):
+        extra["annona_recorded"] = False
+    return extra
+
+
 def _on_pii_anonymized(n_removed: int) -> None:
     """Metadati della conversazione: guard usato e quanti dati tolti (mai i valori)."""
     st.session_state["pii_guard"] = True
@@ -124,6 +134,7 @@ from ui import (
     inject_scroll_to_bottom,
 )
 from ui.sidebar.kb_panel import render_kb_panel
+from ui.sidebar.annona_panel import render_annona_panel  # v1.16.0 P7
 from ui.sidebar import render_socratic_mode_settings
 
 # 🆕 v1.5.0 - File upload widget
@@ -243,6 +254,7 @@ def add_message(
     sources: list = None,
     attachments: list = None,  # 🆕 v1.5.0
     provider: str = None,  # v1.15.4
+    extra: dict = None,  # v1.16.0 — metadati del guard / di Annona (mai valori)
 ):
     """
     Aggiunge un messaggio alla conversazione e salva.
@@ -259,6 +271,8 @@ def add_message(
     # 🆕 v1.5.0 - Aggiungi attachments se presenti
     if attachments:
         message["attachments"] = attachments
+    if extra:
+        message.update(extra)
     
     st.session_state["messages"].append(message)
     st.session_state["total_tokens_estimate"] += estimate_tokens(content)
@@ -466,6 +480,9 @@ if _kb_stats.get("using_chromadb") and _kb_stats["total_chunks"] > 0:
 
 # 2d. 📚 Gestione KB (modifica/rimozione + bulk-flag)
 render_kb_panel()
+
+# 🧭 v1.16.0 P7 — Annona (solo con hybrid.annona.enabled)
+render_annona_panel(HYBRID)
 
 # 2e. ✅ Usa KB Chat (toggle retrieval)
 _use_chat_kb = st.sidebar.checkbox(
@@ -950,6 +967,7 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                 model=model,
                 sources=sources if sources else None,
                 provider=connection_type,  # v1.15.4
+                extra=_answer_extra(client, destination),  # v1.16.0
             )
             
             # 🆕 v1.5.0 - Pulisci file pending dopo invio
