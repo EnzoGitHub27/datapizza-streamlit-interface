@@ -900,7 +900,7 @@ In tutti i blocchi: niente verso il fornitore, un messaggio chiaro, nessun testo
 - **Il dialogo privacy**, con rizzo-pii attivo, offre **«🛡️ Procedi con anonimizzazione»** al posto di «Procedi comunque».
 - **Il badge** sotto la risposta: «🛡️ N dati tolti prima dell'invio». Il numero si salva con la conversazione e resta ricaricandola.
 - **Il riquadro «👁️ Cosa ha visto il modello»**: il testo com'è partito, con i segnaposto. Vale **solo nella sessione corrente**: non si salva, sparisce con «Nuova» e quando carichi una conversazione.
-- **Che cosa si salva**: la conversazione salvata contiene, come sempre, la tua domanda e la risposta **con i valori veri**, sul tuo computer; in più solo il numero dei dati tolti. La tabella segnaposto → valore **non si salva mai** (né nei log, né nella KB Chat, né nell'export).
+- **Che cosa si salva**: la conversazione salvata contiene, come sempre, la tua domanda e la risposta **con i valori veri**, sul tuo computer; in più solo il numero dei dati tolti. La tabella segnaposto → valore **non si salva mai** (né nei log, né nella KB Chat, né nell'export): vive solo in memoria, per la sessione, e serve a togliere sempre con lo stesso segnaposto i valori già visti (21.7).
 - **La sezione «🧭 Annona»** della sidebar (se Annona è attivata): stato del servizio, ultime decisioni del registro (classe, esito, substrato, regola, motivo: mai il testo) e verifica della catena. Si aggiorna al massimo ogni 20 secondi o con «🔄 Aggiorna». Se Annona è giù la sezione lo dice e l'app procede.
 
 ## 21.6 Il gateway di Annona (sperimentale)
@@ -922,8 +922,8 @@ Da sapere:
 
 ## 21.7 Limiti onesti
 
-- **Pseudonimizzato non è anonimo** (GDPR): la tabella dei valori veri esiste, sul tuo computer, per la durata della chiamata.
-- **Il contesto si perde**: il modello cloud vede `[FULLNAME_1]` e non sa se è un cliente o un fornitore. La numerazione vale dentro una chiamata: `[FULLNAME_1]` di un turno può essere un'altra persona nel turno dopo.
+- **Pseudonimizzato non è anonimo** (GDPR): la tabella dei valori veri esiste, sul tuo computer, **in memoria per tutta la sessione**: si azzera con «Nuova», quando carichi un'altra conversazione e quando chiudi la scheda. Non va mai su disco.
+- **Il contesto si perde**: il modello cloud vede `[FULLNAME_1]` e non sa se è un cliente o un fornitore. Dentro la sessione un valore già tolto riprende sempre lo stesso segnaposto, anche quando rizzo-pii non lo riconoscerebbe più (es. «**Paolo**» in grassetto nel testo del modello, rimandato da «Limiti»). Vale solo per le forme che rizzo-pii ha già tolto così come sono: un diminutivo o un nome storpiato che rizzo-pii non riconosce esce in chiaro.
 - **rizzo-pii lavora bene sul testo italiano, non su codice o testo tecnico**: lì toglie troppo, in modo prudente. Una domanda con codice incollato può tornare piena di segnaposto.
 - **Importi, date e URL** vengono tolti per default: in una domanda tecnica il modello perde informazioni utili. Chi vuole li lascia in chiaro con `exclude_tags` (es. `["AMOUNT", "DATE"]`).
 - **Annona scrive il testo del passo in chiaro nel suo log**: con il gateway, chi ha accesso al computer vede quei file.

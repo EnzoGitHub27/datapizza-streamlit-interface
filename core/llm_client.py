@@ -102,6 +102,7 @@ def create_client(
     temperature: float,
     hybrid: Any = None,
     on_anonymized: Any = None,
+    pii_memory: Any = None,
 ) -> Any:
     """
     Il punto unico verso i modelli (SPEC §3).
@@ -117,6 +118,7 @@ def create_client(
     Args:
         hybrid: HybridSettings (config.hybrid_settings), opzionale
         on_anonymized: callback(n_dati_tolti), opzionale
+        pii_memory: PIISessionMemory della sessione (giro 7b), opzionale
     """
     if hybrid is not None:
         from core.egress import classify_destination
@@ -149,6 +151,7 @@ def create_client(
                 pii=PIIClient(hybrid.pii.url, timeout=hybrid.pii.timeout_s),
                 exclude_tags=hybrid.pii.exclude_tags,
                 on_anonymized=on_anonymized,
+                memory=pii_memory,
             )
 
     return _create_raw_client(

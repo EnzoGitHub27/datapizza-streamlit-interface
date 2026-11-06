@@ -78,7 +78,7 @@ GuardedClient(inner, destination, pii, annona, settings)
 - **La mappa della sessione:** il modello risponde in un formato che `_parse_llm_response` analizza (`ui/socratic/session_map.py`). Il guard per la mappa ripristina **dopo il parsing, campo per campo**, così un valore con caratteri speciali non rompe il formato. Test con un nome inventato con l'apostrofo («Lucia D'Angelo»).
 - **I metadati della conversazione:** al salvataggio, `"pii_guard": true/false` e il conteggio dei dati tolti (`"pii_removed": N`, mai i valori), accanto a `model`, `provider` e `models_used` della 1.15.4.
 - **Niente log di prompt o tabella:** il guard non chiama mai `logging`/`print` con il testo, anonimizzato o no, né con la tabella. Le eccezioni portano solo codici e tipi. Un test controlla i messaggi delle eccezioni.
-- **La cronologia** salvata (`add_message`) contiene i valori veri, perché la risposta è già ripristinata: resta sul computer. A ogni turno si anonimizza di nuovo tutto il `full_prompt`, quindi la numerazione dei segnaposto è coerente **dentro** la chiamata.
+- **La cronologia** salvata (`add_message`) contiene i valori veri, perché la risposta è già ripristinata: resta sul computer. A ogni turno si anonimizza di nuovo tutto il `full_prompt`, quindi la numerazione dei segnaposto è coerente **dentro** la chiamata; dal giro 7b anche **fra le chiamate** della sessione (§6, la memoria dei valori già visti).
 
 ### 3.1 La regola unica: la destinazione reale
 
@@ -181,12 +181,14 @@ system_prompt ─┘                          │
                                                     held → blocco + avviso
                                                  3. client cloud ← solo testo pulito
                                                  4. risposta → StreamRestorer → valori veri, in locale
-                                                 5. tabella buttata a fine chiamata
+                                                 5. tabella unita alla memoria della sessione (solo in RAM)
 ```
 
 **La riga sui segnaposto** (giro 7, dalla prova dal vivo): con il guard, al system prompt si aggiunge `PLACEHOLDER_NOTE` (`core/pii_guard.py`): i segnaposto fra parentesi quadre sono dati tolti di proposito, da usare così come sono, senza commentarli né inventare i valori. Passa da rizzo-pii nella stessa chiamata; gli esempi hanno `_N` e non un numero, quindi il ripristino non la tocca. Senza, il modello commentava i segnaposto e, ripristinata, la frase diventava «l'uso di segnaposto (ad esempio, Mario Rossi)». Vale per tutte le vie che passano dal guard.
 
-La tabella dei segnaposto **non** va nei log, nel registro di Annona, nella cronologia salvata, nella KB Chat né nell'export: vive solo per la durata della chiamata (`AnonymizedText.mapping` ha `repr=False`).
+La tabella dei segnaposto **non** va nei log, nel registro di Annona, nella cronologia salvata, nella KB Chat né nell'export: **vive solo in memoria, per la sessione** (`AnonymizedText.mapping` e `PIISessionMemory` non mostrano valori nel `repr`).
+
+**La memoria dei valori già visti** (giro 7b, dalla prova dei casi di Giacomo: in «Limiti» «Paolo» è uscito in chiaro due volte, perché rizzo-pii alla seconda passata sul testo del modello non l'ha riconosciuto). `core/pii_memory.py`, `PIISessionMemory` in `st.session_state["_pii_memory"]`: i valori veri già tolti con il loro segnaposto. A ogni chiamata verso fuori casa (1) i valori noti si coprono per confronto di testo, dal più lungo al più corto, con confine di parola Unicode, senza toccare i segnaposto già presenti, con un contrassegno temporaneo; (2) rizzo-pii toglie i dati nuovi; (3) i nuovi si rinumerano **dopo** i noti e i contrassegni tornano il segnaposto di prima (un contrassegno perso → blocco); (4) il ripristino usa la tabella unita. Si confrontano solo valori che rizzo-pii ha già tolto così come sono: nessuna associazione inventata («Paolo» da solo si copre solo se rizzo-pii lo ha tolto una volta da solo). Si azzera con «Nuova», con il cambio di conversazione e alla chiusura della sessione; mai su disco.
 
 **Nella UI** (decisioni 4 e 9): con rizzo-pii attivo il dialogo privacy offre **«Procedi con anonimizzazione»** al posto di «Procedi comunque»; dopo l'invio la risposta porta il badge **«🛡️ N dati tolti prima dell'invio»** (`pii_removed` nel messaggio: si salva e resta ricaricando) e un riquadro richiudibile **«cosa ha visto il modello»** con il testo com'è partito, segnaposto compresi (con il gateway: l'`egress` di Annona). **Confermato da Gilles (giro 5b):** il riquadro vale solo nella sessione corrente (`egress_views` in memoria, svuotato con «Nuova» e al caricamento di una conversazione) e non si salva. La tabella dei valori veri non si salva mai. Senza rizzo-pii, il dialogo di oggi.
 
@@ -279,12 +281,12 @@ Lo stesso vale per la richiesta della strada C ad Akaion e per le segnalazioni e
 
 ## 11. Limiti onesti
 
-- **Pseudonimizzato non è anonimo** (GDPR): la tabella esiste, sul computer, per la durata della chiamata.
+- **Pseudonimizzato non è anonimo** (GDPR): la tabella esiste, sul computer, in memoria per tutta la sessione (giro 7b).
 - **rizzo-pii lavora bene su testo italiano**, non su codice o testo tecnico: lì toglie troppo (in modo prudente). Un prompt con codice incollato può tornare pieno di segnaposto.
 - **rizzo-pii toglie per default anche importi, date e URL:** in una domanda tecnica («il bonifico del 12/06 di € 1.200») il modello perde informazioni utili. Per default non si lascia in chiaro nessun tag (decisione 7); chi vuole aggiunge `AMOUNT` o `DATE` a `exclude_tags`.
 - **Il contesto si perde:** il modello cloud vede `[FULLNAME_1]`, non sa se è un cliente o un fornitore. Va detto nella UI.
 - **Annona scrive il testo del passo in chiaro nel suo log** (`logs/annona.log`) e il `payload_digest` del registro non ha sale: con la strada A, chi ha accesso al computer vede quei file.
-- **La numerazione** dei segnaposto vale dentro una chiamata: `[FULLNAME_1]` di un turno può essere un'altra persona nel turno dopo, se cambia l'ordine nel testo. Il modello cloud non lo sa.
+- **La numerazione** dei segnaposto, dal giro 7b, resta la stessa per tutta la sessione: un valore già tolto riprende il suo segnaposto. Vale solo per i valori che rizzo-pii ha tolto almeno una volta così come sono: una forma nuova che rizzo-pii non riconosce (un diminutivo, un nome storpiato dal modello) esce in chiaro.
 - **Le prestazioni:** rizzo-pii gira sul processore; con la cronologia lunga ogni turno anonimizza di nuovo tutto. Da misurare.
 
 ---
