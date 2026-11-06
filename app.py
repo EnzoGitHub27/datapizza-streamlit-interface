@@ -63,7 +63,7 @@ from core import (
     conversation_models,  # v1.15.4
     delete_conversation,  # v1.16.0
 )
-from core.conversation import mark_send_failed, classify_send_error  # v1.16.0
+from core.conversation import mark_send_failed, classify_send_error, SEND_EMPTY  # v1.16.0
 
 # 🆕 v1.5.0 - File processors
 from core.file_processors import get_attachment_names
@@ -1110,7 +1110,9 @@ Cita sempre le fonti quando usi informazioni dai documenti.
             msgs = st.session_state.get("messages", [])
             if (_sent_index is not None and _sent_index == len(msgs) - 1
                     and msgs[_sent_index].get("role") == "user"):
-                mark_send_failed(msgs[_sent_index], classify_send_error(e, _stream_started), e)
+                _status = (SEND_EMPTY if isinstance(e, annona_bridge.AnnonaGatewayEmpty)  # giro 7b
+                           else classify_send_error(e, _stream_started))
+                mark_send_failed(msgs[_sent_index], _status, e)
                 if st.session_state.get("auto_save_enabled", True):
                     _save_current_conversation()
                 st.rerun()

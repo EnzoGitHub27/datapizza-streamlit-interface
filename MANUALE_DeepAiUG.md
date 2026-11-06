@@ -918,7 +918,8 @@ Da sapere:
 - la domanda arriva ad Annona **in chiaro**, su loopback: la redazione la fa Annona secondo la sua policy, non rizzo-pii;
 - se Annona è giù, senza policy, in errore, o trattiene il passo (`held`), **non parte niente** e la domanda resta in chat segnata «non inviata»;
 - bottoni socratici, nudge e mappa della sessione **non passano da Annona**: con rizzo-pii acceso passano da rizzo-pii, con rizzo-pii spento si bloccano (21.4);
-- in casa il gateway non si usa: resta il client di sempre.
+- in casa il gateway non si usa: resta il client di sempre;
+- **Annona 0.1.3 offre sempre gli strumenti al modello** (per esempio `explorer`): `/api/kernel/ask` non ha un campo per toglierli, e anche il profilo `read-nothing` li nega senza toglierli. Un modello piccolo (nella prova `llama3.2:3b`) può tentare uno strumento invece di rispondere: Annona lo trattiene e il testo resta vuoto. La domanda resta in chat con l'avviso **«🧭 Senza risposta»**, che dice quale strumento il modello ha tentato (solo il nome, mai percorsi). Rimedi: un modello più capace nella policy di Annona, oppure la strada senza gateway (rizzo-pii con il client dell'Interface).
 
 ## 21.7 Limiti onesti
 
