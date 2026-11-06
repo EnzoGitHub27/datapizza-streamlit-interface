@@ -6,7 +6,7 @@ from datetime import datetime
 import streamlit as st
 
 from config import EXPORT_FORMATS, CONTENT_OPTIONS
-from core import list_saved_conversations, estimate_conversation_tokens
+from core import list_saved_conversations, estimate_conversation_tokens, conversation_models
 from export import (
     get_messages_for_export,
     export_to_markdown,
@@ -15,6 +15,16 @@ from export import (
     export_to_pdf,
     create_batch_export_zip,
 )
+
+
+def _answered(messages) -> dict:
+    """Modello e provider dell'ultima risposta; la sidebar solo di ripiego (v1.15.4)."""
+    found = conversation_models(
+        messages,
+        st.session_state.get("current_model", ""),
+        st.session_state.get("connection_type", ""),
+    )
+    return {"model": found["model"], "provider": found["provider"]}
 
 
 def render_export_section():
@@ -95,8 +105,7 @@ def _generate_and_download(
         "conversation_id": conv_id,
         "created_at": st.session_state.get("conversation_created_at", ""),
         "last_updated": datetime.now().isoformat(),
-        "model": st.session_state.get("current_model", ""),
-        "provider": st.session_state.get("connection_type", ""),
+        **_answered(messages),  # v1.15.4: chi ha risposto, non la sidebar
         "tokens": estimate_conversation_tokens(messages)
     }
     
@@ -193,8 +202,7 @@ def render_export_preview():
         "conversation_id": conv_id,
         "created_at": st.session_state.get("conversation_created_at", ""),
         "last_updated": datetime.now().isoformat(),
-        "model": st.session_state.get("current_model", ""),
-        "provider": st.session_state.get("connection_type", ""),
+        **_answered(messages),  # v1.15.4: chi ha risposto, non la sidebar
         "tokens": estimate_conversation_tokens(messages)
     }
     

@@ -44,6 +44,7 @@ from .conversation import (
     generate_conversation_id,
     build_rag_prompt,
     format_time_from_iso,
+    conversation_models,
 )
 
 __all__ = [
@@ -82,4 +83,5 @@ __all__ = [
     "generate_conversation_id",
     "build_rag_prompt",
     "format_time_from_iso",
+    "conversation_models",  # v1.15.4
 ]

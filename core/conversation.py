@@ -10,7 +10,8 @@ def create_message(
     role: str, 
     content: str, 
     model: str = None, 
-    sources: List[str] = None
+    sources: List[str] = None,
+    provider: str = None,  # v1.15.4
 ) -> Dict[str, Any]:
     """
     Crea un nuovo messaggio strutturato.
@@ -20,6 +21,7 @@ def create_message(
         content: Contenuto del messaggio
         model: Nome modello (per risposte assistant)
         sources: Lista fonti RAG (opzionale)
+        provider: Tipo di connessione che ha risposto (v1.15.4, per assistant)
         
     Returns:
         Dizionario messaggio
@@ -32,6 +34,8 @@ def create_message(
     
     if role == "assistant" and model:
         message["model"] = model
+    if role == "assistant" and provider:
+        message["provider"] = provider
     
     if sources:
         message["sources"] = sources
@@ -157,3 +161,36 @@ def format_time_from_iso(iso_timestamp: str) -> str:
         return datetime.fromisoformat(iso_timestamp).strftime("%H:%M:%S")
     except:
         return ""
+
+
+def conversation_models(
+    messages: List[Dict[str, Any]],
+    fallback_model: str = "",
+    fallback_provider: str = "",
+) -> Dict[str, Any]:
+    """
+    Modello e provider che hanno risposto davvero (v1.15.4).
+
+    - model/provider: quelli dell'ultima risposta dell'assistente che ha
+      `model`. Se quel messaggio non ha `provider` (chat salvate prima della
+      v1.15.4), il provider di ripiego si usa solo se il suo modello è lo
+      stesso; altrimenti resta "" (meglio vuoto che sbagliato).
+    - models_used: i modelli delle risposte, in ordine, senza doppioni.
+    - Senza risposte con `model`: il ripiego (sidebar o testata del file).
+    """
+    used: List[str] = []
+    last: Optional[Dict[str, Any]] = None
+    for msg in messages or []:
+        if msg.get("role") != "assistant" or not msg.get("model"):
+            continue
+        last = msg
+        if msg["model"] not in used:
+            used.append(msg["model"])
+
+    if last is None:
+        return {"model": fallback_model or "", "provider": fallback_provider or "", "models_used": []}
+
+    provider = last.get("provider") or (
+        fallback_provider if last["model"] == fallback_model else ""
+    )
+    return {"model": last["model"], "provider": provider or "", "models_used": used}
