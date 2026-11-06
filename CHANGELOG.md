@@ -22,6 +22,11 @@ Ambiente ibrido, **opzionale e spento per default** (sezione `hybrid:` di `secur
 ### Cambiato
 - **La destinazione reale** (`core/egress.py`, `classify_destination()`): blocchi di KB, KB Chat, allegati e immagini, anonimizzazione, dialogo privacy, icone 🔒, bordo e titolo guardano dove va davvero il testo, non l'etichetta. Cloud OpenAI/Anthropic/Google sempre fuori casa; loopback, LAN e Tailscale in casa; **un Remote host su IP pubblico ora si comporta come il cloud** (prima riceveva KB e allegati con il solo banner «Host esterno»), anche con l'ibrido spento; nel dubbio (nome non risolvibile, URL rotto) si blocca
 
+### Corretto (dalla prova dal vivo, giro 6)
+- **Il testo rimesso nella casella dopo un blocco ci resta** (`app.py`): prima spariva al primo rerun, anche per un'azione nella sidebar, e «Invia» partiva a vuoto. Ora la casella ha una chiave e il testo resta finché non invii di nuovo o non la svuoti tu; lo rimettono anche i blocchi prima dell'invio (modello, chiave, KB fuori casa, URL bloccato, configurazione ibrida illeggibile)
+- **La domanda bloccata non resta nella stima dei token**: tolta dalla chat, esce anche dal contatore «🪙 Token»
+- **Niente chiamate a huggingface.co all'avvio con il modello già sul disco** (`rag/embeddings.py`, `load_sentence_transformer()`): prima `SentenceTransformer` faceva oltre trenta richieste a ogni avvio; ora dalla cache si carica con `local_files_only=True` e si va in rete solo al primo uso o con la cache incompleta, con una riga nel terminale. Test: `test_restore_input`, `test_embeddings_offline`
+
 ### Limiti
 - **Pseudonimizzato non è anonimo** (GDPR): la tabella dei valori veri esiste sul computer durante la chiamata
 - **Il contesto si perde**: il modello vede `[FULLNAME_1]`, non chi è; la numerazione vale dentro una chiamata
