@@ -32,6 +32,8 @@ from .kb_chat_indexer import (
     reindex_all_chat_kb,
     get_chunks_per_chat,
     load_chat_kb_meta,
+    delete_conversation_and_kb,
+    remove_orphan_chats_from_kb,
 )
 
 from .conversation import (
@@ -70,6 +72,8 @@ __all__ = [
     "reindex_all_chat_kb",
     "get_chunks_per_chat",
     "load_chat_kb_meta",
+    "delete_conversation_and_kb",  # v1.15.4
+    "remove_orphan_chats_from_kb",  # v1.15.4
     # Conversation
     "create_message",
     "get_conversation_history",

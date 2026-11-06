@@ -14,7 +14,13 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 
 from config import KNOWLEDGE_BASE_DIR
-from core.persistence import get_kb_metadata, list_saved_conversations, load_conversation
+from core.persistence import (
+    delete_conversation,
+    get_conversation_filename,
+    get_kb_metadata,
+    list_saved_conversations,
+    load_conversation,
+)
 from rag.embeddings import (
     get_embedding_function,
     get_embeddings_helper,
@@ -273,6 +279,60 @@ def _remove_by_chat_id(collection, chat_id: str) -> bool:
         return False
 
 
+def delete_conversation_and_kb(chat_id: str) -> Dict[str, Any]:
+    """
+    v1.15.4 — Elimina una conversazione salvata E i suoi chunk dalla KB Chat.
+
+    Prima si tolgono i chunk, poi il file: se il file sparisse per primo, la
+    chat non comparirebbe più nel pannello di gestione e i suoi pezzi
+    resterebbero recuperabili dalla ricerca senza modo di toglierli.
+
+    Returns:
+        Dict con file_deleted (bool), kb_chunks_removed (int) e kb_ok (bool:
+        False se ChromaDB c'è ma la rimozione è fallita).
+    """
+    removed = 0
+    kb_ok = True
+    _, collection = _get_chroma_collection()
+    if collection is not None:
+        try:
+            existing = collection.get(where={"chat_id": chat_id})
+            removed = len(existing["ids"]) if existing and existing.get("ids") else 0
+        except Exception:
+            removed = 0
+        kb_ok = _remove_by_chat_id(collection, chat_id)
+        if not kb_ok:
+            removed = 0
+    file_deleted = delete_conversation(chat_id)
+    return {"file_deleted": file_deleted, "kb_chunks_removed": removed, "kb_ok": kb_ok}
+
+
+def remove_orphan_chats_from_kb() -> List[str]:
+    """
+    v1.15.4 — Toglie dalla KB Chat i chunk delle chat che non devono più starci:
+    file della conversazione eliminato, oppure includi_in_kb disattivato.
+
+    Returns:
+        Lista dei chat_id rimossi.
+    """
+    _, collection = _get_chroma_collection()
+    if collection is None:
+        return []
+    removed: List[str] = []
+    for chat_id in get_chunks_per_chat():
+        # Prudente: si decide chat per chat guardando il file, non una lista
+        # che in caso d'errore tornerebbe vuota (e svuoterebbe tutta la KB).
+        if not get_conversation_filename(chat_id).exists():
+            orphan = True
+        else:
+            data = load_conversation(chat_id)
+            # file illeggibile → nel dubbio si tiene
+            orphan = data is not None and not get_kb_metadata(data).get("includi_in_kb")
+        if orphan and _remove_by_chat_id(collection, chat_id):
+            removed.append(chat_id)
+    return removed
+
+
 def get_kb_chat_stats() -> Dict[str, Any]:
     """
     Statistiche della collection chat-KB.
@@ -424,8 +484,11 @@ def reindex_all_chat_kb(progress_callback=None) -> Dict[str, int]:
         progress_callback: Opzionale callback(status: str, progress: float)
 
     Returns:
-        Dict con chats_indexed e total_chunks.
+        Dict con chats_indexed, total_chunks e orphans_removed (v1.15.4).
     """
+    # v1.15.4 — prima via le chat orfane (eliminate o non più flaggate)
+    orphans = remove_orphan_chats_from_kb()
+
     # Lista tutte le conversazioni salvate
     conversations = list_saved_conversations()
     kb_conversations = [
@@ -473,4 +536,8 @@ def reindex_all_chat_kb(progress_callback=None) -> Dict[str, int]:
         "total_chunks": total_chunks,
     })
 
-    return {"chats_indexed": chats_indexed, "total_chunks": total_chunks}
+    return {
+        "chats_indexed": chats_indexed,
+        "total_chunks": total_chunks,
+        "orphans_removed": len(orphans),
+    }
