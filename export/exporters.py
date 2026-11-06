@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 from config import VERSION, CONTENT_OPTIONS
-from core import load_conversation, get_conversation_filename
+from core import load_conversation, get_conversation_filename, conversation_models
 
 
 def get_messages_for_export(
@@ -255,8 +255,10 @@ def create_batch_export_zip(
                     "conversation_id": conv_id,
                     "created_at": data.get("created_at", ""),
                     "last_updated": data.get("last_updated", ""),
-                    "model": data.get("model", ""),
-                    "provider": data.get("provider", ""),
+                    # v1.15.4: dai messaggi, la testata solo di ripiego
+                    **{k: v for k, v in conversation_models(
+                        messages, data.get("model") or "", data.get("provider") or ""
+                    ).items() if k in ("model", "provider")},
                     "tokens": data.get("stats", {}).get("tokens_estimate", 0)
                 }
                 

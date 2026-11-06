@@ -60,6 +60,7 @@ from core import (
     search_chat_kb,
     reindex_all_chat_kb,
     get_kb_chat_stats,
+    conversation_models,  # v1.15.4
 )
 
 # 🆕 v1.5.0 - File processors
@@ -216,7 +217,8 @@ def add_message(
     content: str, 
     model: str = None, 
     sources: list = None,
-    attachments: list = None  # 🆕 v1.5.0
+    attachments: list = None,  # 🆕 v1.5.0
+    provider: str = None,  # v1.15.4
 ):
     """
     Aggiunge un messaggio alla conversazione e salva.
@@ -228,7 +230,7 @@ def add_message(
         sources: Fonti RAG (opzionale)
         attachments: Nomi file allegati (opzionale) 🆕
     """
-    message = create_message(role, content, model, sources)
+    message = create_message(role, content, model, sources, provider=provider)
     
     # 🆕 v1.5.0 - Aggiungi attachments se presenti
     if attachments:
@@ -242,12 +244,19 @@ def add_message(
 
 def _save_current_conversation():
     """Salva la conversazione corrente su disco."""
+    # v1.15.4: in testata chi ha risposto per ultimo, non la sidebar di adesso
+    answered = conversation_models(
+        st.session_state["messages"],
+        st.session_state.get("current_model", ""),
+        st.session_state.get("connection_type", ""),
+    )
     save_conversation(
         conversation_id=st.session_state["conversation_id"],
         created_at=st.session_state["conversation_created_at"],
         messages=st.session_state["messages"],
-        model=st.session_state.get("current_model", ""),
-        provider=st.session_state.get("connection_type", ""),
+        model=answered["model"],
+        provider=answered["provider"],
+        models_used=answered["models_used"],
         tokens_estimate=st.session_state.get("total_tokens_estimate", 0),
         kb_settings={
             "use_knowledge_base": st.session_state.get("use_knowledge_base", False),
@@ -878,7 +887,8 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                 "assistant",
                 response_text,
                 model=model,
-                sources=sources if sources else None
+                sources=sources if sources else None,
+                provider=connection_type,  # v1.15.4
             )
             
             # 🆕 v1.5.0 - Pulisci file pending dopo invio
