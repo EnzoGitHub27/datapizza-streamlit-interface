@@ -28,6 +28,20 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 
 ---
 
+## 🛡️ Ambiente ibrido (v1.16.0, non ancora rilasciata)
+
+Sul ramo di sviluppo c'è un **ambiente ibrido**, **opzionale e spento per default**: prima che il testo vada a un modello cloud, **rizzo-pii** (un programma locale e separato) sostituisce i dati personali con segnaposto come `[FULLNAME_1]`; la risposta torna con i valori veri, rimessi **sul tuo computer**. Se rizzo-pii non risponde, verso il cloud non parte niente. Facoltativo, **Annona** mostra nella sidebar le sue decisioni e il suo registro; il suo gateway è sperimentale.
+
+- Si accende con la sezione `hybrid:` di `security_settings.yaml`; rizzo-pii e Annona si installano **a parte**, seguendo i loro README (licenze nel file [NOTICE](NOTICE)).
+- **Novità anche con l'ibrido spento:** un **Remote host su un IP pubblico ora si comporta come il cloud** (KB, KB Chat, allegati e immagini bloccati).
+- Pseudonimizzato non è anonimo, e il modello perde il contesto dei dati tolti: i limiti sono nel Capitolo 21 di [MANUALE_DeepAiUG.md](MANUALE_DeepAiUG.md) e in `docs/SPEC_v1.16.0_hybrid.md`.
+
+> Ho un ruolo non retribuito di Technical Advisor in Akaion, che sviluppa Annona. Annona è opzionale e spenta per default; l'ambiente ibrido funziona anche solo con rizzo-pii, che non ha legami con Akaion.
+>
+> — Vincenzo Iodice (Gilles)
+
+---
+
 ## ✨ Features
 
 - 🤖 **Multi-provider**: Ollama (locale), Remote host, Cloud (OpenAI, Anthropic, Google)
@@ -573,6 +587,7 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
+| v1.16.0 | 🛡️ Ambiente ibrido — rizzo-pii prima del cloud, letture di Annona, destinazione reale (opzionale, spento per default) | 🚧 |
 | v1.15.4 | 🧩 Correzioni — blocchi di codice copiati interi, «Elimina» pulisce la KB Chat, file LICENSE, manuale allineato | ✅ |
 | v1.15.3 | 👁️ Vision local-only — immagini allegate inviate ai modelli vision (LLaVA/Moondream), mai su cloud | ✅ |
 | v1.15.2 | 🔒 Security Audit — SSRF, cloud-block esteso a KB Chat, banner onesti, hardening | ✅ |
