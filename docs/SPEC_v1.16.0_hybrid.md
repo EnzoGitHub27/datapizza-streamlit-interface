@@ -186,7 +186,7 @@ system_prompt ─┘                          │
 
 La tabella dei segnaposto **non** va nei log, nel registro di Annona, nella cronologia salvata, nella KB Chat né nell'export: vive solo per la durata della chiamata (`AnonymizedText.mapping` ha `repr=False`).
 
-**Nella UI** (decisioni 4 e 9): con rizzo-pii attivo il dialogo privacy offre **«Procedi con anonimizzazione»** al posto di «Procedi comunque»; dopo l'invio la risposta porta il badge **«🛡️ N dati tolti prima dell'invio»** (`pii_removed` nel messaggio: si salva e resta ricaricando) e un riquadro richiudibile **«cosa ha visto il modello»** con il testo com'è partito, segnaposto compresi (con il gateway: l'`egress` di Annona). **Scelta dell'Hub, da confermare:** il riquadro vale solo nella sessione corrente (`egress_views` in memoria, svuotato con «Nuova» e al caricamento di una conversazione) e non si salva. La tabella dei valori veri non si salva mai. Senza rizzo-pii, il dialogo di oggi.
+**Nella UI** (decisioni 4 e 9): con rizzo-pii attivo il dialogo privacy offre **«Procedi con anonimizzazione»** al posto di «Procedi comunque»; dopo l'invio la risposta porta il badge **«🛡️ N dati tolti prima dell'invio»** (`pii_removed` nel messaggio: si salva e resta ricaricando) e un riquadro richiudibile **«cosa ha visto il modello»** con il testo com'è partito, segnaposto compresi (con il gateway: l'`egress` di Annona). **Confermato da Gilles (giro 5b):** il riquadro vale solo nella sessione corrente (`egress_views` in memoria, svuotato con «Nuova» e al caricamento di una conversazione) e non si salva. La tabella dei valori veri non si salva mai. Senza rizzo-pii, il dialogo di oggi.
 
 **RAG e upload verso fuori casa restano bloccati nella 1.16.0**, anche con rizzo-pii attivo (decisione 3): lo sblocco si valuta in una 1.16.x, dopo aver misurato rizzo-pii sui documenti veri.
 
@@ -230,11 +230,14 @@ hybrid:
 | Annona spento o senza policy (`AnnonaUnavailable`), modo `read` | si procede, la sidebar dice «Annona non risponde» | si procede **solo se** rizzo-pii ha pulito il testo; la sidebar dice che il passo **non è registrato** |
 | Annona spento, modo `gateway` | si procede col client dell'Interface | **si blocca**: chi ha scelto il gateway ha scelto che decida Annona |
 | Annona risponde `held` | — | si blocca e si mostra `placement.reason` |
+| **gateway acceso, chiamate che non passano da Annona** (bottoni socratici, nudge, generazione e rigenerazione della mappa, mappa progressiva) | col client dell'Interface, come sempre | con rizzo-pii acceso **passano dal guard**; con rizzo-pii spento **si bloccano**: «Con il gateway di Annona, questa funzione verso il cloud richiede rizzo-pii» (giro 5b, decisione di Gilles). Il blocco lo mette `create_client` (`GatewayBlockedClient`): al cloud non parte niente, la chat non si tocca |
 | `MediaBlock` (immagine) verso fuori casa | — | errore, sempre (ADR-0001) |
 | immagine verso un **Remote host su IP pubblico** | — | **bloccata** come verso il cloud: l'upload è disattivato e nessun `MediaBlock` parte (§3.1, decisione 5). Anche con l'ibrido spento, dal giro 3 |
 | **errore del cloud** (chiave sbagliata, rete, 4xx/5xx del fornitore) | — | **l'errore resta visibile in chat accanto alla domanda**, segnata «non inviata» (non è partita) o «rifiutata» (il fornitore ha risposto con un errore), anche dopo il rerun (decisione 11). Con rizzo-pii acceso anche un invio rifiutato era già anonimizzato. Nessun controllo preventivo della chiave |
 
 In tutti i blocchi: nessun byte verso il fornitore, un `st.error` chiaro, nessun testo dell'utente nei log.
+
+*La risposta interrotta (giro 5b, decisione di Gilles):* se lo streaming si interrompe a metà, la parte già arrivata **non si salva**; la domanda resta in chat con l'errore accanto, come nella riga «errore del cloud» qui sopra.
 
 *Il comportamento della 1.15.4 sull'errore del cloud (giro 2c):* la domanda è salvata **prima** della chiamata al modello; un'eccezione mostra «❌ Errore: …» sotto il modulo, senza rerun; al rerun successivo l'errore sparisce e la domanda resta senza risposta. È questo che la riga sopra corregge.
 
@@ -298,6 +301,8 @@ Lo stesso vale per la richiesta della strada C ad Akaion e per le segnalazioni e
 
 **Dal giro 5:** `tests/test_annona_panel.py` (Annona finta accesa, spenta, senza policy; catena valida e rotta; il registro senza testo; «non registrato in Annona»), `tests/test_annona_gateway.py` (risposta, `held`, giù, errore, annullato; app: client dell'Interface mai chiamato fuori casa, usato in casa), `tests/test_pii_badge.py` (badge e riquadro con il guard, assenti con l'ibrido spento e in casa, riquadro solo nella sessione, gateway con l'`egress` di Annona; nei file salvati il conteggio sì, segnaposto e tabella no).
 
+**Dal giro 5b:** `tests/test_gateway_side_calls.py` (con il gateway acceso e la destinazione fuori casa: bottoni socratici, nudge, generazione e rigenerazione della mappa, mappa progressiva dopo la risposta; con rizzo-pii acceso al cloud vanno i segnaposto, con rizzo-pii spento al cloud non arriva niente e si vede il messaggio di blocco; in casa e in modo `read` nulla cambia).
+
 **Il piano iniziale (P6), coperto dai test qui sopra:**
 1. `GuardedClient`: stringa e lista di blocchi; `system_prompt` e prompt in **una** chiamata a rizzo-pii (stessa numerazione); `invoke` → oggetto con `.text`; `MediaBlock` verso fuori casa → errore; destinazione da `classify_destination`; mappa della sessione ripristinata dopo il parsing («Lucia D'Angelo»); nessun log di prompt o tabella.
 2. Tutte e quattro le vie della §2.2 passano dal guard (test che fallisce se una chiamata arriva al client vero senza guard).
@@ -324,6 +329,10 @@ Lo stesso vale per la richiesta della strada C ad Akaion e per le segnalazioni e
 | 9 | La UI | **Il badge** «🛡️ N dati tolti prima dell'invio» e un riquadro richiudibile **«cosa ha visto il modello»** con il testo anonimizzato; la tabella dei valori veri non si salva mai (§6). |
 | 10 | NOTICE e AGPL | `LICENSE` dalla 1.15.4; `NOTICE` dal giro 3. Il punto AGPL si chiede per iscritto all'autore di rizzo-pii; intanto l'Interface non distribuisce né scarica i binari di rizzo-pii (§9). |
 | 11 | Gli errori del cloud (prove del 06/11) | **L'errore resta visibile** in chat accanto alla domanda, segnata «non inviata» o «rifiutata». Con rizzo-pii acceso anche un invio rifiutato è già anonimizzato. Niente controllo preventivo della chiave (§8). |
+
+| 12 | Il buco del gateway (giro 5b) | Con il gateway acceso, le chiamate che non passano da Annona verso fuori casa **passano dal guard** se rizzo-pii è acceso, **si bloccano** se è spento (§8). |
+| 13 | Il riquadro «cosa ha visto il modello» | **Solo nella sessione corrente**, non si salva (§6). |
+| 14 | La risposta interrotta | **Non si salva** (§8). |
 
 **Confermato (giro 4):** la regola unica della destinazione reale (§3.1); gli avvisi riallineati alla stessa regola; `apply_to` tolto dalla configurazione.
 

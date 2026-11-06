@@ -110,15 +110,30 @@ def create_client(
     in casa: il client di sempre (_create_raw_client), identico alla 1.15.4.
     Con rizzo-pii acceso e la destinazione fuori casa (core.egress):
     GuardedClient, che anonimizza prima dell'invio e ripristina in locale.
+    Con il gateway di Annona acceso, rizzo-pii spento e la destinazione fuori
+    casa: GatewayBlockedClient, che non manda niente (le chiamate laterali
+    non passano da Annona e andrebbero al cloud in chiaro).
 
     Args:
         hybrid: HybridSettings (config.hybrid_settings), opzionale
         on_anonymized: callback(n_dati_tolti), opzionale
     """
-    if hybrid is not None and getattr(hybrid.pii, "enabled", False):
+    if hybrid is not None:
         from core.egress import classify_destination
 
-        if classify_destination(connection_type, provider, base_url)["outside"]:
+        pii_on = bool(getattr(hybrid.pii, "enabled", False))
+        annona = getattr(hybrid, "annona", None)
+        gateway_on = bool(annona is not None and getattr(annona, "enabled", False)
+                          and getattr(annona, "mode", "read") == "gateway")
+        if (pii_on or gateway_on) and classify_destination(
+                connection_type, provider, base_url)["outside"]:
+            if not pii_on:
+                # giro 5b — col gateway acceso, le chiamate che non passano da
+                # Annona non vanno al cloud in chiaro: senza rizzo-pii si bloccano
+                from core.pii_guard import GatewayBlockedClient
+
+                return GatewayBlockedClient()
+
             from core.pii_client import PIIClient
             from core.pii_guard import GuardedClient
 

@@ -380,6 +380,19 @@ def get_socratic_client(connection_type, provider, api_key, model, base_url, tem
     except Exception:
         return None
 
+
+def _analyze_session_map(invoke_fn):
+    """v1.16.0 giro 5b — la mappa della sessione; se non può partire verso fuori
+    casa (guard o gateway senza rizzo-pii) lo dice nella sidebar, senza toccare
+    la chat."""
+    try:
+        return SessionMapAnalyzer.analyze(
+            st.session_state["messages"], invoke_fn, st.session_state["conversation_id"]
+        )
+    except PIIGuardBlocked as exc:
+        st.session_state["_side_call_notice"] = str(exc)
+        return None
+
 # ============================================================================
 # SIDEBAR — v1.12.0 Architettura Sidebar
 # ============================================================================
@@ -537,11 +550,7 @@ if (
         )
         if socratic_client_nudge is not None:
             with st.sidebar.spinner("📊 Costruendo mappa sessione..."):
-                session_map = SessionMapAnalyzer.analyze(
-                    st.session_state["messages"],
-                    socratic_client_nudge.invoke,
-                    st.session_state["conversation_id"],
-                )
+                session_map = _analyze_session_map(socratic_client_nudge.invoke)
                 if session_map is not None:
                     st.session_state["session_map_data"] = session_map
                     st.rerun()
@@ -558,11 +567,7 @@ if (
         )
         if socratic_client_gen is not None:
             with st.sidebar.spinner("📊 Generando mappa sessione..."):
-                session_map = SessionMapAnalyzer.analyze(
-                    st.session_state["messages"],
-                    socratic_client_gen.invoke,
-                    st.session_state["conversation_id"],
-                )
+                session_map = _analyze_session_map(socratic_client_gen.invoke)
                 if session_map is not None:
                     st.session_state["session_map_data"] = session_map
                     st.rerun()
@@ -579,14 +584,15 @@ if st.session_state.get("session_map_data") is not None:
         )
         if socratic_client_regen is not None:
             with st.sidebar.spinner("📊 Rigenerando mappa sessione..."):
-                session_map = SessionMapAnalyzer.analyze(
-                    st.session_state["messages"],
-                    socratic_client_regen.invoke,
-                    st.session_state["conversation_id"],
-                )
+                session_map = _analyze_session_map(socratic_client_regen.invoke)
                 if session_map is not None:
                     st.session_state["session_map_data"] = session_map
                     st.rerun()
+
+# v1.16.0 giro 5b — una mappa che non è potuta partire lo dice qui
+_side_notice = st.session_state.pop("_side_call_notice", None)
+if _side_notice:
+    st.sidebar.error(_side_notice)
 
 # 4. 🧠 Modalità Socratica (aperta)
 socratic_mode = render_socratic_mode_settings()
@@ -1038,11 +1044,7 @@ Cita sempre le fonti quando usi informazioni dai documenti.
 
             if map_mode == "progressive" and n_domande >= SESSION_MAP_PROGRESSIVE_VISIBLE_AFTER:
                 # Modalità progressiva: aggiorna mappa dopo ogni risposta
-                session_map = SessionMapAnalyzer.analyze(
-                    st.session_state["messages"],
-                    client.invoke,
-                    st.session_state["conversation_id"],
-                )
+                session_map = _analyze_session_map(client.invoke)
                 if session_map is not None:
                     st.session_state["session_map_data"] = session_map
 
