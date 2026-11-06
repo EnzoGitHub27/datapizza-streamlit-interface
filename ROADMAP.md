@@ -93,7 +93,7 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
    ├─→ v1.15.2 ✅ (2026-07-13)  + 🔒 Security Audit (SSRF, cloud-block, permessi, deps)
    ├─→ v1.15.3 ✅ (2026-08-04)  + 👁️ Vision local-only
    ├─→ v1.15.4 ✅ (2026-11-06)  + 🧩 Correzioni dall'audit pre-1.16.0
-   ├─→ v1.16.0 🚧               + 🛡️ Ambiente ibrido: rizzo-pii prima del cloud, letture di Annona (opzionale, spento per default)
+   ├─→ v1.16.0 ✅ (2026-11-06)  + 🛡️ Ambiente ibrido: rizzo-pii prima del cloud, letture di Annona (opzionale, spento per default)
    ├─→ v1.16.x 📋               + strada C di Annona, prova dal vivo documentata, eventuale sblocco di RAG e upload con rizzo-pii
    │
    └─→ v2.0.0 🎯 (Q2-Q3 2026)   + Semantic Layer + Knowledge Graph
@@ -108,6 +108,21 @@ v1.0.0 ✅ (2026-01-01)          Base interface + Multi-provider
 ---
 
 ## ✅ Completate
+
+### v1.16.0 — Ambiente ibrido ✅
+**Data:** 2026-11-06. Versione minore: funzione nuova, opzionale, spenta per default, nessuna rottura.
+
+- [x] **Destinazione reale** per tutti i blocchi (`core/egress.py`): un Remote host su IP pubblico si comporta come il cloud
+- [x] **rizzo-pii** prima di ogni invio fuori casa (`core/pii_guard.py`, dentro `create_client()`): solo segnaposto verso il cloud, valori veri ripristinati in locale; rizzo-pii giù → niente parte
+- [x] **Annona in sola lettura**: stato, registro e verifica della catena nella sidebar
+- [x] **Gateway di Annona sperimentale**, con le chiamate laterali che passano da rizzo-pii o si bloccano
+- [x] Badge «🛡️ N dati tolti», riquadro «cosa ha visto il modello» (solo nella sessione), errore del cloud visibile accanto alla domanda
+- [x] Prova dal vivo con rizzo-pii vero e OpenAI: solo segnaposto al fornitore, all'andata e al ritorno
+- [x] La riga che spiega i segnaposto al modello (dalla prova dal vivo)
+
+Documentazione: `docs/SPEC_v1.16.0_hybrid.md`, Capitolo 21 di `MANUALE_DeepAiUG.md`
+
+---
 
 ### v1.15.2 — Security Audit ✅
 
@@ -412,29 +427,12 @@ Nessun altro file modificato.
 
 ---
 
-## 🚧 In sviluppo
-
-### v1.16.0 — Ambiente ibrido 🚧
-**Stato:** sul ramo `feat/hybrid-pii-annona`, non ancora rilasciata. Versione minore: funzione nuova, opzionale, spenta per default, nessuna rottura.
-
-- [x] **Destinazione reale** per tutti i blocchi (`core/egress.py`): un Remote host su IP pubblico si comporta come il cloud
-- [x] **rizzo-pii** prima di ogni invio fuori casa (`core/pii_guard.py`, dentro `create_client()`): solo segnaposto verso il cloud, valori veri ripristinati in locale; rizzo-pii giù → niente parte
-- [x] **Annona in sola lettura**: stato, registro e verifica della catena nella sidebar
-- [x] **Gateway di Annona sperimentale**, con le chiamate laterali che passano da rizzo-pii o si bloccano
-- [x] Badge «🛡️ N dati tolti», riquadro «cosa ha visto il modello» (solo nella sessione), errore del cloud visibile accanto alla domanda
-- [ ] Prova dal vivo con rizzo-pii e Annona veri
-- [ ] Cambio di versione e rilascio
-
-Documentazione: `docs/SPEC_v1.16.0_hybrid.md`, Capitolo 21 di `MANUALE_DeepAiUG.md`
+## 📋 Pianificate
 
 ### v1.16.x — dopo la 1.16.0 📋
 - [ ] Strada C di Annona (endpoint `place`), se Akaion la offre
 - [ ] Prova dal vivo documentata
 - [ ] Eventuale sblocco di RAG e upload verso il cloud con rizzo-pii, dopo averlo misurato sui documenti veri
-
----
-
-## 📋 Pianificate
 
 ### v2.0.0 - Preparazione Semantic Layer
 - [ ] Nella sezione «Docker & Deployment»: rizzo-pii e Annona come servizi del `docker-compose` (con la nota AGPL per l'immagine di rizzo-pii)

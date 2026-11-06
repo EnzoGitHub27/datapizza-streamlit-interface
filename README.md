@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.15.4-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.15.4)
+[![Version](https://img.shields.io/badge/version-1.16.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.16.0)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -28,12 +28,13 @@ Istruzioni dettagliate in `installer/INIZIA-QUI.txt`
 
 ---
 
-## 🛡️ Ambiente ibrido (v1.16.0, non ancora rilasciata)
+## 🛡️ Ambiente ibrido (novità v1.16.0)
 
-Sul ramo di sviluppo c'è un **ambiente ibrido**, **opzionale e spento per default**: prima che il testo vada a un modello cloud, **rizzo-pii** (un programma locale e separato) sostituisce i dati personali con segnaposto come `[FULLNAME_1]`; la risposta torna con i valori veri, rimessi **sul tuo computer**. Se rizzo-pii non risponde, verso il cloud non parte niente. Facoltativo, **Annona** mostra nella sidebar le sue decisioni e il suo registro; il suo gateway è sperimentale.
+Dalla 1.16.0 c'è un **ambiente ibrido**, **opzionale e spento per default**: prima che il testo vada a un modello cloud, **rizzo-pii** (un programma locale e separato) sostituisce i dati personali con segnaposto come `[FULLNAME_1]`; la risposta torna con i valori veri, rimessi **sul tuo computer**. Se rizzo-pii non risponde, verso il cloud non parte niente. Facoltativo, **Annona** mostra nella sidebar le sue decisioni e il suo registro; il suo gateway è sperimentale.
 
 - Si accende con la sezione `hybrid:` di `security_settings.yaml`; rizzo-pii e Annona si installano **a parte**, seguendo i loro README (licenze nel file [NOTICE](NOTICE)).
 - **Novità anche con l'ibrido spento:** un **Remote host su un IP pubblico ora si comporta come il cloud** (KB, KB Chat, allegati e immagini bloccati).
+- Provato dal vivo con rizzo-pii vero e OpenAI: al fornitore sono arrivati solo segnaposto, all'andata e al ritorno.
 - Pseudonimizzato non è anonimo, e il modello perde il contesto dei dati tolti: i limiti sono nel Capitolo 21 di [MANUALE_DeepAiUG.md](MANUALE_DeepAiUG.md) e in `docs/SPEC_v1.16.0_hybrid.md`.
 
 > Ho un ruolo non retribuito di Technical Advisor in Akaion, che sviluppa Annona. Annona è opzionale e spenta per default; l'ambiente ibrido funziona anche solo con rizzo-pii, che non ha legami con Akaion.
@@ -61,6 +62,10 @@ Sul ramo di sviluppo c'è un **ambiente ibrido**, **opzionale e spento per defau
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
+
+### 🛡️ Novità v1.16.0 — Ambiente ibrido
+
+rizzo-pii prima del cloud (solo segnaposto al fornitore, valori veri ripristinati sul tuo computer), letture di Annona nella sidebar, gateway di Annona sperimentale, destinazione reale per tutti i blocchi. Opzionale e spento per default: vedi [Ambiente ibrido](#️-ambiente-ibrido-novità-v1160) qui sopra e il CHANGELOG.
 
 ### 👁️ Novità v1.15.3 — Vision local-only
 
@@ -587,7 +592,7 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 
 | Versione | Feature | Stato |
 |----------|---------|-------|
-| v1.16.0 | 🛡️ Ambiente ibrido — rizzo-pii prima del cloud, letture di Annona, destinazione reale (opzionale, spento per default) | 🚧 |
+| v1.16.0 | 🛡️ Ambiente ibrido — rizzo-pii prima del cloud, letture di Annona, destinazione reale (opzionale, spento per default) | ✅ |
 | v1.15.4 | 🧩 Correzioni — blocchi di codice copiati interi, «Elimina» pulisce la KB Chat, file LICENSE, manuale allineato | ✅ |
 | v1.15.3 | 👁️ Vision local-only — immagini allegate inviate ai modelli vision (LLaVA/Moondream), mai su cloud | ✅ |
 | v1.15.2 | 🔒 Security Audit — SSRF, cloud-block esteso a KB Chat, banner onesti, hardening | ✅ |

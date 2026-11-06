@@ -5,13 +5,13 @@
 | | |
 |---|---|
 | **Prodotto** | DeepAiUG Chat 🧠 |
-| **Versione documentata** | v1.15.4 (+ Capitolo 21: ambiente ibrido della v1.16.0, non ancora rilasciata) |
+| **Versione documentata** | v1.16.0 |
 | **Data manuale** | 2026-11-06 |
 | **Repository** | https://github.com/EnzoGitHub27/datapizza-streamlit-interface |
 | **Licenza** | MIT |
 | **Autore progetto** | Vincenzo Iodice (EnzoGitHub27) — community DeepAiUG |
 
-> Questo manuale è stato generato analizzando il codice sorgente in sola lettura. Documenta esclusivamente le funzionalità effettivamente presenti nella versione 1.15.4; le funzionalità pianificate per v2.0.0 (Semantic Layer, Knowledge Graph, Docker, API REST, journaling riflessivo) **non** sono trattate perché non ancora implementate.
+> Questo manuale è stato generato analizzando il codice sorgente in sola lettura. Documenta esclusivamente le funzionalità effettivamente presenti nella versione 1.16.0; le funzionalità pianificate per v2.0.0 (Semantic Layer, Knowledge Graph, Docker, API REST, journaling riflessivo) **non** sono trattate perché non ancora implementate.
 
 ---
 
@@ -42,7 +42,7 @@
 - [Capitolo 18 — Gestione delle conversazioni](#capitolo-18--gestione-delle-conversazioni)
 - [Capitolo 19 — Esportazione](#capitolo-19--esportazione)
 - [Capitolo 20 — Privacy: come DeepAiUG protegge i tuoi dati](#capitolo-20--privacy-come-deepaiug-protegge-i-tuoi-dati)
-- [Capitolo 21 — L'ambiente ibrido: rizzo-pii e Annona (v1.16.0, non ancora rilasciata)](#capitolo-21--lambiente-ibrido-rizzo-pii-e-annona-v1160-non-ancora-rilasciata)
+- [Capitolo 21 — L'ambiente ibrido: rizzo-pii e Annona (v1.16.0)](#capitolo-21--lambiente-ibrido-rizzo-pii-e-annona-v1160)
 
 **Appendici**
 - [Appendice A — Tabella dei limiti e valori predefiniti](#appendice-a--tabella-dei-limiti-e-valori-predefiniti)
@@ -69,7 +69,7 @@ DeepAiUG è un'interfaccia web (basata su Streamlit) per dialogare con modelli l
 - **Persistenza e export**: salvataggio automatico delle conversazioni, esportazione in Markdown, JSON, TXT, PDF e ZIP batch.
 - **Branding personalizzabile** (titolo, icona, banner, tema "Matrix" con pioggia di caratteri).
 
-**Nota sui nomi:** la cartella/repository si chiama `datapizza-streamlit-interface` (usa il framework `datapizza-ai` per i client LLM), ma il prodotto si chiama **DeepAiUG** e l'installer lo colloca in `~/DeepAiUG`. La versione autorevole è quella dichiarata in `config/constants.py` (`VERSION = "1.15.4"`); il campo `version = "0.1.0"` in `pyproject.toml` è solo metadato del pacchetto Poetry e va ignorato.
+**Nota sui nomi:** la cartella/repository si chiama `datapizza-streamlit-interface` (usa il framework `datapizza-ai` per i client LLM), ma il prodotto si chiama **DeepAiUG** e l'installer lo colloca in `~/DeepAiUG`. La versione autorevole è quella dichiarata in `config/constants.py` (`VERSION = "1.16.0"`); dalla 1.16.0 anche `pyproject.toml` dice `1.16.0`, ma resta solo metadato del pacchetto Poetry.
 
 ---
 
@@ -313,7 +313,7 @@ cloud_api_keys:
 #   log_connections: ...
 ```
 
-L'unica impostazione attiva nella 1.15.4 è `show_saved_keys`. La sezione `remote_servers` è un segnaposto commentato senza effetto. Dalla 1.16.0 (non ancora rilasciata) il file ha anche la sezione `hybrid:`, spenta per default: vedi il Capitolo 21.3.
+L'unica impostazione attiva nella 1.15.4 è `show_saved_keys`. La sezione `remote_servers` è un segnaposto commentato senza effetto. Dalla 1.16.0 il file ha anche la sezione `hybrid:`, spenta per default: vedi il Capitolo 21.3.
 
 ## 6.5 `wiki_sources.yaml` — sorgenti wiki e documentali
 
@@ -415,7 +415,7 @@ L'orchestrazione è in `rag/manager.py` (`KnowledgeBaseManager`). Ogni indicizza
 - Override con `DEEPAIUG_EMBEDDING_MODEL`; alternative note: `intfloat/multilingual-e5-base` (768 dim), `intfloat/multilingual-e5-large` (1024 dim), `paraphrase-multilingual-MiniLM-L12-v2` (384 dim).
 - **Fallback**: se `sentence-transformers` non è disponibile, il sistema non si blocca: ChromaDB usa la propria embedding function di default (`all-MiniLM-L6-v2`, orientata all'inglese, qualità inferiore sull'italiano). La UI lo segnala ("🔤 Embedding: ChromaDB default (MiniLM-L6, EN)").
 - **Migrazione automatica**: la collection memorizza il tag del modello di embedding; se al riavvio il tag non coincide (o è assente, caso pre-1.15.0), la collection viene svuotata e va ri-indicizzata manualmente.
-- **Rete** (dalla 1.16.0, non ancora rilasciata): il modello si scarica da `huggingface.co` solo al primo uso, con una riga nel terminale («🌐 … primo uso, lo scarico da huggingface.co»); se è già nella cache sul disco si carica senza nessuna richiesta di rete. Con la cache incompleta lo riscarica, e lo dice.
+- **Rete** (dalla 1.16.0): il modello si scarica da `huggingface.co` solo al primo uso, con una riga nel terminale («🌐 … primo uso, lo scarico da huggingface.co»); se è già nella cache sul disco si carica senza nessuna richiesta di rete. Con la cache incompleta lo riscarica, e lo dice.
 - Gli embedding **non usano Ollama**: girano nel processo Streamlit, di solito in CPU (CPU al 100% durante l'indicizzazione è normale); la GPU solo se torch la supporta (vedi §2.4).
 
 ## 9.4 Vector store e retrieval
@@ -466,7 +466,7 @@ L'app è pensata per **uso mono-utente locale**. Non ha login: "utente" è chiun
 All'apertura del browser (di norma `http://localhost:8501`) trovi:
 
 - **Tema "Matrix"**: sfondo verde scurissimo, testo verde-teal, titoli con effetto glitch e, se abilitata, la "pioggia" di caratteri in sottofondo (personalizzabile o disattivabile dal sistemista via `branding.yaml`).
-- **Titolo dinamico** che indica il backend attivo: `🧠 DeepAiUG Chat → Ollama 1.15.4` (locale), `→ Remote` o `→ {provider}` (cloud).
+- **Titolo dinamico** che indica il backend attivo: `🧠 DeepAiUG Chat → Ollama 1.16.0` (locale), `→ Remote` o `→ {provider}` (cloud).
 - **Banner novità** con le note della versione (se non è attiva la Knowledge Base).
 - **Indicatore di connessione** — dalla v1.15.2 per Local/Remote riflette la **destinazione reale** dell'URL (Cap. 20.0), non l'etichetta della modalità:
   - `🔒 Rete fidata - i dati restano nella tua rete ({host})` (verde: loopback, LAN, Tailscale)
@@ -817,9 +817,9 @@ Limiti ancora validi in v1.15.4:
 
 ---
 
-# Capitolo 21 — L'ambiente ibrido: rizzo-pii e Annona (v1.16.0, non ancora rilasciata)
+# Capitolo 21 — L'ambiente ibrido: rizzo-pii e Annona (v1.16.0)
 
-> Questo capitolo descrive una funzione della **1.16.0**, che è sul ramo di sviluppo e **non è ancora rilasciata**. È **opzionale e spenta per default**: con la sezione `hybrid:` assente o spenta, DeepAiUG si comporta come la 1.15.4. Il dettaglio tecnico è in `docs/SPEC_v1.16.0_hybrid.md`.
+> Questo capitolo descrive una funzione della **1.16.0**, provata dal vivo con rizzo-pii vero e OpenAI. È **opzionale e spenta per default**: con la sezione `hybrid:` assente o spenta, DeepAiUG si comporta come la 1.15.4. Il dettaglio tecnico è in `docs/SPEC_v1.16.0_hybrid.md`.
 
 L'idea: usare un modello cloud senza mandargli i dati personali. Prima che il testo esca di casa, un programma locale toglie nomi, codici fiscali, indirizzi e simili e li sostituisce con **segnaposto** (`[FULLNAME_1]`, `[CF_1]`…). Il cloud risponde usando i segnaposto e DeepAiUG rimette i valori veri **sul tuo computer**, prima di mostrarti la risposta.
 
@@ -1003,4 +1003,4 @@ Dalla prova dal vivo (06/11/2026, rizzo-pii vero e OpenAI):
 
 ---
 
-*Manuale generato dall'analisi del codice sorgente DeepAiUG v1.15.2 — 2026-07-13; aggiornato alla v1.15.4 il 2026-11-06 dopo l'audit `docs/AUDIT_pre_v1.16.0.md`; Capitolo 21 (ambiente ibrido v1.16.0, non ancora rilasciata) aggiunto il 2026-11-06.*
+*Manuale generato dall'analisi del codice sorgente DeepAiUG v1.15.2 — 2026-07-13; aggiornato alla v1.15.4 il 2026-11-06 dopo l'audit `docs/AUDIT_pre_v1.16.0.md`; aggiornato alla v1.16.0 (Capitolo 21, ambiente ibrido) il 2026-11-06.*
