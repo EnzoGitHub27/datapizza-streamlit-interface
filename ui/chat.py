@@ -6,21 +6,41 @@
 # 🆕 v1.8.0: Passaggio user_question e socratic_mode ai bottoni socratici
 # 🆕 v1.9.1: Fix bubble rendering - singola st.markdown() per wrappare contenuto
 # 🆕 v1.14.3: Typing indicator animato + scroll automatico durante streaming
+# 🆕 v1.15.4: Bolla = contenitore Streamlit con key + st.markdown nativo.
+#   Prima il Markdown diventava HTML (markdown_it) e st.markdown lo rileggeva
+#   come Markdown: alla prima riga vuota di un blocco di codice il blocco HTML
+#   si chiudeva, il resto diventava un blocco annidato e il frontend scriveva
+#   "[object Object]" (anche negli appunti). Vedi docs/AUDIT_pre_v1.16.0.md §3.
 # ============================================================================
 
-import html
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 import streamlit as st
-from markdown_it import MarkdownIt
 
 import streamlit.components.v1 as components
 
 from ui.socratic import render_socratic_buttons
 
-# Markdown-to-HTML converter (tables + fenced code blocks enabled)
-_md = MarkdownIt("commonmark", {"html": False}).enable("table")
+
+def bubble_key(role: str, index: int) -> str:
+    """Key del contenitore della bolla: Streamlit la espone come classe CSS
+    `st-key-<key>`, che ui/styles.py usa per lo stile (user-bubble-N /
+    assistant-bubble-N)."""
+    kind = "user" if role == "user" else "assistant"
+    return f"{kind}-bubble-{index}"
+
+
+def _escape_md(text: str) -> str:
+    """Neutralizza i caratteri Markdown in un testo da mostrare così com'è
+    (i nomi dei file allegati)."""
+    out = []
+    for ch in text:
+        if ch in "\\`*_{}[]()<>#+-.!|~":
+            out.append("\\" + ch)
+        else:
+            out.append(ch)
+    return "".join(out)
 
 
 def render_chat_message(
@@ -59,36 +79,25 @@ def render_chat_message(
     if role == "user":
         avatar, label = "👤", "Tu"
         col_config = [3, 7, 0.5]
-        bubble_class = "user-bubble"
     else:
         avatar = "🤖"
         label = f"AI{f' ({model_used})' if model_used else ''}"
         col_config = [0.5, 7, 3]
-        bubble_class = "assistant-bubble"
 
     # Render message
     cols = st.columns(col_config)
     with cols[1]:
         st.caption(f"{avatar} **{label}** • {time_str}")
 
-        # Build bubble HTML as a single block so CSS wraps the content
-        bubble_parts: list[str] = []
+        # v1.15.4 — Bolla: contenitore con key (stile in ui/styles.py) e
+        # Markdown nativo di Streamlit, lo stesso usato durante lo streaming.
+        # Niente HTML grezzo: i blocchi di codice si vedono e si copiano interi.
+        with st.container(key=bubble_key(role, index)):
+            # v1.5.0 - Attachments line (user messages only)
+            if attachments and role == "user":
+                st.caption("📎 **Allegati:** " + _escape_md(", ".join(attachments)))
 
-        # v1.5.0 - Attachments line (user messages only)
-        if attachments and role == "user":
-            attachments_str = html.escape(", ".join(attachments))
-            bubble_parts.append(
-                f'<p class="bubble-attachments">📎 <strong>Allegati:</strong> {attachments_str}</p>'
-            )
-
-        # Convert markdown content to HTML
-        bubble_parts.append(_md.render(content))
-
-        inner_html = "\n".join(bubble_parts)
-        st.markdown(
-            f'<div class="{bubble_class}">{inner_html}</div>',
-            unsafe_allow_html=True,
-        )
+            st.markdown(content)
 
         # Show sources if present (RAG) — kept outside bubble as native expander
         if sources:
