@@ -1,0 +1,42 @@
+DeepAiUG Interface
+Copyright (c) 2025-2026 Vincenzo Iodice (Gilles) - DeepAiUG
+Licenza: MIT (vedi il file LICENSE).
+
+Questo file elenca i programmi di terzi con cui l'Interface può lavorare
+nell'«ambiente ibrido» (v1.16.0, opzionale e spento per default). Nessuno
+di questi programmi è incluso, distribuito o scaricato dall'Interface:
+l'utente li installa da sé, e l'Interface li chiama soltanto via HTTP su
+loopback (127.0.0.1), come servizi separati.
+
+----------------------------------------------------------------------------
+rizzo-pii
+https://github.com/Rizzo-AI-Academy/rizzo-pii
+----------------------------------------------------------------------------
+- Codice sorgente: licenza MIT (vedi il file LICENSE di rizzo-pii).
+- Uso nell'Interface: chiamato via HTTP (http://127.0.0.1:5005, endpoint
+  /health e /analyze) da core/pii_client.py. L'Interface non importa né
+  copia il codice di rizzo-pii.
+- Ripristino dei segnaposto: la logica che rimette i valori al posto dei
+  segnaposto (es. [FULLNAME_1]) in core/pii_client.py è riscritta in Python,
+  con le stesse regole della funzione reverse() dell'interfaccia di
+  rizzo-pii (src/app/app.py, commit 9057eef): una passata sola, forme con e
+  senza parentesi, confine di parola Unicode.
+- Binari e immagine Docker: le build distribuite di rizzo-pii (AppImage,
+  .deb, .exe, .dmg) e la sua immagine Docker contengono PyMuPDF e sono
+  rilasciate sotto AGPL-3.0 (vedi THIRD_PARTY_LICENSES.md di rizzo-pii).
+  L'Interface NON distribuisce, non impacchetta e non scarica questi binari
+  né l'immagine. Che la chiamata HTTP lasci l'Interface un programma
+  separato, e non un'opera combinata con quei binari, si chiede per iscritto
+  all'autore di rizzo-pii: fino alla risposta, vale la regola qui sopra.
+
+----------------------------------------------------------------------------
+Annona
+https://github.com/akaion-ai/annona
+----------------------------------------------------------------------------
+- Licenza: Apache License 2.0 (vedi il file LICENSE di Annona).
+- Uso nell'Interface: chiamato via HTTP (http://127.0.0.1:7070, endpoint
+  /api/kernel/*) da core/annona_client.py. L'Interface non importa né
+  distribuisce Annona.
+- Dichiarazione: Vincenzo Iodice (Gilles) ha un ruolo non retribuito di
+  Technical Advisor in Akaion, che sviluppa Annona. Annona è opzionale e
+  spenta per default.
