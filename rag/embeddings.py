@@ -12,7 +12,8 @@
 # ============================================================================
 
 import os
-from typing import List, Optional
+import warnings
+from typing import List, Optional, Tuple
 
 # Default: e5-small è il miglior compromesso qualità/velocità per IT.
 # 117M params, 384 dim (drop-in con MiniLM-L6 in termini di dimensionalità),
@@ -35,6 +36,64 @@ QUERY_PREFIX = "query: "
 PASSAGE_PREFIX = "passage: "
 
 
+# ============================================================================
+# Scelta del device (v1.15.4)
+# ============================================================================
+# torch può dire cuda.is_available() == True anche quando non ha i kernel per
+# la scheda: es. torch 2.13+cu130 (sm_75 e superiori) su una MX250 (sm_61).
+# In quel caso il primo calcolo fallisce con «no kernel image». Qui si usa la
+# GPU solo se torch è compilato per la sua architettura; altrimenti la CPU.
+# DEEPAIUG_EMBEDDINGS_DEVICE=cpu|cuda forza la scelta.
+# ============================================================================
+
+DEVICE_ENV_VAR = "DEEPAIUG_EMBEDDINGS_DEVICE"
+
+
+def _arch_supported(capability: Tuple[int, int], arch_list: List[str]) -> bool:
+    """
+    True se torch ha kernel per la scheda: lo stesso sm_XY, un sm della stessa
+    generazione con minor più basso (compatibilità binaria), o un PTX
+    compute_XY non più recente della scheda (compilato al volo).
+    """
+    major, minor = capability
+    for arch in arch_list:
+        kind, _, num = arch.partition("_")
+        if not num.isdigit() or len(num) < 2:
+            continue
+        a_major, a_minor = int(num[:-1]), int(num[-1])
+        if kind == "sm" and a_major == major and a_minor <= minor:
+            return True
+        if kind == "compute" and (a_major, a_minor) <= (major, minor):
+            return True
+    return False
+
+
+def select_device() -> Tuple[str, str]:
+    """Restituisce (device, motivo). Ogni errore nel controllo → cpu."""
+    forced = os.environ.get(DEVICE_ENV_VAR, "").strip().lower()
+    if forced in ("cpu", "cuda"):
+        return forced, f"forzato da {DEVICE_ENV_VAR}"
+
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            import torch
+
+            if not torch.cuda.is_available():
+                return "cpu", "CUDA non disponibile"
+            major, minor = torch.cuda.get_device_capability()
+            arch_list = list(torch.cuda.get_arch_list())
+            sm = f"sm_{major}{minor}"
+            if _arch_supported((major, minor), arch_list):
+                return "cuda", f"GPU {sm} supportata da torch {torch.__version__}"
+            return "cpu", (
+                f"GPU {sm} non supportata da torch {torch.__version__} "
+                f"({', '.join(arch_list) or 'nessuna architettura'})"
+            )
+    except Exception as e:  # noqa: BLE001 - nel dubbio, CPU
+        return "cpu", f"controllo GPU fallito ({type(e).__name__}: {e})"
+
+
 class _EmbeddingsHelper:
     """
     Wrapper attorno a sentence-transformers. Carica il modello una sola volta
@@ -46,7 +105,9 @@ class _EmbeddingsHelper:
         from sentence_transformers import SentenceTransformer
 
         self.model_name = model_name
-        self.model = SentenceTransformer(model_name)
+        self.device, reason = select_device()
+        print(f"🧮 Embedding {model_name} su {self.device}: {reason}")
+        self.model = SentenceTransformer(model_name, device=self.device)
 
     def encode_query(self, texts: List[str]) -> List[List[float]]:
         prefixed = [QUERY_PREFIX + t for t in texts]

@@ -112,7 +112,7 @@ Dalla v1.15.2 il `requirements.txt` **pinna tutte le dipendenze** (`==`) per bui
 ## 2.4 Ollama e hardware
 
 - **Ollama** è il motore LLM locale. Gli installer lo installano automaticamente (Linux: `curl -fsSL https://ollama.com/install.sh | sh`; macOS: Homebrew, script o zip in `/Applications/`).
-- **GPU: non richiesta.** L'embedding RAG gira in CPU dentro il processo Streamlit; la GPU viene rilevata dagli installer a solo scopo informativo.
+- **GPU: non richiesta.** L'embedding RAG gira dentro il processo Streamlit: sulla GPU solo se la build di torch installata la supporta, altrimenti in CPU (dalla v1.15.4; prima, su schede come la MX250, l'indicizzazione falliva con «no kernel image»). `DEEPAIUG_EMBEDDINGS_DEVICE=cpu` o `cuda` forza la scelta; il device scelto compare una volta nel terminale («🧮 Embedding … su cpu: …»).
 - Modello LLM suggerito dagli installer in base alla RAM:
 
 | RAM | Modello suggerito | Alternative |
@@ -414,7 +414,7 @@ L'orchestrazione è in `rag/manager.py` (`KnowledgeBaseManager`). Ogni indicizza
 - Override con `DEEPAIUG_EMBEDDING_MODEL`; alternative note: `intfloat/multilingual-e5-base` (768 dim), `intfloat/multilingual-e5-large` (1024 dim), `paraphrase-multilingual-MiniLM-L12-v2` (384 dim).
 - **Fallback**: se `sentence-transformers` non è disponibile, il sistema non si blocca: ChromaDB usa la propria embedding function di default (`all-MiniLM-L6-v2`, orientata all'inglese, qualità inferiore sull'italiano). La UI lo segnala ("🔤 Embedding: ChromaDB default (MiniLM-L6, EN)").
 - **Migrazione automatica**: la collection memorizza il tag del modello di embedding; se al riavvio il tag non coincide (o è assente, caso pre-1.15.0), la collection viene svuotata e va ri-indicizzata manualmente.
-- Gli embedding **non usano Ollama né GPU**: girano in CPU nel processo Streamlit (CPU al 100% durante l'indicizzazione è normale).
+- Gli embedding **non usano Ollama**: girano nel processo Streamlit, di solito in CPU (CPU al 100% durante l'indicizzazione è normale); la GPU solo se torch la supporta (vedi §2.4).
 
 ## 9.4 Vector store e retrieval
 
