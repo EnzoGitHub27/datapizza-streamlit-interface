@@ -167,7 +167,7 @@ KB_INDICATOR_CSS = """
 """
 
 
-def get_connection_indicator_css(connection_type: str, use_kb: bool) -> str:
+def get_connection_indicator_css(connection_type: str, use_kb: bool, outside: bool = None) -> str:
     """
     Ritorna il CSS appropriato per l'indicatore di connessione.
     
@@ -178,7 +178,10 @@ def get_connection_indicator_css(connection_type: str, use_kb: bool) -> str:
     Returns:
         Stringa CSS
     """
-    if connection_type == "Cloud provider":
+    # v1.16.0: la destinazione reale se nota, altrimenti l'etichetta
+    if outside is None:
+        outside = connection_type == "Cloud provider"
+    if outside:
         return CLOUD_INDICATOR_CSS
     elif use_kb:
         return KB_INDICATOR_CSS

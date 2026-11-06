@@ -52,47 +52,6 @@ def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, flo
         index=["Local (Ollama)", "Remote host", "Cloud provider"].index(current_connection)
     )
 
-    # 🆕 v1.5.0: Rileva cambio verso Cloud con documenti in memoria
-    docs_uploaded = st.session_state.get("documents_uploaded_this_session", False)
-    privacy_acknowledged = st.session_state.get("privacy_acknowledged_for_cloud", False)
-
-    if connection_type == "Cloud provider" and docs_uploaded and not privacy_acknowledged:
-        # Segnala che serve il dialog di privacy (gestito in app.py)
-        st.session_state["show_privacy_dialog"] = True
-        container.warning(
-            "⚠️ **Documenti in memoria!**\n\n"
-            "Conferma richiesta prima di usare Cloud."
-        )
-    else:
-        st.session_state["show_privacy_dialog"] = False
-
-    # 🆕 v1.9.1: Warn when switching to cloud with sensitive loaded conversation
-    if connection_type == "Cloud provider":
-        from core.persistence import conversation_has_sensitive_content
-        session_data = {
-            "knowledge_base": {
-                "use_knowledge_base": st.session_state.get("use_knowledge_base", False),
-                "kb_folder_path": st.session_state.get("kb_folder_path", ""),
-            },
-            "messages": st.session_state.get("messages", []),
-        }
-        sensitivity = conversation_has_sensitive_content(session_data)
-        # Only warn for attachments/sources; KB is hard-blocked below
-        if sensitivity["is_sensitive"] and not sensitivity["has_knowledge_base"]:
-            icons: list[str] = []
-            if sensitivity["has_documents"]:
-                icons.append("📎")
-            if sensitivity["has_sources"]:
-                icons.append("📎")
-            icon_str = "🔒" + "".join(dict.fromkeys(icons))  # deduplicate
-            container.warning(
-                f"⚠️ Questa conversazione contiene **{sensitivity['reason']}** ({icon_str}).\n\n"
-                "Procedendo su Cloud, l'intera cronologia dei messaggi — incluso il testo "
-                "derivato da questi contenuti locali — verrà inviata al provider esterno. "
-                "Non c'è alcun filtro che escluda i contenuti locali.\n\n"
-                "Per mantenerli privati, avvia una nuova conversazione oppure usa un server locale."
-            )
-
     st.session_state["connection_type"] = connection_type
 
     # Blocco fuori casa se Knowledge Base attiva (PRIVACY) — 🔒 v1.16.0 P2:
@@ -428,6 +387,55 @@ def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, flo
         st.session_state["_egress_kb_blocked"] = outside_label(destination)
         st.rerun()
     st.session_state["egress_destination"] = destination
+
+    # 🔒 v1.16.0 — gli avvisi dopo la destinazione reale (prima guardavano l'etichetta)
+    # 🆕 v1.5.0: Rileva cambio verso Cloud con documenti in memoria
+    docs_uploaded = st.session_state.get("documents_uploaded_this_session", False)
+    privacy_acknowledged = st.session_state.get("privacy_acknowledged_for_cloud", False)
+
+    if destination["outside"] and docs_uploaded and not privacy_acknowledged:
+        # Segnala che serve il dialog di privacy (gestito in app.py)
+        st.session_state["show_privacy_dialog"] = True
+        container.warning(
+            "⚠️ **Documenti in memoria!**\n\n"
+            "Conferma richiesta prima di usare un modello fuori dalla tua rete."
+        )
+    else:
+        st.session_state["show_privacy_dialog"] = False
+
+    # 🆕 v1.9.1: Warn when switching to cloud with sensitive loaded conversation
+    # 🔒 v1.16.0: fuori casa = cloud o host su internet (destinazione reale)
+    if destination["outside"]:
+        from core.persistence import conversation_has_sensitive_content
+        session_data = {
+            "knowledge_base": {
+                "use_knowledge_base": st.session_state.get("use_knowledge_base", False),
+                "kb_folder_path": st.session_state.get("kb_folder_path", ""),
+            },
+            "messages": st.session_state.get("messages", []),
+        }
+        sensitivity = conversation_has_sensitive_content(session_data)
+        # Only warn for attachments/sources; KB is hard-blocked below
+        if sensitivity["is_sensitive"] and not sensitivity["has_knowledge_base"]:
+            icons: list[str] = []
+            if sensitivity["has_documents"]:
+                icons.append("📎")
+            if sensitivity["has_sources"]:
+                icons.append("📎")
+            icon_str = "🔒" + "".join(dict.fromkeys(icons))  # deduplicate
+            container.warning(
+                f"⚠️ Questa conversazione contiene **{sensitivity['reason']}** ({icon_str}).\n\n"
+                "Procedendo fuori dalla tua rete (cloud o host su internet), l'intera cronologia dei messaggi — incluso il testo "
+                "derivato da questi contenuti locali — verrà inviata al provider esterno. "
+                + (
+                    "🛡️ rizzo-pii toglie i dati personali riconosciuti (nomi, CF, IBAN...), "
+                    "ma il resto del testo parte com'è.\n\n"
+                    if st.session_state.get("hybrid_pii_active")
+                    else "Non c'è alcun filtro che escluda i contenuti locali.\n\n"
+                )
+                + "Per mantenerli privati, avvia una nuova conversazione oppure usa un server locale."
+            )
+
 
     # Salva modello corrente
     st.session_state["current_model"] = model

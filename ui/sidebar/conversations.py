@@ -43,7 +43,10 @@ def render_conversations_manager():
     # Detect if current provider is Cloud — solo "Cloud provider" blocca il
     # caricamento di chat con dati locali / wiki / vault. "Remote host" è
     # un server aziendale fidato e va trattato come Local. (Fix v1.15.0)
-    is_cloud = st.session_state.get("connection_type", "") == "Cloud provider"
+    # 🔒 v1.16.0: la destinazione reale (core.egress) — un Remote host su
+    # internet conta come il cloud, LAN e Tailscale no
+    from ui.privacy_warning import destination_is_outside
+    is_cloud = destination_is_outside()
 
     # Build selectbox options with content-type icons
     conv_options: list[dict] = []
