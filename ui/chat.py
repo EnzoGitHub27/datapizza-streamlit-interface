@@ -99,6 +99,37 @@ def render_chat_message(
 
             st.markdown(content)
 
+        # v1.16.0 P9 (decisione 9) — badge e «cosa ha visto il modello»
+        if role == "assistant" and message.get("pii_removed") is not None:
+            n = int(message.get("pii_removed") or 0)
+            st.caption(f"🛡️ {n} {'dato tolto' if n == 1 else 'dati tolti'} prima dell'invio")
+        if role == "assistant":
+            egress = (st.session_state.get("egress_views") or {}).get(index)
+            if egress:
+                with st.expander("👁️ Cosa ha visto il modello", expanded=False):
+                    st.text(egress)
+                    st.caption("Solo in questa sessione: non si salva nella conversazione.")
+
+        # v1.16.0 P7 (decisione 6) — invio fuori casa non registrato in Annona
+        if role == "assistant" and message.get("annona_recorded") is False:
+            st.caption("📒 non registrato in Annona")
+        # v1.16.0 P8 — risposta arrivata dal gateway sperimentale di Annona
+        if role == "assistant" and message.get("annona_gateway"):
+            p = message.get("annona_placement") or {}
+            bits = " · ".join(v for v in (p.get("class"), p.get("outcome"), p.get("substrate")) if v)
+            st.caption(f"🧭 via Annona (sperimentale){' · ' + bits if bits else ''} · registrato in Annona")
+
+        # v1.16.0 (decisione 11) — la domanda senza risposta porta il suo errore
+        send_status = message.get("send_status") if role == "user" else None
+        if send_status:
+            detail = message.get("send_error", "")
+            if send_status == "rifiutata":
+                st.error(f"⛔ **Rifiutata** dal fornitore — {detail}")
+            elif send_status == "senza_risposta":  # giro 7b: gateway di Annona senza testo
+                st.warning(f"🧭 **Senza risposta** — {detail}")
+            else:
+                st.warning(f"⚠️ **Non inviata** — {detail}")
+
         # Show sources if present (RAG) — kept outside bubble as native expander
         if sources:
             with st.expander(f"📎 Fonti ({len(sources)})"):

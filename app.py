@@ -61,11 +61,67 @@ from core import (
     reindex_all_chat_kb,
     get_kb_chat_stats,
     conversation_models,  # v1.15.4
+    delete_conversation,  # v1.16.0
 )
+from core.conversation import mark_send_failed, classify_send_error, SEND_EMPTY  # v1.16.0
 
 # 🆕 v1.5.0 - File processors
 from core.file_processors import get_attachment_names
 from core.url_validator import is_blocked, classify_url
+from core.egress import classify_destination, outside_label  # v1.16.0 P2
+from core.pii_guard import PIIGuardBlocked  # v1.16.0 P6
+from core.pii_memory import PIISessionMemory  # v1.16.0 giro 7b
+from config.hybrid_settings import load_hybrid_settings, HybridSettingsError  # v1.16.0 P5
+
+# 🛡️ v1.16.0 — Ambiente ibrido (security_settings.yaml, sezione hybrid:).
+# Spento per default: create_client() resta quello della 1.15.4.
+try:
+    HYBRID = load_hybrid_settings()
+    HYBRID_ERROR = None
+except HybridSettingsError as _hybrid_exc:
+    HYBRID = None
+    HYBRID_ERROR = str(_hybrid_exc)
+
+
+# letto dagli avvisi della sidebar e dal dialogo privacy (decisione 4)
+st.session_state["hybrid_pii_active"] = bool(HYBRID and HYBRID.pii.enabled)
+
+
+def _pii_memory():
+    """giro 7b — i valori già tolti in questa sessione (solo in memoria, mai salvati)."""
+    if "_pii_memory" not in st.session_state:
+        st.session_state["_pii_memory"] = PIISessionMemory()
+    return st.session_state["_pii_memory"]
+
+
+def _answer_extra(client, destination) -> dict:
+    """Metadati della risposta: niente valori, solo stato (v1.16.0)."""
+    extra = {}
+    # 🛡️ P9 (decisione 9) — quanti dati tolti: il conteggio si salva, i valori mai
+    if getattr(client, "pii_guard", False) and getattr(client, "last_removed", None) is not None:
+        extra["pii_removed"] = int(client.last_removed)
+    # 🧭 P7, decisione 6: Annona in sola lettura non vede gli invii fuori casa
+    if (HYBRID is not None and HYBRID.annona.enabled and HYBRID.annona.mode == "read"
+            and destination["outside"]):
+        extra["annona_recorded"] = False
+    return extra
+
+
+def _remember_egress(text: str) -> None:
+    """
+    🛡️ P9 — «cosa ha visto il modello» per l'ultima risposta: SOLO nella
+    sessione corrente (scelta dell'Hub), mai nella conversazione salvata.
+    """
+    if not text:
+        return
+    idx = len(st.session_state.get("messages", [])) - 1
+    st.session_state.setdefault("egress_views", {})[idx] = text
+
+
+def _on_pii_anonymized(n_removed: int) -> None:
+    """Metadati della conversazione: guard usato e quanti dati tolti (mai i valori)."""
+    st.session_state["pii_guard"] = True
+    st.session_state["pii_removed"] = st.session_state.get("pii_removed", 0) + int(n_removed or 0)
 
 # ============================================================================
 # RAG
@@ -100,6 +156,8 @@ from ui import (
     inject_scroll_to_bottom,
 )
 from ui.sidebar.kb_panel import render_kb_panel
+from ui.sidebar.annona_panel import render_annona_panel  # v1.16.0 P7
+from core import annona_bridge  # v1.16.0 P8
 from ui.sidebar import render_socratic_mode_settings
 
 # 🆕 v1.5.0 - File upload widget
@@ -219,6 +277,7 @@ def add_message(
     sources: list = None,
     attachments: list = None,  # 🆕 v1.5.0
     provider: str = None,  # v1.15.4
+    extra: dict = None,  # v1.16.0 — metadati del guard / di Annona (mai valori)
 ):
     """
     Aggiunge un messaggio alla conversazione e salva.
@@ -235,6 +294,8 @@ def add_message(
     # 🆕 v1.5.0 - Aggiungi attachments se presenti
     if attachments:
         message["attachments"] = attachments
+    if extra:
+        message.update(extra)
     
     st.session_state["messages"].append(message)
     st.session_state["total_tokens_estimate"] += estimate_tokens(content)
@@ -270,6 +331,8 @@ def _save_current_conversation():
         socratic_history=SocraticHistory.to_serializable(),  # v1.9.0
         kb_metadata=st.session_state.get("kb_metadata"),  # v1.14.0
         vault_used=st.session_state.get("vault_used", False),  # v1.14.2
+        pii_guard=st.session_state.get("pii_guard"),  # v1.16.0
+        pii_removed=st.session_state.get("pii_removed", 0),  # v1.16.0
     )
 
 def reset_conversation():
@@ -282,6 +345,11 @@ def reset_conversation():
     st.session_state["kb_metadata"] = dict(KB_METADATA_DEFAULT)
     # v1.14.2 - Reset vault_used
     st.session_state["vault_used"] = False
+    # v1.16.0 - Reset metadati del guard
+    st.session_state.pop("pii_guard", None)
+    st.session_state["pii_removed"] = 0
+    st.session_state["egress_views"] = {}  # P9: solo sessione
+    st.session_state.pop("_pii_memory", None)  # giro 7b: la memoria dei valori tolti si azzera
     # 🆕 v1.5.0 - Pulisci anche file pending e flag privacy
     clear_pending_files()
     reset_privacy_flags()
@@ -314,9 +382,25 @@ def get_socratic_client(connection_type, provider, api_key, model, base_url, tem
             model,
             "Sei un assistente che genera prospettive alternative e stimola la riflessione critica.",
             base_url,
-            temperature
+            temperature,
+            hybrid=HYBRID,  # v1.16.0 P6
+            on_anonymized=_on_pii_anonymized,
+            pii_memory=_pii_memory(),  # giro 7b
         )
     except Exception:
+        return None
+
+
+def _analyze_session_map(invoke_fn):
+    """v1.16.0 giro 5b — la mappa della sessione; se non può partire verso fuori
+    casa (guard o gateway senza rizzo-pii) lo dice nella sidebar, senza toccare
+    la chat."""
+    try:
+        return SessionMapAnalyzer.analyze(
+            st.session_state["messages"], invoke_fn, st.session_state["conversation_id"]
+        )
+    except PIIGuardBlocked as exc:
+        st.session_state["_side_call_notice"] = str(exc)
         return None
 
 # ============================================================================
@@ -335,6 +419,11 @@ config_expander = st.sidebar.expander("⚙️ Configurazione", expanded=False)
     temperature,
     max_messages,
 ) = render_llm_config(container=config_expander)
+
+# 🔒 v1.16.0 P2 — dove va davvero il testo (calcolato dalla sidebar LLM)
+destination = st.session_state.get("egress_destination") or classify_destination(
+    connection_type, provider, base_url
+)
 
 # 1b. 📚 Knowledge Base — Wiki / Vault (aperta di default per renderla visibile)
 kb_expander = st.sidebar.expander("📚 Knowledge Base (Wiki / Vault)", expanded=True)
@@ -431,6 +520,9 @@ if _kb_stats.get("using_chromadb") and _kb_stats["total_chunks"] > 0:
 # 2d. 📚 Gestione KB (modifica/rimozione + bulk-flag)
 render_kb_panel()
 
+# 🧭 v1.16.0 P7 — Annona (solo con hybrid.annona.enabled)
+render_annona_panel(HYBRID)
+
 # 2e. ✅ Usa KB Chat (toggle retrieval)
 _use_chat_kb = st.sidebar.checkbox(
     "📚 Usa KB Chat",
@@ -468,11 +560,7 @@ if (
         )
         if socratic_client_nudge is not None:
             with st.sidebar.spinner("📊 Costruendo mappa sessione..."):
-                session_map = SessionMapAnalyzer.analyze(
-                    st.session_state["messages"],
-                    socratic_client_nudge.invoke,
-                    st.session_state["conversation_id"],
-                )
+                session_map = _analyze_session_map(socratic_client_nudge.invoke)
                 if session_map is not None:
                     st.session_state["session_map_data"] = session_map
                     st.rerun()
@@ -489,11 +577,7 @@ if (
         )
         if socratic_client_gen is not None:
             with st.sidebar.spinner("📊 Generando mappa sessione..."):
-                session_map = SessionMapAnalyzer.analyze(
-                    st.session_state["messages"],
-                    socratic_client_gen.invoke,
-                    st.session_state["conversation_id"],
-                )
+                session_map = _analyze_session_map(socratic_client_gen.invoke)
                 if session_map is not None:
                     st.session_state["session_map_data"] = session_map
                     st.rerun()
@@ -510,14 +594,15 @@ if st.session_state.get("session_map_data") is not None:
         )
         if socratic_client_regen is not None:
             with st.sidebar.spinner("📊 Rigenerando mappa sessione..."):
-                session_map = SessionMapAnalyzer.analyze(
-                    st.session_state["messages"],
-                    socratic_client_regen.invoke,
-                    st.session_state["conversation_id"],
-                )
+                session_map = _analyze_session_map(socratic_client_regen.invoke)
                 if session_map is not None:
                     st.session_state["session_map_data"] = session_map
                     st.rerun()
+
+# v1.16.0 giro 5b — una mappa che non è potuta partire lo dice qui
+_side_notice = st.session_state.pop("_side_call_notice", None)
+if _side_notice:
+    st.sidebar.error(_side_notice)
 
 # 4. 🧠 Modalità Socratica (aperta)
 socratic_mode = render_socratic_mode_settings()
@@ -533,7 +618,9 @@ render_export_section()
 if st.session_state.get("show_privacy_dialog", False):
     st.title("🔐 Conferma Privacy Richiesta")
     
-    can_proceed, action = render_privacy_dialog()
+    can_proceed, action = render_privacy_dialog(
+        pii_active=st.session_state.get("hybrid_pii_active", False)  # v1.16.0
+    )
     
     if can_proceed and action:
         handle_privacy_action(action)
@@ -545,18 +632,33 @@ if st.session_state.get("show_privacy_dialog", False):
 # MAIN - TITLE AND INFO
 # ============================================================================
 
+# 🔒 v1.16.0 — il titolo dice anche dove va il testo (destinazione reale)
+_dest_mark = " ☁️" if destination["outside"] else ""
 if connection_type == "Cloud provider":
-    st.title(f"{APP_ICON} {APP_TITLE} → {provider} `{VERSION}`")
+    st.title(f"{APP_ICON} {APP_TITLE} → {provider}{_dest_mark} `{VERSION}`")
 elif connection_type == "Remote host":
-    st.title(f"{APP_ICON} {APP_TITLE} → Remote `{VERSION}`")
+    _remote = "Remote esterno" if destination["outside"] else "Remote"
+    st.title(f"{APP_ICON} {APP_TITLE} → {_remote}{_dest_mark} `{VERSION}`")
 else:
-    st.title(f"{APP_ICON} {APP_TITLE} → Ollama `{VERSION}`")
+    st.title(f"{APP_ICON} {APP_TITLE} → Ollama{_dest_mark} `{VERSION}`")
 
 # ============================================================================
 # 🆕 v1.5.0 - PRIVACY WARNING BANNER (se su Cloud con documenti)
 # ============================================================================
 
 render_privacy_warning_banner()
+
+# 🧭 v1.16.0 P8 — il gateway sperimentale si dichiara, con quello che si perde
+_use_gateway = bool(
+    HYBRID is not None and HYBRID.annona.enabled and HYBRID.annona.mode == "gateway"
+    and destination["outside"]
+)
+if _use_gateway:
+    st.warning(
+        "🧭 **Gateway Annona — SPERIMENTALE.** Verso fuori casa decide, redige, chiama il "
+        "modello e registra Annona. Si perde: " + "; ".join(annona_bridge.GATEWAY_LOSSES) + "."
+    )
+
 
 # ============================================================================
 # KNOWLEDGE BASE BANNER
@@ -595,8 +697,11 @@ if connection_type in ("Local (Ollama)", "Remote host"):
         st.error("🔒 **Connessione bloccata** - endpoint metadati cloud")
     else:  # invalid
         st.info("ℹ️ **URL non valido o non risolvibile** - verifica l'indirizzo")
-else:
+elif destination["outside"]:
     st.warning("☁️ **Cloud** - Dati esterni (KB e Upload disabilitati)")
+else:
+    # v1.16.0 P2 — cloud «Custom» su localhost/LAN (es. LM Studio): in casa
+    st.success(f"🔒 **Rete fidata** - endpoint «Custom» nella tua rete ({destination['host']})")
 
 # ============================================================================
 # STATS
@@ -662,7 +767,8 @@ st.subheader("✍️ Messaggio")
 processed_files, has_images, upload_warning = render_file_upload_widget(
     connection_type=connection_type,
     current_model=model,
-    key="chat_file_upload"
+    key="chat_file_upload",
+    outside=destination["outside"],  # v1.16.0 P2
 )
 
 # Salva file in session_state per uso nel submit
@@ -674,16 +780,31 @@ if processed_files:
     if valid_count > 0:
         st.success(f"📎 {valid_count} file pronti per l'invio")
 
+# 🛡️ v1.16.0 P6 — messaggio bloccato dal guard: l'avviso resta, il testo torna nella casella
+_guard_notice = st.session_state.pop("_guard_blocked_notice", None)
+if _guard_notice:
+    st.error(_guard_notice)
+
 # ========== FORM MESSAGGIO ==========
-with st.form("msg_form", clear_on_submit=True):
+# v1.16.0 (giro 6) — un testo non inviato torna nella casella e ci resta: la
+# casella ha una chiave, quindi il valore sopravvive ai rerun (anche a quelli
+# della sidebar) finché l'utente non invia di nuovo o non la svuota lui.
+if "_restore_input" in st.session_state:
+    st.session_state["msg_input"] = st.session_state.pop("_restore_input")
+
+# v1.16.0 giro 7c — niente clear_on_submit: lo svuotamento lo fa il browser, che
+# al rerun successivo (es. la temperatura nella sidebar) rimanda alla casella il
+# suo valore vuoto e copre il testo rimesso dal server. La casella la svuota il
+# server dopo un invio partito (_restore_input = "" più sotto).
+with st.form("msg_form", clear_on_submit=False):
     placeholder = (
         "Chiedi qualcosa sui tuoi documenti..." 
         if st.session_state.get("use_knowledge_base") 
         else "Scrivi il tuo messaggio..."
     )
     user_input = st.text_area(
-        "Messaggio", 
-        "", 
+        "Messaggio",
+        key="msg_input",  # v1.16.0 giro 6: il testo rimesso resta nella casella
         height=100, 
         placeholder=placeholder, 
         label_visibility="collapsed"
@@ -717,15 +838,31 @@ if submit and user_input.strip():
     )
     _url_blocked, _url_block_reason = is_blocked(base_url) if _uses_base_url else (False, "")
 
+    _pre_block = None  # v1.16.0 giro 6 — blocco prima dell'invio: il testo torna nella casella
     if not model:
-        st.error("❌ Seleziona un modello!")
+        _pre_block = "❌ Seleziona un modello!"
     elif connection_type == "Cloud provider" and not api_key:
-        st.error("❌ Inserisci API key!")
-    elif connection_type == "Cloud provider" and (st.session_state.get("use_knowledge_base") or st.session_state.get("use_chat_kb")):
-        st.error("🔒 Cloud bloccato con Knowledge Base o KB Chat attiva!")
+        _pre_block = "❌ Inserisci API key!"
+    elif destination["outside"] and (st.session_state.get("use_knowledge_base") or st.session_state.get("use_chat_kb")):
+        # 🔒 v1.16.0 P2 — destinazione reale, non l'etichetta
+        _pre_block = f"🔒 {outside_label(destination)} bloccato con Knowledge Base o KB Chat attiva!"
     elif _url_blocked:
-        st.error(f"🔒 Connessione bloccata per sicurezza: {_url_block_reason}")
+        _pre_block = f"🔒 Connessione bloccata per sicurezza: {_url_block_reason}"
+    elif HYBRID_ERROR and destination["outside"]:
+        # v1.16.0 — configurazione ibrida illeggibile: non si sa se rizzo-pii
+        # doveva essere acceso, quindi verso fuori casa non parte niente
+        _pre_block = f"🛡️ Configurazione ibrida non valida, messaggio non inviato: {HYBRID_ERROR}"
+
+    if _pre_block:
+        st.session_state["_restore_input"] = user_input
+        st.session_state["_guard_blocked_notice"] = _pre_block
+        st.rerun()
     else:
+        # v1.16.0 giro 6 — partito l'invio, la casella si svuota (anche fuori dal
+        # browser); i blocchi qui sotto rimettono il testo con _restore_input
+        st.session_state["_restore_input"] = ""
+        _sent_index = None        # v1.16.0 — la domanda di questo invio
+        _stream_started = False   # v1.16.0 — la richiesta è partita?
         try:
             # 🆕 v1.5.0 - Recupera file da session_state
             pending_files, pending_has_images, _ = get_pending_files()
@@ -743,6 +880,7 @@ if submit and user_input.strip():
             
             # Add user message (mostra testo originale, non enriched)
             add_message("user", user_input.strip(), attachments=attachment_names)
+            _sent_index = len(st.session_state["messages"]) - 1
 
             # 🆕 v1.10.0 - Incrementa contatore domande sessione
             st.session_state["n_domande_sessione"] += 1
@@ -802,7 +940,10 @@ if submit and user_input.strip():
                     model, 
                     system_prompt, 
                     base_url, 
-                    temperature
+                    temperature,
+                    hybrid=HYBRID,  # v1.16.0 P6
+                    on_anonymized=_on_pii_anonymized,
+                    pii_memory=_pii_memory(),  # giro 7b
                 )
             
             # Prepare prompt
@@ -853,43 +994,76 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                         vision_err,
                     )
 
+            _gateway_result = None
+            if _use_gateway:
+                # 🧭 v1.16.0 P8 — Annona esegue il passo: niente streaming
+                with st.chat_message("assistant"):
+                    st.caption("🧭 Gateway Annona — sperimentale")
+                    _gw_prompt = full_prompt if context_text else (
+                        f"{system_prompt}\n\n{full_prompt}" if system_prompt else full_prompt
+                    )
+                    with st.spinner("🧭 Annona sta eseguendo il passo (niente streaming)..."):
+                        _gateway_result = annona_bridge.gateway_ask(
+                            annona_bridge.make_client(HYBRID.annona), _gw_prompt
+                        )
+                    response_text = _gateway_result.text
+                    st.markdown(response_text)
+
             # Display streaming response with typing indicator + auto-scroll
-            with st.chat_message("assistant"):
-                # v1.14.3 — Typing indicator: pallini animati prima del primo token
-                typing_placeholder = st.empty()
-                with typing_placeholder:
-                    show_typing_indicator()
+            if _gateway_result is None:
+                with st.chat_message("assistant"):
+                    # v1.14.3 — Typing indicator: pallini animati prima del primo token
+                    typing_placeholder = st.empty()
+                    with typing_placeholder:
+                        show_typing_indicator()
 
-                placeholder = st.empty()
-                response_text = ""
-                previous_text = ""
+                    placeholder = st.empty()
+                    response_text = ""
+                    previous_text = ""
 
-                for chunk in client.stream_invoke(llm_input):
-                    # Prima iterazione: rimuovi typing indicator
-                    typing_placeholder.empty()
+                    _stream_started = True
+                    for chunk in client.stream_invoke(llm_input):
+                        # Prima iterazione: rimuovi typing indicator
+                        typing_placeholder.empty()
 
-                    current_text = getattr(chunk, "text", str(chunk))
-                    if current_text:
-                        new_text = current_text[len(previous_text):]
-                        if new_text:
-                            response_text += new_text
-                            previous_text = current_text
-                            # v1.14.3 — Cursore ▌ durante lo streaming
-                            placeholder.markdown(response_text + "▌")
+                        current_text = getattr(chunk, "text", str(chunk))
+                        if current_text:
+                            new_text = current_text[len(previous_text):]
+                            if new_text:
+                                response_text += new_text
+                                previous_text = current_text
+                                # v1.14.3 — Cursore ▌ durante lo streaming
+                                placeholder.markdown(response_text + "▌")
 
-                # Risposta finale senza cursore
-                placeholder.markdown(response_text)
-                # v1.14.3 — Scroll finale a fondo pagina
-                inject_scroll_to_bottom()
+                    # Risposta finale senza cursore
+                    placeholder.markdown(response_text)
+                    # v1.14.3 — Scroll finale a fondo pagina
+                    inject_scroll_to_bottom()
 
             # Add response with sources to conversation
-            add_message(
-                "assistant",
-                response_text,
-                model=model,
-                sources=sources if sources else None,
-                provider=connection_type,  # v1.15.4
-            )
+            if _gateway_result is not None:
+                # 🧭 v1.16.0 P8 — chi ha risposto lo ha scelto la policy di Annona
+                _gw = _gateway_result.summary
+                add_message(
+                    "assistant",
+                    response_text,
+                    model=f"annona:{_gw.get('substrate', '?')}",
+                    sources=sources if sources else None,
+                    provider="Annona gateway (sperimentale)",
+                    extra={"annona_gateway": True, "annona_placement": _gw},
+                )
+                _remember_egress(_gateway_result.egress_text)
+            else:
+                add_message(
+                    "assistant",
+                    response_text,
+                    model=model,
+                    sources=sources if sources else None,
+                    provider=connection_type,  # v1.15.4
+                    extra=_answer_extra(client, destination),  # v1.16.0
+                )
+                if getattr(client, "pii_guard", False):
+                    _remember_egress(client.last_egress)
             
             # 🆕 v1.5.0 - Pulisci file pending dopo invio
             clear_pending_files()
@@ -900,11 +1074,7 @@ Cita sempre le fonti quando usi informazioni dai documenti.
 
             if map_mode == "progressive" and n_domande >= SESSION_MAP_PROGRESSIVE_VISIBLE_AFTER:
                 # Modalità progressiva: aggiorna mappa dopo ogni risposta
-                session_map = SessionMapAnalyzer.analyze(
-                    st.session_state["messages"],
-                    client.invoke,
-                    st.session_state["conversation_id"],
-                )
+                session_map = _analyze_session_map(client.invoke)
                 if session_map is not None:
                     st.session_state["session_map_data"] = session_map
 
@@ -913,8 +1083,43 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                     st.session_state["nudge_mostrato"] = True
 
             st.rerun()
-            
+
+        except PIIGuardBlocked as e:
+            # 🛡️ v1.16.0 P6 — verso fuori casa non è partito niente: la domanda
+            # non resta in chat come inviata, il testo torna nella casella
+            msgs = st.session_state.get("messages", [])
+            if msgs and msgs[-1].get("role") == "user":
+                _blocked_msg = msgs.pop()
+                # v1.16.0 giro 6 — la domanda non è in chat: fuori anche dalla stima dei token
+                st.session_state["total_tokens_estimate"] = max(
+                    0, st.session_state.get("total_tokens_estimate", 0)
+                    - estimate_tokens(_blocked_msg.get("content", ""))
+                )
+                st.session_state["n_domande_sessione"] = max(
+                    0, st.session_state.get("n_domande_sessione", 1) - 1
+                )
+                if st.session_state.get("auto_save_enabled", True):
+                    if msgs:
+                        _save_current_conversation()
+                    else:
+                        # la conversazione era solo questa domanda: niente file vuoto
+                        delete_conversation(st.session_state["conversation_id"])
+            st.session_state["_restore_input"] = user_input
+            st.session_state["_guard_blocked_notice"] = str(e)
+            st.rerun()
+
         except Exception as e:
+            # v1.16.0 (decisione 11) — se la domanda di questo invio non ha avuto
+            # risposta, l'errore resta accanto a lei (salvato, visibile al rerun)
+            msgs = st.session_state.get("messages", [])
+            if (_sent_index is not None and _sent_index == len(msgs) - 1
+                    and msgs[_sent_index].get("role") == "user"):
+                _status = (SEND_EMPTY if isinstance(e, annona_bridge.AnnonaGatewayEmpty)  # giro 7b
+                           else classify_send_error(e, _stream_started))
+                mark_send_failed(msgs[_sent_index], _status, e)
+                if st.session_state.get("auto_save_enabled", True):
+                    _save_current_conversation()
+                st.rerun()
             st.error(f"❌ Errore: {e}")
 
 # ============================================================================
@@ -926,9 +1131,9 @@ c1, c2, _ = st.columns([2, 8, 2])
 c1.caption("🤖 DeepAiUG by Gilles")
 c2.caption(f"{VERSION} - Socratic Mode | DeepAiUG © 2026")
 
-# Visual indicators
-if connection_type == "Cloud provider":
-    # Rosso per cloud (warning: dati esterni)
+# Visual indicators — 🔒 v1.16.0: la destinazione reale, non l'etichetta
+if destination["outside"]:
+    # Rosso fuori casa (cloud o host su internet: dati esterni)
     st.markdown(
         '<style>.stApp { border-top: 4px solid #ff6b6b !important; }</style>',
         unsafe_allow_html=True

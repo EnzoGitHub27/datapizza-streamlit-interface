@@ -94,6 +94,52 @@ def select_device() -> Tuple[str, str]:
         return "cpu", f"controllo GPU fallito ({type(e).__name__}: {e})"
 
 
+# ============================================================================
+# Niente rete se il modello è già sul disco (v1.16.0, giro 6)
+# ============================================================================
+# SentenceTransformer(nome) interroga huggingface.co per ogni file del modello
+# (oltre trenta richieste all'avvio) anche quando è tutto nella cache. Se il
+# modello è già in cache si carica con local_files_only=True; si va in rete
+# solo se manca (il primo uso) o se la cache è incompleta, con una riga nel
+# terminale.
+# ============================================================================
+
+
+def model_in_cache(model_name: str) -> bool:
+    """True se il modello è una cartella locale o è già nella cache di huggingface."""
+    if os.path.isdir(model_name):
+        return True
+    try:
+        from huggingface_hub import try_to_load_from_cache
+
+        return all(
+            isinstance(try_to_load_from_cache(model_name, f), str)
+            for f in ("modules.json", "config.json")
+        )
+    except Exception:
+        return False
+
+
+def load_sentence_transformer(model_name: str, device: str, factory=None):
+    """Carica il modello: dalla cache senza rete se c'è, altrimenti da huggingface.co.
+
+    Restituisce (modello, origine) con origine «cache» o «rete».
+    """
+    if factory is None:
+        from sentence_transformers import SentenceTransformer as factory
+
+    if model_in_cache(model_name):
+        try:
+            return factory(model_name, device=device, local_files_only=True), "cache"
+        except Exception as exc:
+            print(f"🌐 Embedding {model_name}: cache incompleta ({type(exc).__name__}), "
+                  f"lo scarico da huggingface.co")
+    else:
+        print(f"🌐 Embedding {model_name}: non è ancora sul disco (primo uso), "
+              f"lo scarico da huggingface.co")
+    return factory(model_name, device=device), "rete"
+
+
 class _EmbeddingsHelper:
     """
     Wrapper attorno a sentence-transformers. Carica il modello una sola volta
@@ -107,7 +153,9 @@ class _EmbeddingsHelper:
         self.model_name = model_name
         self.device, reason = select_device()
         print(f"🧮 Embedding {model_name} su {self.device}: {reason}")
-        self.model = SentenceTransformer(model_name, device=self.device)
+        self.model, self.source = load_sentence_transformer(
+            model_name, self.device, factory=SentenceTransformer
+        )
 
     def encode_query(self, texts: List[str]) -> List[List[float]]:
         prefixed = [QUERY_PREFIX + t for t in texts]
