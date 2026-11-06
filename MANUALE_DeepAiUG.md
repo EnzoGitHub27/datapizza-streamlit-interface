@@ -415,6 +415,7 @@ L'orchestrazione è in `rag/manager.py` (`KnowledgeBaseManager`). Ogni indicizza
 - Override con `DEEPAIUG_EMBEDDING_MODEL`; alternative note: `intfloat/multilingual-e5-base` (768 dim), `intfloat/multilingual-e5-large` (1024 dim), `paraphrase-multilingual-MiniLM-L12-v2` (384 dim).
 - **Fallback**: se `sentence-transformers` non è disponibile, il sistema non si blocca: ChromaDB usa la propria embedding function di default (`all-MiniLM-L6-v2`, orientata all'inglese, qualità inferiore sull'italiano). La UI lo segnala ("🔤 Embedding: ChromaDB default (MiniLM-L6, EN)").
 - **Migrazione automatica**: la collection memorizza il tag del modello di embedding; se al riavvio il tag non coincide (o è assente, caso pre-1.15.0), la collection viene svuotata e va ri-indicizzata manualmente.
+- **Rete** (dalla 1.16.0, non ancora rilasciata): il modello si scarica da `huggingface.co` solo al primo uso, con una riga nel terminale («🌐 … primo uso, lo scarico da huggingface.co»); se è già nella cache sul disco si carica senza nessuna richiesta di rete. Con la cache incompleta lo riscarica, e lo dice.
 - Gli embedding **non usano Ollama**: girano nel processo Streamlit, di solito in CPU (CPU al 100% durante l'indicizzazione è normale); la GPU solo se torch la supporta (vedi §2.4).
 
 ## 9.4 Vector store e retrieval
