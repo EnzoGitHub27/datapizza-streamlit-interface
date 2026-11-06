@@ -5,13 +5,13 @@
 | | |
 |---|---|
 | **Prodotto** | DeepAiUG Chat 🧠 |
-| **Versione documentata** | v1.15.2 |
-| **Data manuale** | 2026-07-13 |
+| **Versione documentata** | v1.15.4 |
+| **Data manuale** | 2026-11-06 |
 | **Repository** | https://github.com/EnzoGitHub27/datapizza-streamlit-interface |
 | **Licenza** | MIT |
 | **Autore progetto** | Vincenzo Iodice (EnzoGitHub27) — community DeepAiUG |
 
-> Questo manuale è stato generato analizzando il codice sorgente in sola lettura. Documenta esclusivamente le funzionalità effettivamente presenti nella versione 1.15.2; le funzionalità pianificate per v2.0.0 (Semantic Layer, Knowledge Graph, Docker, API REST, journaling riflessivo) **non** sono trattate perché non ancora implementate.
+> Questo manuale è stato generato analizzando il codice sorgente in sola lettura. Documenta esclusivamente le funzionalità effettivamente presenti nella versione 1.15.4; le funzionalità pianificate per v2.0.0 (Semantic Layer, Knowledge Graph, Docker, API REST, journaling riflessivo) **non** sono trattate perché non ancora implementate.
 
 ---
 
@@ -54,12 +54,12 @@
 
 DeepAiUG è un'interfaccia web (basata su Streamlit) per dialogare con modelli linguistici (LLM), progettata secondo due principi fondanti:
 
-1. **Privacy-first.** Il funzionamento predefinito è completamente locale: il modello gira su Ollama sulla macchina dell'utente o su un server della rete locale. L'uso di provider cloud (OpenAI, Anthropic, Google) è possibile ma sorvegliato: quando sono in gioco documenti locali o Knowledge Base, l'invio al cloud viene bloccato o richiede conferma esplicita.
+1. **Privacy-first.** Il funzionamento predefinito è completamente locale: il modello gira su Ollama sulla macchina dell'utente o su un server della rete locale. L'uso di provider cloud (OpenAI, Anthropic, Google) è possibile ma sorvegliato: con la Knowledge Base attiva l'invio al cloud è bloccato; con documenti caricati nella sessione è richiesta una conferma esplicita; in altri casi (per esempio una chat caricata che contiene dati locali) c'è solo un avviso — vedi Capitolo 20.
 2. **Approccio socratico.** L'applicazione non si limita a rispondere: offre strumenti ("bottoni socratici", "Mappa Sessione") che restituiscono attrito cognitivo, aiutando l'utente a esaminare assunzioni, limiti e prospettive alternative invece di delegare il giudizio all'AI. Questi strumenti sono sempre disattivabili: l'attrito ha valore solo se scelto (si veda `PHILOSOPHY.md` nel repository).
 
 **Funzionalità principali in sintesi:**
 
-- Chat multi-turno con risposte in streaming, verso tre tipi di backend: **Ollama locale**, **server remoto** (API compatibile OpenAI, tipicamente Ollama in LAN), **provider cloud** (OpenAI, Anthropic, Google Gemini, endpoint custom).
+- Chat multi-turno con risposte in streaming, verso tre tipi di backend: **Ollama locale**, **server remoto** (API compatibile OpenAI, tipicamente Ollama in LAN), **provider cloud** (OpenAI, Anthropic, Google Gemini, endpoint custom). Anthropic e Google richiedono pacchetti aggiuntivi che gli installer non installano (vedi 2.3).
 - **Upload di file** in chat (PDF, TXT, MD, DOCX, immagini) con estrazione del testo.
 - **Knowledge Base documentale (RAG)**: indicizzazione di cartelle locali, wiki MediaWiki/DokuWiki, vault Obsidian/LogSeq/export Notion, con ricerca semantica multilingua (ChromaDB + embedding `intfloat/multilingual-e5-small`).
 - **KB Chat epistemica**: le conversazioni salvate possono essere marcate per rilevanza e reindicizzate come memoria consultabile nelle risposte future.
@@ -68,7 +68,7 @@ DeepAiUG è un'interfaccia web (basata su Streamlit) per dialogare con modelli l
 - **Persistenza e export**: salvataggio automatico delle conversazioni, esportazione in Markdown, JSON, TXT, PDF e ZIP batch.
 - **Branding personalizzabile** (titolo, icona, banner, tema "Matrix" con pioggia di caratteri).
 
-**Nota sui nomi:** la cartella/repository si chiama `datapizza-streamlit-interface` (usa il framework `datapizza-ai` per i client LLM), ma il prodotto si chiama **DeepAiUG** e l'installer lo colloca in `~/DeepAiUG`. La versione autorevole è quella dichiarata in `config/constants.py` (`VERSION = "1.15.2"`); il campo `version = "0.1.0"` in `pyproject.toml` è solo metadato del pacchetto Poetry e va ignorato.
+**Nota sui nomi:** la cartella/repository si chiama `datapizza-streamlit-interface` (usa il framework `datapizza-ai` per i client LLM), ma il prodotto si chiama **DeepAiUG** e l'installer lo colloca in `~/DeepAiUG`. La versione autorevole è quella dichiarata in `config/constants.py` (`VERSION = "1.15.4"`); il campo `version = "0.1.0"` in `pyproject.toml` è solo metadato del pacchetto Poetry e va ignorato.
 
 ---
 
@@ -88,7 +88,7 @@ DeepAiUG è un'interfaccia web (basata su Streamlit) per dialogare con modelli l
 
 - **Requisito operativo verificato dagli script**: Python **≥ 3.10**.
 - Gli installer, quando Python manca, installano **Python 3.12** (su macOS scaricano `python-3.12.10-macos11.pkg`).
-- Se si installa via Poetry, `pyproject.toml` richiede `python >= 3.12, < 3.14`.
+- **Poetry non è un percorso supportato**: `pyproject.toml` (che richiede `python >= 3.12, < 3.14`) non elenca tutte le dipendenze (mancano tra gli altri chromadb, sentence-transformers, pypdf, mwclient, dokuwiki, reportlab, python-docx, Pillow) e ha pin diversi da `requirements.txt`. Usare `requirements.txt`, come fanno gli installer.
 
 ## 2.3 Dipendenze principali (`requirements.txt`)
 
@@ -103,6 +103,8 @@ Dalla v1.15.2 il `requirements.txt` **pinna tutte le dipendenze** (`==`) per bui
 | Export | `reportlab==4.4.9` |
 | Upload file | `python-docx==1.2.0`, `Pillow==12.3.0` |
 
+⚠️ **Anthropic e Google Gemini non funzionano con la sola installazione standard**: usano i client `datapizza-ai-clients-anthropic` e `datapizza-ai-clients-google`, che non sono in `requirements.txt` e non vengono installati dagli installer. Senza di essi, scegliendo quei provider la chat risponde con «❌ Errore: …» (ImportError). Per usarli: `pip install datapizza-ai-clients-anthropic datapizza-ai-clients-google` dentro il venv (`~/DeepAiUG/venv`). OpenAI e gli endpoint compatibili OpenAI funzionano senza pacchetti aggiuntivi.
+
 ⚠️ **Ordine di installazione critico**: `datapizza-ai` va installato **prima** di `requirements.txt`, perché `datapizza-ai-clients-openai-like` ne dipende. Gli installer ufficiali rispettano già quest'ordine.
 
 ⚠️ **Spazio disco**: `sentence-transformers` trascina `torch` come dipendenza (≈ 888 MB su Linux, ≈ 250 MB su Mac). Al primo utilizzo del RAG viene inoltre scaricato da HuggingFace il modello di embedding `intfloat/multilingual-e5-small` (≈ 118 MB, cache in `~/.cache/huggingface/hub/`).
@@ -110,7 +112,7 @@ Dalla v1.15.2 il `requirements.txt` **pinna tutte le dipendenze** (`==`) per bui
 ## 2.4 Ollama e hardware
 
 - **Ollama** è il motore LLM locale. Gli installer lo installano automaticamente (Linux: `curl -fsSL https://ollama.com/install.sh | sh`; macOS: Homebrew, script o zip in `/Applications/`).
-- **GPU: non richiesta.** L'embedding RAG gira in CPU dentro il processo Streamlit; la GPU viene rilevata dagli installer a solo scopo informativo.
+- **GPU: non richiesta.** L'embedding RAG gira dentro il processo Streamlit: sulla GPU solo se la build di torch installata la supporta, altrimenti in CPU (dalla v1.15.4; prima, su schede come la MX250, l'indicizzazione falliva con «no kernel image»). `DEEPAIUG_EMBEDDINGS_DEVICE=cpu` o `cuda` forza la scelta; il device scelto compare una volta nel terminale («🧮 Embedding … su cpu: …»).
 - Modello LLM suggerito dagli installer in base alla RAM:
 
 | RAM | Modello suggerito | Alternative |
@@ -161,9 +163,17 @@ Stessa logica in 12 passi, con queste differenze:
 - Launcher: `~/DeepAiUG/DeepAiUG.command` e, in modalità best-effort, un bundle `~/DeepAiUG/DeepAiUG.app` con icona `.icns` generata dal logo (via `sips` + `iconutil`) e rimozione della quarantena.
 - **Nota Gatekeeper**: alla prima esecuzione può servire tasto destro → "Apri".
 
-## 3.3 Cosa fare dopo l'installazione
+## 3.3 Installazione su Windows 11 — `installer/INSTALLA_DeepAiUG.bat`
 
-1. Avviare dal menu applicazioni (Linux) o dal `.app`/`.command` (macOS): il browser si apre in 20–30 secondi.
+- Tasto destro su `INSTALLA_DeepAiUG.bat` → **«Esegui come amministratore»**: lo script verifica i permessi (`net session`) e si ferma se mancano.
+- Installa in `%USERPROFILE%\DeepAiUG`, con log in `%USERPROFILE%\DeepAiUG_install_log.txt`.
+- Se mancano, scarica **Python 3.12.10** (python.org) e **Ollama** (`OllamaSetup.exe`).
+- Crea l'**icona DeepAiUG sul Desktop** per l'avvio.
+- Aggiornamento: `installer/AGGIORNA_DeepAiUG.bat`; diagnostica: `installer/CHECK_DeepAiUG.bat` (vedi anche `installer/INIZIA-QUI.txt`).
+
+## 3.4 Cosa fare dopo l'installazione
+
+1. Avviare dal menu applicazioni (Linux), dal `.app`/`.command` (macOS) o dall'icona sul Desktop (Windows): il browser si apre in 20–30 secondi.
 2. (Facoltativo) Personalizzare i file YAML di configurazione — vedi Capitolo 6.
 3. (Facoltativo) Configurare le chiavi API cloud — vedi Capitolo 7.
 
@@ -188,7 +198,7 @@ Gli script di aggiornamento (log in `~/DeepAiUG_update_log.txt`):
 
 ## 4.2 Diagnostica — `check_deepaiug.sh`
 
-Script unico per Linux e macOS (rileva l'OS con `uname -s`). Verifica: Python ≥ 3.10, presenza di Ollama (nel PATH o in `/Applications/Ollama.app`), esistenza di `~/DeepAiUG`, del venv e di `requirements.txt`; elenca i modelli con `ollama list` e mostra le ultime 20 righe del log di installazione. Al termine stampa il conteggio errori e l'esito.
+Script unico per Linux e macOS (rileva l'OS con `uname -s`); su Windows si usa `installer/CHECK_DeepAiUG.bat`. Verifica: Python ≥ 3.10, presenza di Ollama (nel PATH o in `/Applications/Ollama.app`), esistenza di `~/DeepAiUG`, del venv e di `requirements.txt`; elenca i modelli con `ollama list` e mostra le ultime 20 righe del log di installazione. Al termine stampa il conteggio errori e l'esito.
 
 ---
 
@@ -207,7 +217,7 @@ I launcher creati dall'installer fanno esattamente questo, avviando prima Ollama
 ## 5.2 Porta e parametri server
 
 - **Porta: 8501** (default Streamlit — non è configurata esplicitamente nel progetto).
-- `.streamlit/config.toml` contiene **solo il tema** ("Matrix": `primaryColor = "#00d4aa"`, sfondo `#020c06`, testo `#c8ffd4`, font monospace). **Non** contiene alcuna sezione `[server]`: valgono i default di Streamlit, incluso il limite upload widget di 200 MB (il limite applicativo reale per file è però 10 MB, imposto dal codice).
+- `.streamlit/config.toml` contiene **solo il tema** ("Matrix": `primaryColor = "#00d4aa"`, sfondo `#020c06`, testo `#c8ffd4`, font monospace). **Non** contiene alcuna sezione `[server]`: valgono i default di Streamlit, incluso il limite upload widget di **200 MB**: è il limite reale per file. Il valore `MAX_FILE_SIZE_MB = 10` di `config/constants.py` compare solo nel testo d'aiuto del widget e **non viene controllato** dal codice.
 - Per cambiare porta o binding si possono usare le normali opzioni Streamlit, ad es. `streamlit run app.py --server.port 8502 --server.address 127.0.0.1`.
 
 ⚠️ **L'applicazione non ha autenticazione né isolamento per-utente**: chiunque raggiunga la porta 8501 è "l'utente". Non esporre la porta su reti non fidate senza un reverse proxy con autenticazione (vedi Capitolo 10).
@@ -228,7 +238,7 @@ app:
 news_banner:
   enabled: true               # banner novità in alto
   # text: "..."               # testo personalizzato (commentato = default di versione)
-  # version: "1.15.2"
+  # version: "..."            # se assente vale VERSION di config/constants.py
 matrix_rain: true             # effetto "pioggia Matrix" sullo sfondo
 matrix_rain_intensity: 0.055  # opacità; range consigliato 0.01–0.20
 ```
@@ -261,6 +271,8 @@ providers:
     default_model: "gemini-2.0-flash"
   custom: {}                  # base_url e modelli liberi
 ```
+
+⚠️ Per **Custom** la UI non ha un campo Base URL: vale il `base_url` scritto qui dal sistemista (nel file fornito è vuoto). L'utente sceglie solo il modello.
 
 Se il file manca, la UI usa i provider hardcoded in `config/constants.py` (OpenAI → `gpt-4o-mini`, Anthropic → `claude-sonnet-4-20250514`, Google → `gemini-1.5-pro`, Custom).
 
@@ -356,7 +368,7 @@ Le chiavi dei provider cloud **non** stanno in `cloud_models.yaml`. Sono lette i
 
 **Precauzioni per l'amministratore:**
 
-- `secrets/` è esclusa da git (`.gitignore`), ma i file sono salvati **in chiaro** e possono nascere con permessi larghi (664). Su macchine condivise applicare `chmod 600 secrets/*.txt` e preferire variabili d'ambiente o `.env` con permessi ristretti.
+- `secrets/` è esclusa da git (`.gitignore`), ma i file sono salvati **in chiaro**. Dalla v1.15.2 le chiavi salvate dalla UI hanno permessi **0600** (solo il proprietario); controllare i permessi solo dei file creati a mano (`chmod 600 secrets/*.txt`) e preferire variabili d'ambiente o `.env` con permessi ristretti.
 - La visualizzazione in chiaro delle chiavi salvate nella UI è disattivata di default (`show_saved_keys: false` in `security_settings.yaml`); lasciarla così salvo necessità.
 - Non lasciare copie di backup dei file chiave in cartelle sincronizzate o mondo-leggibili.
 
@@ -389,7 +401,7 @@ Riferimento tecnico per il sistemista; l'uso dal punto di vista dell'utente è n
 
 `Adapter (sorgente) → Chunker → Embedding → ChromaDB → Retrieval top-k → contesto iniettato nel prompt`
 
-L'orchestrazione è in `rag/manager.py` (`KnowledgeBaseManager`). Ogni indicizzazione **svuota e ricostruisce** la collection (non è incrementale, salvo il rilevamento dei file modificati per i vault).
+L'orchestrazione è in `rag/manager.py` (`KnowledgeBaseManager`). Ogni indicizzazione **svuota e ricostruisce** l'unica collection della KB documentale: una sorgente nuova **sostituisce** la precedente (non si possono combinare, per esempio, una wiki e un vault) e non esiste aggiornamento incrementale.
 
 ## 9.2 Chunking
 
@@ -402,7 +414,7 @@ L'orchestrazione è in `rag/manager.py` (`KnowledgeBaseManager`). Ogni indicizza
 - Override con `DEEPAIUG_EMBEDDING_MODEL`; alternative note: `intfloat/multilingual-e5-base` (768 dim), `intfloat/multilingual-e5-large` (1024 dim), `paraphrase-multilingual-MiniLM-L12-v2` (384 dim).
 - **Fallback**: se `sentence-transformers` non è disponibile, il sistema non si blocca: ChromaDB usa la propria embedding function di default (`all-MiniLM-L6-v2`, orientata all'inglese, qualità inferiore sull'italiano). La UI lo segnala ("🔤 Embedding: ChromaDB default (MiniLM-L6, EN)").
 - **Migrazione automatica**: la collection memorizza il tag del modello di embedding; se al riavvio il tag non coincide (o è assente, caso pre-1.15.0), la collection viene svuotata e va ri-indicizzata manualmente.
-- Gli embedding **non usano Ollama né GPU**: girano in CPU nel processo Streamlit (CPU al 100% durante l'indicizzazione è normale).
+- Gli embedding **non usano Ollama**: girano nel processo Streamlit, di solito in CPU (CPU al 100% durante l'indicizzazione è normale); la GPU solo se torch la supporta (vedi §2.4).
 
 ## 9.4 Vector store e retrieval
 
@@ -425,7 +437,7 @@ L'orchestrazione è in `rag/manager.py` (`KnowledgeBaseManager`). Ogni indicizza
 
 # Capitolo 10 — Sicurezza e raccomandazioni operative
 
-Sintesi dell'audit statico `SECURITY_AUDIT.md` (v1.15.1, 2026-07-07): **nessun RCE** (assenti `pickle`/`eval`/`exec`/`os.system`; YAML sempre con `safe_load`; unico subprocess `ollama list` senza shell; upload mai scritti su disco; export senza zip-slip; nessuna chiave hardcoded). Rilevati 0 Critical, 4 High, 4 Medium, 4 Low. **La v1.15.2 corregge i finding H1–H4 e M1–M4** (blocco endpoint metadati cloud, blocco cloud esteso a KB Chat, banner basati sulla destinazione reale, chiavi API a permessi 0600, migrazione a `pypdf`, dipendenze pinnate).
+Sintesi dell'audit statico `SECURITY_AUDIT.md` (v1.15.1, 2026-07-07): **nessun RCE** (assenti `pickle`/`eval`/`exec`/`os.system`; YAML sempre con `safe_load`; unico subprocess `ollama list` senza shell; upload mai scritti su disco; export senza zip-slip; nessuna chiave hardcoded). Rilevati 0 Critical, 4 High, 4 Medium, 4 Low. **La v1.15.2 corregge i finding H1–H3 e M1–M4** (blocco endpoint metadati cloud, blocco cloud esteso a KB Chat, banner basati sulla destinazione reale, renderer della chat senza HTML grezzo, chiavi API a permessi 0600, migrazione a `pypdf`, dipendenze pinnate); **H4** (lettura di cartelle indicate dall'utente) è un rischio accettato, vedi il punto 5 (`SECURITY_AUDIT_RESOLUTION.md`).
 
 ## 10.1 Modello di minaccia
 
@@ -452,7 +464,7 @@ L'app è pensata per **uso mono-utente locale**. Non ha login: "utente" è chiun
 All'apertura del browser (di norma `http://localhost:8501`) trovi:
 
 - **Tema "Matrix"**: sfondo verde scurissimo, testo verde-teal, titoli con effetto glitch e, se abilitata, la "pioggia" di caratteri in sottofondo (personalizzabile o disattivabile dal sistemista via `branding.yaml`).
-- **Titolo dinamico** che indica il backend attivo: `🧠 DeepAiUG Chat → Ollama v1.15.2` (locale), `→ Remote` o `→ {provider}` (cloud).
+- **Titolo dinamico** che indica il backend attivo: `🧠 DeepAiUG Chat → Ollama 1.15.4` (locale), `→ Remote` o `→ {provider}` (cloud).
 - **Banner novità** con le note della versione (se non è attiva la Knowledge Base).
 - **Indicatore di connessione** — dalla v1.15.2 per Local/Remote riflette la **destinazione reale** dell'URL (Cap. 20.0), non l'etichetta della modalità:
   - `🔒 Rete fidata - i dati restano nella tua rete ({host})` (verde: loopback, LAN, Tailscale)
@@ -502,6 +514,8 @@ Per usare un server Ollama nella tua rete locale (es. una macchina con GPU).
 
 Per usare OpenAI, Anthropic (Claude), Google Gemini o un endpoint custom.
 
+> ⚠️ Anthropic e Google funzionano solo se il sistemista ha installato i loro client nel venv (Capitolo 2.3); altrimenti l'invio del messaggio dà «❌ Errore: …».
+
 - **Provider**: elenco configurato dal sistemista (o i quattro predefiniti).
 - **API Key**: se non ne hai una salvata, inseriscila e premi **💾 Salva** (verrà ricordata). Se ne esiste una salvata vedrai "✅ Key salvata (nascosta per sicurezza)" e il bottone **🔄 Usa altra key** per sostituirla.
 - **Modello**: dall'elenco del provider; se abilitato, l'opzione **✏️ Altro...** permette di digitare un modello non in lista.
@@ -514,7 +528,7 @@ Per usare OpenAI, Anthropic (Claude), Google Gemini o un endpoint custom.
 |---|---|---|---|
 | System Prompt | testo libero | "Sei un assistente utile. Rispondi in modo chiaro e preciso." | Istruzioni permanenti date al modello |
 | Temperature | 0.0 – 2.0 (step 0.1) | 0.7 | Creatività: bassa = risposte prevedibili, alta = più varie |
-| Max messaggi | 10 – 100 (step 10) | 50 | Quanti messaggi recenti restano nel contesto |
+| Max messaggi | 10 – 100 (step 10) | 50 | Quanti messaggi recenti restano nel contesto. Vale solo **senza** contesto KB: quando la Knowledge Base o la KB Chat trovano risultati, la domanda viene inviata con il solo contesto dei documenti, senza la cronologia |
 
 ---
 
@@ -529,13 +543,13 @@ Sopra il campo messaggio puoi trascinare o selezionare **più file**:
 | Documenti | PDF, TXT, MD, DOCX | Il testo viene estratto e aggiunto al tuo messaggio |
 | Immagini | PNG, JPG, JPEG, GIF, WEBP | Richiedono un modello "Vision" (vedi sotto) |
 
-**Limiti**: massimo **10 MB per file**; il testo estratto da un documento viene troncato a **50.000 caratteri** (con nota esplicita nel messaggio). Dai PDF viene estratto il testo pagina per pagina (`[Pagina N]`); dai DOCX paragrafi e tabelle; i PDF di sole immagini vengono segnalati come privi di testo estraibile.
+**Limiti**: il widget indica «Max 10MB per file», ma è solo un'indicazione: il limite effettivo è quello di Streamlit, **200 MB**. File grandi rallentano l'estrazione e allungano molto il messaggio; il testo estratto da un documento viene troncato a **50.000 caratteri** (con nota esplicita nel messaggio). Dai PDF viene estratto il testo pagina per pagina (`[Pagina N]`); dai DOCX paragrafi e tabelle; i PDF di sole immagini vengono segnalati come privi di testo estraibile.
 
 Ogni file allegato appare in un'**anteprima** richiudibile: thumbnail per le immagini, primi 500 caratteri per i documenti, con icona per tipo (📕 PDF, 📘 DOCX, 📄 TXT, 📝 MD, 🖼️ immagine).
 
 **Modelli Vision**: le immagini sono accettate solo se il nome del modello è riconosciuto come multimodale (LLaVA e varianti, Granite3-Vision, Moondream, BakLLaVA, CogVLM, Fuyu, MiniCPM-V). Con un modello non-Vision compare l'avviso "⚠️ Immagini rilevate ma il modello non supporta Vision" e le immagini vengono ignorate.
 
-> ✅ **Novità v1.15.3 (Vision local-only)**: con un modello Vision le immagini allegate vengono **inviate davvero al modello** insieme al testo (nelle versioni precedenti venivano preparate ma non inviate). Funziona solo su **Local (Ollama)** e **Remote host** — mai verso il cloud, dove l'upload resta disabilitato. Le immagini sono **effimere**: non vengono salvate in conversazioni, KB o vault; nella cronologia restano solo i nomi dei file allegati.
+> ✅ **Novità v1.15.3 (Vision local-only)**: con un modello Vision le immagini allegate vengono **inviate davvero al modello** insieme al testo (nelle versioni precedenti venivano preparate ma non inviate). Funziona solo su **Local (Ollama)** e **Remote host** — mai verso il cloud, dove l'upload resta disabilitato. ⚠️ Se il Remote host punta a un indirizzo Internet (banner giallo «Host esterno»), anche le immagini e i file allegati escono dalla tua rete: il blocco riguarda solo la modalità «Cloud provider». Le immagini sono **effimere**: non vengono salvate in conversazioni, KB o vault; nella cronologia restano solo i nomi dei file allegati.
 
 **Su cloud** l'upload è disabilitato: "📎 Upload file disabilitato per privacy".
 
@@ -543,8 +557,13 @@ Ogni file allegato appare in un'**anteprima** richiudibile: thumbnail per le imm
 
 - Scrivi nel campo (placeholder "Scrivi il tuo messaggio...", oppure "Chiedi qualcosa sui tuoi documenti..." se la KB è attiva) e premi **🚀 Invia**.
 - Prima dell'invio l'app verifica: modello selezionato ("❌ Seleziona un modello!"), chiave API per il cloud ("❌ Inserisci API key!"), blocco KB+cloud ("🔒 Cloud bloccato con Knowledge Base o KB Chat attiva!").
+- Le risposte con **blocchi di codice** si possono copiare con l'icona in alto a destra del blocco.
+
+> ✅ **Novità v1.15.4**: i blocchi di codice restano interi anche dopo la fine dello streaming e nelle conversazioni ricaricate. Prima, un blocco con righe vuote (quasi tutto il codice Python) veniva spezzato e, copiandolo, negli appunti comparivano scritte «[object Object]».
+
 - Se la Knowledge Base è attiva vedrai gli spinner "🔍 Ricerca documenti rilevanti..." e/o "📚 Ricerca nella KB Chat...", con il conteggio dei documenti trovati; le **fonti** usate compaiono sotto la risposta nell'expander **"📎 Fonti (N)"**.
-- Il bottone **🔄 Nuova** azzera tutto e apre una conversazione nuova (messaggi, contatori, allegati, storico socratico, mappa sessione).
+- Il bottone **🔄 Nuova** azzera e apre una conversazione nuova (messaggi, contatori, storico socratico, mappa sessione).
+- ⚠️ **Limite noto:** il riquadro degli allegati **non si svuota** da solo, né dopo l'invio né con «🔄 Nuova». Prima del messaggio successivo togli a mano i file dal riquadro (la ✕ accanto a ciascuno) o ricarica la pagina, altrimenti potrebbero essere allegati di nuovo.
 
 ---
 
@@ -557,7 +576,8 @@ Sidebar → expander **📚 Knowledge Base** (aperto di default).
 ## 14.1 Attivazione
 
 Spunta **"🔍 Usa Knowledge Base"**. Comparirà:
-- `🔒 Privacy OK - Dati locali` se sei in Local/Remote;
+- `🔒 Privacy reale - dati e chat restano nella tua rete` se sei in Local/Remote verso un indirizzo della tua rete;
+- `⚠️ La chat che usa la KB va a un host esterno ({host})` se il Remote host risolve a un indirizzo Internet (la KB **non** viene bloccata in questo caso);
 - `🔒 Cloud provider bloccato per privacy!` se sei su cloud (la KB non funziona con il cloud, per scelta di design).
 
 Quando la KB è attiva e indicizzata, nell'area principale appare il banner: `📚 Knowledge Base ATTIVA - N documenti | N chunks`.
@@ -573,7 +593,7 @@ Quando la KB è attiva e indicizzata, nell'area principale appare il banner: `�
 | Vault LogSeq | 🟤 | `.md`, `.org`; ignora le cartelle di backup di LogSeq |
 | Export Notion | ⬛ | `.md` |
 
-Il tipo di vault viene **riconosciuto automaticamente** dal percorso ("🟣 Obsidian rilevato — N file compatibili trovati"). Oltre alle sorgenti predisposte dal sistemista (in `wiki_sources.yaml`), l'opzione **"➕ Configura manualmente..."** permette di inserire URL wiki o percorsi ad hoc, con opzioni avanzate (namespace, numero massimo di pagine, autenticazione username/password).
+Il tipo di vault viene **riconosciuto automaticamente** dal percorso ("🟣 Obsidian rilevato — N file compatibili trovati"). Oltre alle sorgenti predisposte dal sistemista (in `wiki_sources.yaml`), l'opzione **"➕ Configura manualmente..."** (disponibile solo se il sistemista imposta `mode: "custom"` in `wiki_sources.yaml`, o se il file non ha sorgenti; il file fornito usa `mode: "selectable"`) permette di inserire URL wiki o percorsi ad hoc, con opzioni avanzate (namespace, numero massimo di pagine, autenticazione username/password).
 
 ## 14.3 Indicizzazione
 
@@ -582,7 +602,7 @@ Il tipo di vault viene **riconosciuto automaticamente** dal percorso ("🟣 Obsi
 3. Leggi il **banner di stima**: numero di file/pagine e tempo previsto in base al modello di embedding ("💡 CPU al 100% durante l'embedding — è normale, non chiudere l'app").
 4. Premi il bottone di indicizzazione (**🔄 Indicizza Documenti**, **🔄 Indicizza Obsidian**, **🔄 Sincronizza Wiki**, ecc.) e segui la barra di avanzamento fino a "✅ Indicizzazione completata!".
 
-Ogni indicizzazione ricostruisce da zero l'indice della sorgente. Per le wiki già configurate viene mostrata la data dell'ultimo sync e il numero di pagine.
+Ogni indicizzazione ricostruisce da zero l'intera Knowledge Base: indicizzare una sorgente nuova **sostituisce** quella precedente (una sola sorgente attiva alla volta). Per le wiki già configurate viene mostrata la data dell'ultimo sync e il numero di pagine.
 
 ## 14.4 Statistiche e parametri di ricerca
 
@@ -689,7 +709,7 @@ La mappa (expander **"📊 Mappa della sessione"**) contiene tre elementi:
 2. **Domande → frame** — per ogni tua domanda, come ha costruito o rinforzato quella cornice;
 3. **Frame non esplorati** — 2–3 prospettive alternative, formulate come domande, che la sessione non ha percorso.
 
-La mappa non giudica e non dà consigli. È generata **dallo stesso modello che stai già usando** (nessun invio aggiuntivo verso l'esterno), richiede almeno **2 domande** e può essere rigenerata con **🔄 Rigenera mappa** (o creata su una conversazione caricata con **📊 Genera mappa**).
+La mappa non giudica e non dà consigli. È generata **dallo stesso modello che stai già usando**: è una chiamata in più, che contiene tutte le tue domande della sessione. Se sei su cloud, quelle domande vengono inviate di nuovo al provider; in modalità **Progressiva** la chiamata parte dopo **ogni** risposta. Richiede almeno **2 domande** e può essere rigenerata con **🔄 Rigenera mappa** (o creata su una conversazione caricata con **📊 Genera mappa**).
 
 ---
 
@@ -699,7 +719,7 @@ Sidebar → `### 💬 Conversazione`.
 
 ## 18.1 Salvataggio automatico
 
-La checkbox **"Auto-save"** (attiva di default) salva la conversazione su disco a ogni messaggio (e dopo ogni esplorazione socratica). Non esiste — e non serve — un bottone "Salva" manuale. Le conversazioni non si possono rinominare: sono identificate da data e ora di creazione.
+La checkbox **"Auto-save"** (attiva di default) salva la conversazione su disco a ogni messaggio. Dopo un'esplorazione socratica la conversazione viene salvata **anche con Auto-save spento**: con Auto-save spento e senza bottoni socratici, invece, la chat non viene salvata (e la KB Chat non la trova). Non esiste — e non serve — un bottone "Salva" manuale. Le conversazioni non si possono rinominare: sono identificate da data e ora di creazione.
 
 ## 18.2 Caricare una conversazione
 
@@ -716,9 +736,9 @@ Il menu **"Carica"** elenca le conversazioni salvate come `{icone} {data} - {mod
 Selezionata la conversazione, premi **📂 Carica**:
 - se sei su **cloud** e la chat contiene dati locali, il caricamento è **bloccato** per privacy;
 - se la chat usava una KB locale "pesante" (**≥ 50 file**) viene chiesta conferma, con stima del tempo di ri-indicizzazione (**✅ Procedi** / **❌ Annulla**);
-- al caricamento vengono ripristinati messaggi, contatori, impostazioni KB, storico socratico e metadati, e la Knowledge Base viene **ri-indicizzata automaticamente** con barra di avanzamento.
+- al caricamento vengono ripristinati messaggi, contatori, impostazioni KB, storico socratico e metadati, e, se la chat usava una **cartella locale o un vault** ancora presente, la Knowledge Base viene **ri-indicizzata automaticamente** con barra di avanzamento. Per le **wiki** viene solo riattivata la KB con l'indice già presente, che può essere di un'altra sorgente: in quel caso risincronizza la wiki a mano.
 
-**🗑️ Elimina** cancella definitivamente la conversazione dal disco.
+**🗑️ Elimina** chiede conferma (**✅ Elimina** / **❌ Annulla**) e poi cancella definitivamente la conversazione dal disco. Dalla **v1.15.4** toglie anche i suoi pezzi dalla **KB Chat**, se ne faceva parte. Per le chat eliminate con versioni precedenti, «🔄 Aggiorna KB Chat» toglie ora dalla KB Chat i pezzi delle chat che non esistono più o non sono più incluse.
 
 ---
 
@@ -760,9 +780,9 @@ Dalla v1.15.2 un **classificatore URL** (`core/url_validator.py`) verifica dove 
 
 I banner di connessione riflettono quindi la **destinazione reale** dell'URL, non l'etichetta della modalità: se in "Remote host" inserisci un indirizzo Internet, l'interfaccia te lo segnala.
 
-## 20.1 Blocco totale: Knowledge Base + cloud
+## 20.1 Blocco: Knowledge Base + cloud
 
-Con la **Knowledge Base attiva** il passaggio a un provider cloud è **impedito**: "🔒 Cloud bloccato: Knowledge Base o KB Chat attiva. I tuoi dati locali rimangono privati!" e la connessione torna su Local. Dalla v1.15.2 il blocco copre anche il toggle **"📚 Usa KB Chat"** (`use_chat_kb`). Analogamente, su cloud l'upload di file è disabilitato.
+Con la **Knowledge Base attiva** il passaggio a un provider cloud è **impedito**: "🔒 Cloud bloccato: Knowledge Base o KB Chat attiva. I tuoi dati locali rimangono privati!" e la connessione torna su Local. Dalla v1.15.2 il blocco copre anche il toggle **"📚 Usa KB Chat"** (`use_chat_kb`). Analogamente, su cloud l'upload di file è disabilitato. Il blocco vale per la modalità **«Cloud provider»**: un Remote host che punta a un indirizzo Internet riceve KB e allegati con il solo banner «Host esterno» (vedi 20.0).
 
 ## 20.2 Conferma esplicita: documenti in memoria
 
@@ -776,7 +796,9 @@ Ogni nuovo documento caricato azzera un eventuale consenso precedente.
 
 ## 20.3 Protezione delle conversazioni salvate
 
-Le chat che contengono dati locali (allegati, KB, vault) sono marcate con 🔒 quando sei su cloud e **non possono essere caricate** finché non torni in locale/remoto.
+Le chat che contengono dati locali (allegati, KB, vault) sono marcate con 🔒 quando sei su cloud e **non possono essere caricate** mentre sei su cloud.
+
+⚠️ **Attenzione all'ordine:** se carichi una chat del genere mentre sei in Local/Remote, disattivi la KB e **poi** passi al cloud, non c'è nessun blocco: compare solo un avviso, e al primo messaggio **l'intera cronologia** (comprese le risposte ricavate da documenti locali) viene inviata al provider. La conferma esplicita del 20.2 scatta solo per i file caricati in questa sessione. Per restare privato, apri una **nuova conversazione** prima di passare al cloud.
 
 ## 20.4 Cosa è cambiato in v1.15.2 (e cosa devi comunque sapere)
 
@@ -785,9 +807,11 @@ Due dei tre limiti noti documentati per la v1.15.1 sono stati affrontati dall'au
 - ✅ **RISOLTO** — *"Il toggle 📚 Usa KB Chat non è coperto dal blocco cloud"*: dalla v1.15.2 il blocco cloud copre anche `use_chat_kb`. Con KB Chat attiva il passaggio al cloud è impedito, esattamente come per la KB documentale (vedi 20.1).
 - ✅ **MIGLIORATO** — *"Remote host è considerato fidato per definizione"*: ora il classificatore URL (vedi 20.0) verifica l'indirizzo a cui l'host risolve realmente e l'interfaccia ti avvisa con "⚠️ Host esterno" se la destinazione è fuori dalla tua rete; gli endpoint metadati cloud sono bloccati del tutto. Resta tua la decisione finale: l'avviso non impedisce di usare un host esterno.
 
-Limite ancora valido in v1.15.2:
+Limiti ancora validi in v1.15.4:
 
 - La Mappa Sessione e i bottoni socratici usano il modello corrente: se sei su cloud, anche quelle richieste vanno al provider cloud.
+- Una chat caricata e poi usata sul cloud manda tutta la cronologia (vedi 20.3).
+- Un Remote host su un indirizzo Internet non è bloccato: solo avvisato (vedi 20.0 e 20.1).
 
 ---
 
@@ -795,7 +819,7 @@ Limite ancora valido in v1.15.2:
 
 | Parametro | Valore | Regolabile da UI |
 |---|---|---|
-| Dimensione massima file allegato | 10 MB | No |
+| Dimensione massima file allegato | 200 MB (limite di Streamlit; i «10 MB» del testo d'aiuto non sono controllati) | No |
 | Troncamento testo documento | 50.000 caratteri | No |
 | Formati upload | pdf, txt, md, docx, png, jpg, jpeg, gif, webp | No |
 | Temperature | 0.7 (0.0–2.0) | Sì |
@@ -826,7 +850,7 @@ Limite ancora valido in v1.15.2:
 | KB svuotata dopo aggiornamento a v1.15.x | Migrazione automatica per cambio modello embedding | Ri-indicizzare le sorgenti e premere 🔄 Aggiorna KB Chat |
 | "⚠️ Storage: Memoria (temporaneo)" | ChromaDB non installato | Installare `chromadb`; senza, l'indice si perde alla chiusura |
 | CPU al 100% durante l'indicizzazione | Normale: embedding in CPU | Attendere; non chiudere l'app |
-| Le immagini allegate vengono ignorate | Modello non-Vision, o limite noto v1.15.x (Vision API non integrata) | Usare il testo dei documenti; le immagini non raggiungono ancora il modello |
+| Le immagini allegate vengono ignorate | Modello non-Vision (nome non riconosciuto) o connessione cloud | Usare un modello vision locale (llava, moondream) su Local/Remote: dalla v1.15.3 le immagini arrivano al modello |
 | "❌ Pacchetto `mwclient` non installato" | Dipendenza wiki mancante | `pip install mwclient` (o `dokuwiki`) nel venv |
 | PDF non esportabile | `reportlab` mancante | `pip install reportlab` nel venv |
 | Verifica generale dell'installazione | — | Eseguire `installer/check_deepaiug.sh` |
@@ -851,4 +875,4 @@ Limite ancora valido in v1.15.2:
 
 ---
 
-*Manuale generato dall'analisi del codice sorgente DeepAiUG v1.15.2 — 2026-07-13. Nessun file di codice è stato modificato.*
+*Manuale generato dall'analisi del codice sorgente DeepAiUG v1.15.2 — 2026-07-13; aggiornato alla v1.15.4 il 2026-11-06 dopo l'audit `docs/AUDIT_pre_v1.16.0.md`.*

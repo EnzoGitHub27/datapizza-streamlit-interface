@@ -9,7 +9,7 @@ from config import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP
 from core import (
     list_saved_conversations,
     load_conversation,
-    delete_conversation,
+    delete_conversation_and_kb,
     extract_kb_settings,
     get_kb_metadata,
 )
@@ -105,9 +105,36 @@ def render_conversations_manager():
                             st.rerun()
 
             with col_d:
+                # v1.15.4 — conferma, poi via il file E i pezzi nella KB Chat
                 if st.button("🗑️ Elimina"):
-                    delete_conversation(sel_entry["id"])
+                    st.session_state["pending_delete_id"] = sel_entry["id"]
                     st.rerun()
+
+            pending_del = st.session_state.get("pending_delete_id")
+            if pending_del and pending_del == sel_entry["id"]:
+                in_kb = sel_entry.get("kb_metadata", {}).get("includi_in_kb")
+                st.sidebar.warning(
+                    "🗑️ Eliminare definitivamente questa conversazione?"
+                    + (" Verrà tolta anche dalla KB Chat." if in_kb else "")
+                )
+                col_yes, col_no = st.sidebar.columns(2)
+                with col_yes:
+                    if st.button("✅ Elimina", key="confirm_delete"):
+                        st.session_state.pop("pending_delete_id", None)
+                        result = delete_conversation_and_kb(pending_del)
+                        if not result["kb_ok"]:
+                            st.session_state["_delete_kb_warning"] = True
+                        st.rerun()
+                with col_no:
+                    if st.button("❌ Annulla", key="cancel_delete"):
+                        st.session_state.pop("pending_delete_id", None)
+                        st.rerun()
+
+            if st.session_state.pop("_delete_kb_warning", False):
+                st.sidebar.warning(
+                    "⚠️ Conversazione eliminata, ma la KB Chat non ha risposto: "
+                    "usa «🔄 Aggiorna KB Chat» per togliere i suoi pezzi."
+                )
 
             # Pannello conferma per vault pesanti
             pending_id = st.session_state.get("pending_load_id")

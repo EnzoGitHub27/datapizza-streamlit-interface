@@ -1,0 +1,7 @@
+# requirements-dev.txt — DeepAiUG v1.15.4
+# Dipendenze solo per lo sviluppo e i test (l'app non ne ha bisogno).
+# Installazione, dentro il venv del repo:
+#   venv/bin/python -m pip install -r requirements-dev.txt
+# Test:
+#   venv/bin/python -m pytest
+pytest==9.2.0

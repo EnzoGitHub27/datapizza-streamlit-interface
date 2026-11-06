@@ -7,6 +7,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
+from .conversation import conversation_models  # v1.15.4
+
 from config import (
     CONVERSATIONS_DIR,
     DEFAULT_CHUNK_SIZE,
@@ -76,6 +78,7 @@ def save_conversation(
     socratic_history: List[Dict[str, Any]] = None,  # v1.9.0
     kb_metadata: Dict[str, Any] = None,  # v1.14.0
     vault_used: bool = False,  # v1.14.2
+    models_used: List[str] = None,  # v1.15.4
 ) -> bool:
     """
     Salva una conversazione su file.
@@ -91,6 +94,7 @@ def save_conversation(
         socratic_history: Esplorazioni socratiche serializzate (v1.9.0, opzionale)
         kb_metadata: Metadati per inclusione nella KB epistemica (v1.14.0, opzionale)
         vault_used: True se la conversazione ha usato un vault (v1.14.2)
+        models_used: modelli che hanno risposto, scritto solo se più di uno (v1.15.4)
 
     Returns:
         True se salvato con successo
@@ -114,6 +118,8 @@ def save_conversation(
             "kb_metadata": kb_metadata or dict(KB_METADATA_DEFAULT),  # v1.14.0
             "vault_used": vault_used,  # v1.14.2
         }
+        if models_used and len(models_used) > 1:  # v1.15.4
+            conversation_data["models_used"] = list(models_used)
         
         filename = get_conversation_filename(conversation_id)
         with open(filename, "w", encoding="utf-8") as f:
@@ -189,12 +195,17 @@ def list_saved_conversations() -> List[Dict[str, Any]]:
                 with open(file_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 sensitivity = conversation_has_sensitive_content(data)
+                # v1.15.4: il modello dai messaggi, la testata solo di ripiego
+                answered = conversation_models(
+                    data.get("messages", []), data.get("model") or "", data.get("provider") or ""
+                )
                 conversations.append({
                     "id": data.get("conversation_id"),
                     "created_at": data.get("created_at"),
                     "last_updated": data.get("last_updated"),
-                    "model": data.get("model"),
-                    "provider": data.get("provider"),
+                    "model": answered["model"],
+                    "provider": answered["provider"],
+                    "models_used": answered["models_used"],
                     "message_count": data.get("stats", {}).get("total_messages", 0),
                     "is_sensitive": sensitivity["is_sensitive"],
                     "reason": sensitivity["reason"],

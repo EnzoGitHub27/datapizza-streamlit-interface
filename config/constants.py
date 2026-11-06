@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.15.3"
+VERSION = "1.15.4"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "👁️ Vision local-only: allega un'immagine e falla leggere a un modello vision locale (LLaVA, Moondream). Mai sul cloud."
+VERSION_DESCRIPTION = "🧩 Codice copiato intero dalla chat, niente più «[object Object]»; «Elimina» toglie la chat anche dalla KB Chat."
 
 # ============================================================================
 # PATHS
