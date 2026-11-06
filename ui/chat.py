@@ -99,6 +99,15 @@ def render_chat_message(
 
             st.markdown(content)
 
+        # v1.16.0 (decisione 11) — la domanda senza risposta porta il suo errore
+        send_status = message.get("send_status") if role == "user" else None
+        if send_status:
+            detail = message.get("send_error", "")
+            if send_status == "rifiutata":
+                st.error(f"⛔ **Rifiutata** dal fornitore — {detail}")
+            else:
+                st.warning(f"⚠️ **Non inviata** — {detail}")
+
         # Show sources if present (RAG) — kept outside bubble as native expander
         if sources:
             with st.expander(f"📎 Fonti ({len(sources)})"):

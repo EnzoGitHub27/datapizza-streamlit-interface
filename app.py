@@ -63,6 +63,7 @@ from core import (
     conversation_models,  # v1.15.4
     delete_conversation,  # v1.16.0
 )
+from core.conversation import mark_send_failed, classify_send_error  # v1.16.0
 
 # 🆕 v1.5.0 - File processors
 from core.file_processors import get_attachment_names
@@ -780,6 +781,8 @@ if submit and user_input.strip():
         # doveva essere acceso, quindi verso fuori casa non parte niente
         st.error(f"🛡️ Configurazione ibrida non valida, messaggio non inviato: {HYBRID_ERROR}")
     else:
+        _sent_index = None        # v1.16.0 — la domanda di questo invio
+        _stream_started = False   # v1.16.0 — la richiesta è partita?
         try:
             # 🆕 v1.5.0 - Recupera file da session_state
             pending_files, pending_has_images, _ = get_pending_files()
@@ -797,6 +800,7 @@ if submit and user_input.strip():
             
             # Add user message (mostra testo originale, non enriched)
             add_message("user", user_input.strip(), attachments=attachment_names)
+            _sent_index = len(st.session_state["messages"]) - 1
 
             # 🆕 v1.10.0 - Incrementa contatore domande sessione
             st.session_state["n_domande_sessione"] += 1
@@ -920,6 +924,7 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                 response_text = ""
                 previous_text = ""
 
+                _stream_started = True
                 for chunk in client.stream_invoke(llm_input):
                     # Prima iterazione: rimuovi typing indicator
                     typing_placeholder.empty()
@@ -990,6 +995,15 @@ Cita sempre le fonti quando usi informazioni dai documenti.
             st.rerun()
 
         except Exception as e:
+            # v1.16.0 (decisione 11) — se la domanda di questo invio non ha avuto
+            # risposta, l'errore resta accanto a lei (salvato, visibile al rerun)
+            msgs = st.session_state.get("messages", [])
+            if (_sent_index is not None and _sent_index == len(msgs) - 1
+                    and msgs[_sent_index].get("role") == "user"):
+                mark_send_failed(msgs[_sent_index], classify_send_error(e, _stream_started), e)
+                if st.session_state.get("auto_save_enabled", True):
+                    _save_current_conversation()
+                st.rerun()
             st.error(f"❌ Errore: {e}")
 
 # ============================================================================

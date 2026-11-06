@@ -2,8 +2,27 @@
 # DeepAiUG v1.4.0 - Gestione conversazione in memoria
 # ============================================================================
 
+import re
 from datetime import datetime
 from typing import Dict, Any, List, Optional
+
+# v1.16.0 (decisione 11) — una domanda che non ha avuto risposta resta in chat
+# con l'errore accanto, anche dopo il rerun e ricaricando la conversazione.
+SEND_NOT_SENT = "non_inviata"   # non è partita (client, rete, connessione)
+SEND_REJECTED = "rifiutata"     # partita, il fornitore ha risposto con un errore
+
+# nomi di eccezione che dicono «non è partita»
+_NOT_SENT_ERRORS = (
+    "APIConnectionError", "ConnectError", "ConnectionError", "ConnectTimeout",
+    "BlockedURLError", "NewConnectionError", "MaxRetryError",
+)
+
+# chiavi e token da non salvare mai nel messaggio d'errore
+_SECRET_PATTERNS = [
+    re.compile(r"sk-[A-Za-z0-9_\-*]{6,}"),
+    re.compile(r"AIza[0-9A-Za-z_\-]{10,}"),
+    re.compile(r"(?i)(api[_-]?key|token|authorization|bearer)([\"'\s:=]+)[^\s\"',}]+"),
+]
 
 
 def create_message(
@@ -43,6 +62,35 @@ def create_message(
     return message
 
 
+def redact_secrets(text: str) -> str:
+    """Toglie da un messaggio d'errore ciò che somiglia a una chiave o a un token."""
+    out = text or ""
+    for pat in _SECRET_PATTERNS:
+        if pat.groups >= 2:
+            out = pat.sub(lambda m: f"{m.group(1)}{m.group(2)}[nascosto]", out)
+        else:
+            out = pat.sub("[chiave nascosta]", out)
+    return out
+
+
+def classify_send_error(exc: BaseException, stream_started: bool) -> str:
+    """«non_inviata» se la richiesta non è partita, «rifiutata» se il fornitore ha detto no."""
+    if not stream_started:
+        return SEND_NOT_SENT
+    names = {type(exc).__name__} | {c.__name__ for c in type(exc).__mro__}
+    if names & set(_NOT_SENT_ERRORS):
+        return SEND_NOT_SENT
+    return SEND_REJECTED
+
+
+def mark_send_failed(message: Dict[str, Any], status: str, error: BaseException) -> Dict[str, Any]:
+    """Segna la domanda come non inviata o rifiutata, con l'errore (senza chiavi)."""
+    detail = redact_secrets(f"{type(error).__name__}: {error}")
+    message["send_status"] = status
+    message["send_error"] = detail[:300]
+    return message
+
+
 def get_conversation_history(
     messages: List[Dict[str, Any]], 
     max_messages: int = None
@@ -60,9 +108,11 @@ def get_conversation_history(
     if max_messages and len(messages) > max_messages:
         messages = messages[-max_messages:]
     
+    # v1.16.0 — le domande non inviate o rifiutate non tornano al modello
     return [
         {"role": msg["role"], "content": msg["content"]} 
         for msg in messages
+        if not msg.get("send_status")
     ]
 
 
