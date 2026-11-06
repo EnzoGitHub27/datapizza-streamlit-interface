@@ -6,6 +6,31 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
+## [1.16.0] — non ancora rilasciata
+
+Ambiente ibrido, **opzionale e spento per default** (sezione `hybrid:` di `security_settings.yaml`): con l'ibrido spento l'app si comporta come la 1.15.4, salvo la destinazione reale (sotto, «Cambiato»). Ramo `feat/hybrid-pii-annona`; dettagli in `docs/SPEC_v1.16.0_hybrid.md` e nel Capitolo 21 di `MANUALE_DeepAiUG.md`.
+
+### Aggiunto
+- **rizzo-pii prima del cloud** (`core/pii_client.py`, `core/pii_guard.py`, `GuardedClient` dentro `create_client()`): verso fuori casa partono solo i segnaposto (`[FULLNAME_1]`, `[CF_1]`…), system prompt compreso, in una chiamata sola; la risposta, anche in streaming, torna con i valori veri ripristinati in locale. Coperte tutte le vie verso il modello: chat, bottoni socratici, nudge, generazione e rigenerazione della mappa, mappa progressiva. rizzo-pii giù, in modalità definitiva o con risposta rotta → **niente parte** e il testo torna nella casella. La tabella segnaposto → valore vive solo durante la chiamata: mai in log, cronologia, KB Chat o export
+- **Annona in sola lettura** (`core/annona_client.py`, `core/annona_bridge.py`, sezione «🧭 Annona» della sidebar): stato, ultime decisioni del registro (mai il testo) e verifica della catena; Annona giù → la sidebar lo dice e l'app procede; le risposte da fuori casa portano «📒 non registrato in Annona»
+- **Gateway di Annona, sperimentale** (`mode: gateway`): verso fuori casa decide, redige, chiama il modello e registra Annona; si perdono streaming, scelta del modello e chiavi dell'Interface. Annona giù, senza policy, in errore o `held` → niente parte. Le chiamate che non passano da Annona passano da rizzo-pii o, con rizzo-pii spento, si bloccano
+- **Nella chat**: il dialogo privacy offre «🛡️ Procedi con anonimizzazione»; il badge «🛡️ N dati tolti prima dell'invio» (si salva il solo numero); il riquadro «👁️ Cosa ha visto il modello» (solo nella sessione corrente, non si salva)
+- **L'errore del cloud resta visibile** accanto alla domanda, segnata «non inviata» o «rifiutata», anche dopo il rerun; la risposta interrotta a metà non si salva
+- `config/hybrid_settings.py` (lettore della sezione `hybrid:`: errori espliciti, `on_service_down.cloud` fisso a `block`), `NOTICE` (rizzo-pii MIT con la nota AGPL sui binari, Annona Apache-2.0, la dichiarazione «non retribuito»), `.graphifyignore`
+- Test con servizi finti (rizzo-pii, Annona e cloud simulati; conversazioni in cartelle temporanee): `test_pii_client`, `test_annona_client`, `test_egress`, `test_hybrid_settings`, `test_pii_guard`, `test_pii_guard_app`, `test_egress_labels`, `test_cloud_error_visible`, `test_annona_panel`, `test_annona_gateway`, `test_pii_badge`, `test_gateway_side_calls`
+
+### Cambiato
+- **La destinazione reale** (`core/egress.py`, `classify_destination()`): blocchi di KB, KB Chat, allegati e immagini, anonimizzazione, dialogo privacy, icone 🔒, bordo e titolo guardano dove va davvero il testo, non l'etichetta. Cloud OpenAI/Anthropic/Google sempre fuori casa; loopback, LAN e Tailscale in casa; **un Remote host su IP pubblico ora si comporta come il cloud** (prima riceveva KB e allegati con il solo banner «Host esterno»), anche con l'ibrido spento; nel dubbio (nome non risolvibile, URL rotto) si blocca
+
+### Limiti
+- **Pseudonimizzato non è anonimo** (GDPR): la tabella dei valori veri esiste sul computer durante la chiamata
+- **Il contesto si perde**: il modello vede `[FULLNAME_1]`, non chi è; la numerazione vale dentro una chiamata
+- **rizzo-pii su codice e testo tecnico** toglie troppo; importi, date e URL si tolgono per default (`exclude_tags` per lasciarli)
+- **Con il gateway** la domanda arriva ad Annona in chiaro su loopback e Annona scrive il testo del passo nel suo log
+- **RAG e upload verso il cloud restano bloccati**, anche con rizzo-pii
+- Le prestazioni di rizzo-pii con cronologie lunghe sono da misurare; manca la prova dal vivo con rizzo-pii e Annona veri
+
+---
 ## [1.15.4] — 2026-11-06
 
 Versione di sole correzioni, dall'audit `docs/AUDIT_pre_v1.16.0.md` (ramo `feat/hybrid-pii-annona`).

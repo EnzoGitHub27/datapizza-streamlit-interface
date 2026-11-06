@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | **Prodotto** | DeepAiUG Chat 🧠 |
-| **Versione documentata** | v1.15.4 |
+| **Versione documentata** | v1.15.4 (+ Capitolo 21: ambiente ibrido della v1.16.0, non ancora rilasciata) |
 | **Data manuale** | 2026-11-06 |
 | **Repository** | https://github.com/EnzoGitHub27/datapizza-streamlit-interface |
 | **Licenza** | MIT |
@@ -42,6 +42,7 @@
 - [Capitolo 18 — Gestione delle conversazioni](#capitolo-18--gestione-delle-conversazioni)
 - [Capitolo 19 — Esportazione](#capitolo-19--esportazione)
 - [Capitolo 20 — Privacy: come DeepAiUG protegge i tuoi dati](#capitolo-20--privacy-come-deepaiug-protegge-i-tuoi-dati)
+- [Capitolo 21 — L'ambiente ibrido: rizzo-pii e Annona (v1.16.0, non ancora rilasciata)](#capitolo-21--lambiente-ibrido-rizzo-pii-e-annona-v1160-non-ancora-rilasciata)
 
 **Appendici**
 - [Appendice A — Tabella dei limiti e valori predefiniti](#appendice-a--tabella-dei-limiti-e-valori-predefiniti)
@@ -312,7 +313,7 @@ cloud_api_keys:
 #   log_connections: ...
 ```
 
-L'unica impostazione attiva oggi è `show_saved_keys`. La sezione `remote_servers` è un segnaposto commentato senza effetto.
+L'unica impostazione attiva nella 1.15.4 è `show_saved_keys`. La sezione `remote_servers` è un segnaposto commentato senza effetto. Dalla 1.16.0 (non ancora rilasciata) il file ha anche la sezione `hybrid:`, spenta per default: vedi il Capitolo 21.3.
 
 ## 6.5 `wiki_sources.yaml` — sorgenti wiki e documentali
 
@@ -782,7 +783,7 @@ I banner di connessione riflettono quindi la **destinazione reale** dell'URL, no
 
 ## 20.1 Blocco: Knowledge Base + cloud
 
-Con la **Knowledge Base attiva** il passaggio a un provider cloud è **impedito**: "🔒 Cloud bloccato: Knowledge Base o KB Chat attiva. I tuoi dati locali rimangono privati!" e la connessione torna su Local. Dalla v1.15.2 il blocco copre anche il toggle **"📚 Usa KB Chat"** (`use_chat_kb`). Analogamente, su cloud l'upload di file è disabilitato. Il blocco vale per la modalità **«Cloud provider»**: un Remote host che punta a un indirizzo Internet riceve KB e allegati con il solo banner «Host esterno» (vedi 20.0).
+Con la **Knowledge Base attiva** il passaggio a un provider cloud è **impedito**: "🔒 Cloud bloccato: Knowledge Base o KB Chat attiva. I tuoi dati locali rimangono privati!" e la connessione torna su Local. Dalla v1.15.2 il blocco copre anche il toggle **"📚 Usa KB Chat"** (`use_chat_kb`). Analogamente, su cloud l'upload di file è disabilitato. Il blocco vale per la modalità **«Cloud provider»**: un Remote host che punta a un indirizzo Internet riceve KB e allegati con il solo banner «Host esterno» (vedi 20.0). **Dalla 1.16.0** un Remote host su IP pubblico si comporta come il cloud: KB, KB Chat, allegati e immagini sono bloccati (Capitolo 21.4).
 
 ## 20.2 Conferma esplicita: documenti in memoria
 
@@ -811,7 +812,122 @@ Limiti ancora validi in v1.15.4:
 
 - La Mappa Sessione e i bottoni socratici usano il modello corrente: se sei su cloud, anche quelle richieste vanno al provider cloud.
 - Una chat caricata e poi usata sul cloud manda tutta la cronologia (vedi 20.3).
-- Un Remote host su un indirizzo Internet non è bloccato: solo avvisato (vedi 20.0 e 20.1).
+- Un Remote host su un indirizzo Internet non è bloccato: solo avvisato (vedi 20.0 e 20.1). Dalla 1.16.0 è bloccato come il cloud (Capitolo 21.4).
+
+---
+
+# Capitolo 21 — L'ambiente ibrido: rizzo-pii e Annona (v1.16.0, non ancora rilasciata)
+
+> Questo capitolo descrive una funzione della **1.16.0**, che è sul ramo di sviluppo e **non è ancora rilasciata**. È **opzionale e spenta per default**: con la sezione `hybrid:` assente o spenta, DeepAiUG si comporta come la 1.15.4. Il dettaglio tecnico è in `docs/SPEC_v1.16.0_hybrid.md`.
+
+L'idea: usare un modello cloud senza mandargli i dati personali. Prima che il testo esca di casa, un programma locale toglie nomi, codici fiscali, indirizzi e simili e li sostituisce con **segnaposto** (`[FULLNAME_1]`, `[CF_1]`…). Il cloud risponde usando i segnaposto e DeepAiUG rimette i valori veri **sul tuo computer**, prima di mostrarti la risposta.
+
+## 21.1 I due programmi
+
+- **rizzo-pii** (licenza MIT, https://github.com/Rizzo-AI-Academy/rizzo-pii) — riconosce i dati personali nel testo italiano e li sostituisce con segnaposto. È il pezzo che serve: **l'ambiente ibrido funziona anche solo con rizzo-pii.** DeepAiUG lo chiama su `http://127.0.0.1:5005`.
+- **Annona** (licenza Apache-2.0, https://github.com/akaion-ai/annona) — un «kernel» che decide dove può andare ogni passo, secondo una policy, e tiene un **registro** a catena delle decisioni. È **facoltativo**. DeepAiUG lo chiama su `http://127.0.0.1:7070`.
+
+Entrambi sono **programmi separati**: DeepAiUG non li include, non li scarica e non li installa. Li chiama soltanto via HTTP, e solo su loopback (`127.0.0.1`): un indirizzo diverso viene rifiutato. Licenze e note sono nel file `NOTICE`.
+
+> Vincenzo Iodice (Gilles) ha un ruolo non retribuito di Technical Advisor in Akaion, che sviluppa Annona. Annona è opzionale e spenta per default; l'ambiente ibrido funziona anche solo con rizzo-pii, che non ha legami con Akaion.
+
+## 21.2 Installarli (a parte)
+
+Si installano **seguendo i loro README**, non con script di DeepAiUG:
+
+- rizzo-pii: il README del suo repository (sopra). Attenzione: le build già pronte di rizzo-pii (AppImage, `.deb`, `.exe`, `.dmg`) e la sua immagine Docker sono rilasciate sotto **AGPL-3.0** (vedi il `NOTICE`); il codice sorgente è MIT.
+- Annona: il README del suo repository (sopra), compresa la scrittura della policy.
+
+Prima di accendere l'ambiente ibrido, verifica che il servizio risponda sul suo indirizzo (`/health`). Con rizzo-pii spento e l'ambiente ibrido acceso, verso il cloud **non parte niente** (21.4).
+
+## 21.3 La sezione `hybrid:` di `security_settings.yaml`
+
+```yaml
+hybrid:
+  pii:
+    enabled: false                  # rizzo-pii prima del cloud
+    url: "http://127.0.0.1:5005"    # solo loopback
+    timeout_s: 30
+    exclude_tags: []                # tag lasciati in chiaro, es. ["AMOUNT"]; nessuno per default
+  annona:
+    enabled: false
+    url: "http://127.0.0.1:7070"    # solo loopback
+    mode: "read"                    # read = sola lettura in sidebar; gateway = sperimentale (21.6)
+  on_service_down:
+    cloud: "block"                  # fisso: altri valori sono un errore
+    local: "proceed"
+```
+
+- File o sezione assente → tutto spento.
+- Tipi sbagliati, YAML illeggibile o `on_service_down.cloud` diverso da `block` → **errore esplicito**, mai «spento» in silenzio: verso fuori casa non parte niente finché la configurazione non è corretta.
+- **Dove si anonimizza non si configura**: sempre e solo **fuori casa** (21.4). Una chiave `apply_to` nel file viene ignorata.
+
+## 21.4 «In casa» e «fuori casa»: la destinazione reale
+
+Dalla 1.16.0 i blocchi e l'anonimizzazione guardano **dove va davvero il testo**, non l'etichetta della connessione:
+
+| Destinazione | Esito |
+|---|---|
+| `Cloud provider` OpenAI, Anthropic, Google | **fuori casa**, sempre |
+| Ollama locale, Remote host o cloud «Custom» su loopback, rete privata (LAN) o Tailscale (`100.64.0.0/10`) | **in casa** |
+| Remote host su un **IP pubblico**, indirizzo link-local, nome non risolvibile o URL rotto | **fuori casa** (nel dubbio, si blocca) |
+
+**Novità importante, anche con l'ambiente ibrido spento:** un Remote host su un IP pubblico **ora si comporta come il cloud**. Knowledge Base, KB Chat, allegati e immagini verso quell'host sono **bloccati** (prima c'era solo il banner «Host esterno», vedi 20.0 e 20.1). Dialogo privacy, icone 🔒, bordo rosso e titolo seguono la stessa regola.
+
+Che cosa succede in ogni caso:
+
+| Situazione | In casa | Fuori casa |
+|---|---|---|
+| ambiente ibrido spento | come la 1.15.4 | come la 1.15.4 (con la regola della destinazione reale qui sopra) |
+| rizzo-pii acceso e funzionante | il testo parte così com'è | parte **solo il testo con i segnaposto**; la risposta torna con i valori veri |
+| rizzo-pii spento, lento o in caricamento | si procede | **si blocca**: «rizzo-pii non risponde: il messaggio non è stato inviato al cloud». Il testo torna nella casella |
+| rizzo-pii in modalità definitiva (senza tabella) | si procede | si blocca, con l'indicazione per riattivare la tabella |
+| rizzo-pii risponde male | si procede | si blocca |
+| immagine allegata | si procede | **errore, sempre** (le immagini non vanno mai fuori casa) |
+| Knowledge Base, KB Chat, allegati | si procede | **restano bloccati** nella 1.16.0, anche con rizzo-pii |
+| Annona attivata in modo `read` (accesa o spenta) | si procede; se è giù la sidebar lo dice | si procede come nelle righe sopra (con i segnaposto se rizzo-pii è acceso): Annona non vede i messaggi, e la risposta porta «📒 non registrato in Annona» |
+| Annona spenta, modo `gateway` | client di sempre | **si blocca** |
+| Annona risponde `held` (gateway) | — | si blocca e si mostra il motivo di Annona |
+| gateway acceso: bottoni socratici, nudge, mappa della sessione | client di sempre | con rizzo-pii acceso **passano da rizzo-pii**; con rizzo-pii spento **si bloccano**: «Con il gateway di Annona, questa funzione verso il cloud richiede rizzo-pii» |
+| errore del cloud (chiave sbagliata, rete, errore del fornitore) | — | l'errore **resta visibile in chat** accanto alla domanda, segnata «non inviata» o «rifiutata», anche ricaricando |
+| risposta interrotta a metà | — | la parte già arrivata **non si salva**; resta la domanda con l'errore |
+
+In tutti i blocchi: niente verso il fornitore, un messaggio chiaro, nessun testo dell'utente nei log.
+
+## 21.5 Che cosa vedi nella chat
+
+- **Il dialogo privacy**, con rizzo-pii attivo, offre **«🛡️ Procedi con anonimizzazione»** al posto di «Procedi comunque».
+- **Il badge** sotto la risposta: «🛡️ N dati tolti prima dell'invio». Il numero si salva con la conversazione e resta ricaricandola.
+- **Il riquadro «👁️ Cosa ha visto il modello»**: il testo com'è partito, con i segnaposto. Vale **solo nella sessione corrente**: non si salva, sparisce con «Nuova» e quando carichi una conversazione.
+- **Che cosa si salva**: la conversazione salvata contiene, come sempre, la tua domanda e la risposta **con i valori veri**, sul tuo computer; in più solo il numero dei dati tolti. La tabella segnaposto → valore **non si salva mai** (né nei log, né nella KB Chat, né nell'export).
+- **La sezione «🧭 Annona»** della sidebar (se Annona è attivata): stato del servizio, ultime decisioni del registro (classe, esito, substrato, regola, motivo: mai il testo) e verifica della catena. Si aggiorna al massimo ogni 20 secondi o con «🔄 Aggiorna». Se Annona è giù la sezione lo dice e l'app procede.
+
+## 21.6 Il gateway di Annona (sperimentale)
+
+Con `annona.mode: "gateway"`, per le destinazioni **fuori casa** non è DeepAiUG a chiamare il modello: manda la domanda ad Annona, che decide, redige secondo la sua policy, chiama il modello e registra il passo. In pagina compare l'avviso **«SPERIMENTALE»** e la risposta porta «🧭 via Annona (sperimentale)».
+
+Che cosa si perde:
+
+- **lo streaming**: la risposta arriva tutta insieme;
+- **la scelta del modello**: la fa la policy di Annona, non la sidebar (il modello salvato è `annona:<substrato>`);
+- **le chiavi**: quelle dei fornitori stanno nella policy di Annona, non in DeepAiUG.
+
+Da sapere:
+
+- la domanda arriva ad Annona **in chiaro**, su loopback: la redazione la fa Annona secondo la sua policy, non rizzo-pii;
+- se Annona è giù, senza policy, in errore, o trattiene il passo (`held`), **non parte niente** e la domanda resta in chat segnata «non inviata»;
+- bottoni socratici, nudge e mappa della sessione **non passano da Annona**: con rizzo-pii acceso passano da rizzo-pii, con rizzo-pii spento si bloccano (21.4);
+- in casa il gateway non si usa: resta il client di sempre.
+
+## 21.7 Limiti onesti
+
+- **Pseudonimizzato non è anonimo** (GDPR): la tabella dei valori veri esiste, sul tuo computer, per la durata della chiamata.
+- **Il contesto si perde**: il modello cloud vede `[FULLNAME_1]` e non sa se è un cliente o un fornitore. La numerazione vale dentro una chiamata: `[FULLNAME_1]` di un turno può essere un'altra persona nel turno dopo.
+- **rizzo-pii lavora bene sul testo italiano, non su codice o testo tecnico**: lì toglie troppo, in modo prudente. Una domanda con codice incollato può tornare piena di segnaposto.
+- **Importi, date e URL** vengono tolti per default: in una domanda tecnica il modello perde informazioni utili. Chi vuole li lascia in chiaro con `exclude_tags` (es. `["AMOUNT", "DATE"]`).
+- **Annona scrive il testo del passo in chiaro nel suo log**: con il gateway, chi ha accesso al computer vede quei file.
+- **Le prestazioni**: rizzo-pii gira sul processore e a ogni turno anonimizza di nuovo tutta la cronologia. Con conversazioni lunghe può essere lento.
+- **Knowledge Base e allegati verso il cloud restano bloccati** nella 1.16.0: lo sblocco si valuterà dopo aver misurato rizzo-pii sui documenti veri.
 
 ---
 
@@ -872,7 +988,11 @@ Limiti ancora validi in v1.15.4:
 | **Top-k** | Numero di passaggi recuperati dalla KB per ogni domanda (default 5) |
 | **System Prompt** | Istruzioni permanenti date al modello all'inizio di ogni scambio |
 | **Temperature** | Parametro che regola la variabilità delle risposte del modello |
+| **rizzo-pii** | Programma locale e separato che sostituisce i dati personali con segnaposto prima del cloud (v1.16.0, Capitolo 21) |
+| **Segnaposto** | Etichetta come `[FULLNAME_1]` al posto di un dato personale; il valore vero resta sul computer |
+| **Annona** | Kernel locale e separato, facoltativo, che decide dove può andare un passo e ne tiene il registro (v1.16.0, Capitolo 21) |
+| **In casa / fuori casa** | La destinazione reale del testo: loopback, LAN e Tailscale sono in casa; cloud e IP pubblici fuori casa (Capitolo 21.4) |
 
 ---
 
-*Manuale generato dall'analisi del codice sorgente DeepAiUG v1.15.2 — 2026-07-13; aggiornato alla v1.15.4 il 2026-11-06 dopo l'audit `docs/AUDIT_pre_v1.16.0.md`.*
+*Manuale generato dall'analisi del codice sorgente DeepAiUG v1.15.2 — 2026-07-13; aggiornato alla v1.15.4 il 2026-11-06 dopo l'audit `docs/AUDIT_pre_v1.16.0.md`; Capitolo 21 (ambiente ibrido v1.16.0, non ancora rilasciata) aggiunto il 2026-11-06.*
