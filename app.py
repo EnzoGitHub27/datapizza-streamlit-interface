@@ -776,6 +776,12 @@ if _guard_notice:
     st.error(_guard_notice)
 
 # ========== FORM MESSAGGIO ==========
+# v1.16.0 (giro 6) — un testo non inviato torna nella casella e ci resta: la
+# casella ha una chiave, quindi il valore sopravvive ai rerun (anche a quelli
+# della sidebar) finché l'utente non invia di nuovo o non la svuota lui.
+if "_restore_input" in st.session_state:
+    st.session_state["msg_input"] = st.session_state.pop("_restore_input")
+
 with st.form("msg_form", clear_on_submit=True):
     placeholder = (
         "Chiedi qualcosa sui tuoi documenti..." 
@@ -783,8 +789,8 @@ with st.form("msg_form", clear_on_submit=True):
         else "Scrivi il tuo messaggio..."
     )
     user_input = st.text_area(
-        "Messaggio", 
-        st.session_state.pop("_restore_input", ""),  # v1.16.0: testo non inviato
+        "Messaggio",
+        key="msg_input",  # v1.16.0 giro 6: il testo rimesso resta nella casella
         height=100, 
         placeholder=placeholder, 
         label_visibility="collapsed"
@@ -818,20 +824,29 @@ if submit and user_input.strip():
     )
     _url_blocked, _url_block_reason = is_blocked(base_url) if _uses_base_url else (False, "")
 
+    _pre_block = None  # v1.16.0 giro 6 — blocco prima dell'invio: il testo torna nella casella
     if not model:
-        st.error("❌ Seleziona un modello!")
+        _pre_block = "❌ Seleziona un modello!"
     elif connection_type == "Cloud provider" and not api_key:
-        st.error("❌ Inserisci API key!")
+        _pre_block = "❌ Inserisci API key!"
     elif destination["outside"] and (st.session_state.get("use_knowledge_base") or st.session_state.get("use_chat_kb")):
         # 🔒 v1.16.0 P2 — destinazione reale, non l'etichetta
-        st.error(f"🔒 {outside_label(destination)} bloccato con Knowledge Base o KB Chat attiva!")
+        _pre_block = f"🔒 {outside_label(destination)} bloccato con Knowledge Base o KB Chat attiva!"
     elif _url_blocked:
-        st.error(f"🔒 Connessione bloccata per sicurezza: {_url_block_reason}")
+        _pre_block = f"🔒 Connessione bloccata per sicurezza: {_url_block_reason}"
     elif HYBRID_ERROR and destination["outside"]:
         # v1.16.0 — configurazione ibrida illeggibile: non si sa se rizzo-pii
         # doveva essere acceso, quindi verso fuori casa non parte niente
-        st.error(f"🛡️ Configurazione ibrida non valida, messaggio non inviato: {HYBRID_ERROR}")
+        _pre_block = f"🛡️ Configurazione ibrida non valida, messaggio non inviato: {HYBRID_ERROR}"
+
+    if _pre_block:
+        st.session_state["_restore_input"] = user_input
+        st.session_state["_guard_blocked_notice"] = _pre_block
+        st.rerun()
     else:
+        # v1.16.0 giro 6 — partito l'invio, la casella si svuota (anche fuori dal
+        # browser); i blocchi qui sotto rimettono il testo con _restore_input
+        st.session_state["_restore_input"] = ""
         _sent_index = None        # v1.16.0 — la domanda di questo invio
         _stream_started = False   # v1.16.0 — la richiesta è partita?
         try:
