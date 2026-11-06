@@ -1,8 +1,9 @@
 # SPEC v1.16.0 «ibrida» — rizzo-pii e Annona come servizi opzionali
 
-**Stato:** bozza da leggere (giro 1) · **Data:** 2026-11-05 · **Base:** v1.15.3 · **Ramo:** `feat/hybrid-pii-annona`
-**Cosa c'è già nel ramo:** questa SPEC, `core/pii_client.py`, `core/annona_client.py` e i loro test con i servizi simulati. **Niente è collegato all'interfaccia.**
-**Cosa non c'è:** il collegamento in `app.py`, la configurazione nuova, il cambio di versione, README, CHANGELOG e ROADMAP. Si fanno dopo che Gilles ha letto questa SPEC.
+**Stato:** decisa (giro 3) · **Data:** 2026-11-05, aggiornata il 2026-11-06 · **Base:** v1.15.4 · **Ramo:** `feat/hybrid-pii-annona`
+**Cosa c'è già nel ramo:** questa SPEC, `core/pii_client.py`, `core/annona_client.py` e i loro test con i servizi simulati; il `NOTICE`; i blocchi decisi sulla destinazione reale (P2, `core/egress.py`); la sezione `hybrid:` di `security_settings.yaml` con il suo lettore (P5, `config/hybrid_settings.py`). **Il guard non è ancora collegato all'interfaccia** (P6, giro 4).
+**Cosa non c'è:** `GuardedClient`, la UI ibrida (badge, «cosa ha visto il modello», letture di Annona), il cambio di versione, README, CHANGELOG e ROADMAP.
+**Giro 3:** le decisioni di Gilles sono nella §13; le correzioni dell'audit (`docs/AUDIT_pre_v1.16.0.md` §2.1) sono dentro le sezioni a cui si riferiscono.
 
 ---
 
@@ -43,15 +44,17 @@ In più, il **`system_prompt`** viaggia dentro il client (parametro del costrutt
 
 ### 2.3 Le difese che ci sono già
 
-- **Cloud bloccato con KB o KB Chat attive** (`app.py:713-714`): oggi i pezzi del RAG **non arrivano mai al cloud**.
-- **Upload file disabilitato su cloud** (`ui/file_upload.py:205-211`): niente testo di documenti verso il cloud.
-- **Vision local-only** (ADR-0001, `core/llm_client.py:177-208`, `app.py:831-845`): le immagini diventano `MediaBlock` solo con un modello vision locale; sul cloud non c'è l'upload. È il precedente di questa SPEC: **una regola che impedisce a un tipo di dato di andare al cloud**.
+- **Cloud bloccato con KB o KB Chat attive** (`app.py:713-714`): nella 1.15.3 i pezzi del RAG **non arrivano mai a un `Cloud provider`**; a un **Remote host su IP pubblico sì**, con il solo banner «Host esterno» (H3b), perché il blocco guarda l'etichetta `connection_type` e non la destinazione (audit §2.1). Dal giro 3 il blocco guarda la destinazione reale: §3.1.
+- **Upload file disabilitato su cloud** (`ui/file_upload.py:205-211`): stessa lacuna nella 1.15.3 (blocco sull'etichetta); dal giro 3 sulla destinazione reale.
+- **Vision local-only** (ADR-0001, `core/llm_client.py:177-208`, `app.py:831-845`): le immagini diventano `MediaBlock` solo con un modello vision locale; sul cloud non c'è l'upload. Nella 1.15.3 un Remote host pubblico con un modello vision riceveva le immagini (stessa lacuna dell'etichetta); dal giro 3 no. È il precedente di questa SPEC: **una regola che impedisce a un tipo di dato di andare al cloud**.
 - **Dialogo privacy** (`ui/privacy_warning.py`): se nella sessione ci sono stati documenti e si passa al cloud, si sceglie fra «Reset chat» e «Procedi comunque» con conferma. Protegge la **cronologia**, che può contenere quello che il modello locale ha letto nei documenti.
 - **SSRF** (`core/url_validator.py`, `is_blocked`) e **banner sulla destinazione reale** (H3b, `classify_url`, `app.py:573-576`): un «Remote host» che risolve su un IP pubblico è di fatto fuori casa.
 
 ### 2.4 Che cosa può ancora uscire verso il cloud, in chiaro
 
-Quello che l'utente **scrive** (nomi, codici fiscali, IBAN incollati nel messaggio), la **cronologia** dopo «Procedi comunque», il `system_prompt`, i prompt socratici e la mappa della sessione. È questo che la 1.16.0 deve coprire.
+Quello che l'utente **scrive** (nomi, codici fiscali, IBAN incollati nel messaggio), la **cronologia** dopo «Procedi comunque», la **cronologia di una conversazione caricata** (`ui/sidebar/llm_config.py`: l'avviso dice «Non c'è alcun filtro che escluda i contenuti locali»), il `system_prompt`, i prompt socratici e i **messaggi dell'utente usati dalla mappa della sessione**. È questo che la 1.16.0 deve coprire.
+
+L'elenco esatto delle chiamate socratiche, dall'audit: `ui/socratic/buttons.py` (alternative, assunzioni, limiti, confuta, rifletti) e la generazione/rigenerazione in `app.py`. L'app usa del client **solo** `invoke` e `stream_invoke`: un involucro con questi due metodi copre tutto.
 
 ---
 
@@ -68,10 +71,28 @@ GuardedClient(inner, destination, pii, annona, settings)
 ```
 
 - **`input`** può essere una stringa o una lista di blocchi (`TextBlock`, `MediaBlock`): il guard anonimizza il testo dei `TextBlock`. Un `MediaBlock` verso il cloud è **sempre** un errore (la regola della Vision resta).
-- **Il `system_prompt`** si anonimizza una volta, quando `create_client` costruisce il client vero, con la sua tabella.
-- **`destination`** non è solo `connection_type`: per `Remote host` e Cloud «Custom» si usa `classify_url(base_url)` (come H3b). `loopback`/`private` = in casa; `public` = fuori casa, trattato come il cloud.
-- **Lo streaming:** l'app calcola i delta su `chunk.text` cumulativo (`app.py:860-866`). Il guard deve restituire chunk con un `.text` cumulativo **già ripristinato** e senza segnaposto a metà: lo fa `StreamRestorer` (in `core/pii_client.py`), che trattiene la coda che potrebbe essere l'inizio di un segnaposto (`[FULLN…`).
+- **Il `system_prompt` e il prompt si anonimizzano nella stessa chiamata a rizzo-pii** (correzione dell'audit): due chiamate separate darebbero due numerazioni, e `[FULLNAME_1]` del system prompt potrebbe essere una persona diversa da `[FULLNAME_1]` del messaggio. Il guard unisce `system_prompt` e testo con un separatore fisso, chiama `/analyze` una volta, divide il risultato e costruisce il client vero **per ogni chiamata** con il system prompt pulito. Nel ramo RAG il `system_prompt` è anche dentro `full_prompt`: il testo unico lo contiene due volte, con la stessa numerazione. Test dedicato.
+- **`invoke`** restituisce un **oggetto con `.text`** già ripristinato (i chiamanti leggono `.text`, poi `.content`, poi `str()`: `ui/socratic/session_map.py`, `ui/socratic/buttons.py`), non una stringa.
+- **`destination`** non è `connection_type`: è la regola unica della §3.1, la stessa dei blocchi di KB, upload e immagini.
+- **Lo streaming:** l'app calcola i delta su `chunk.text` **cumulativo** (`app.py`, ciclo di `stream_invoke`). `StreamRestorer.push()` (in `core/pii_client.py`) restituisce invece **delta** ripristinati, trattenendo la coda che potrebbe essere l'inizio di un segnaposto (`[FULLN…`). Il guard **accumula** i delta del restorer e produce chunk con `.text` cumulativo, già ripristinato e senza segnaposto a metà.
+- **La mappa della sessione:** il modello risponde in un formato che `_parse_llm_response` analizza (`ui/socratic/session_map.py`). Il guard per la mappa ripristina **dopo il parsing, campo per campo**, così un valore con caratteri speciali non rompe il formato. Test con un nome inventato con l'apostrofo («Lucia D'Angelo»).
+- **I metadati della conversazione:** al salvataggio, `"pii_guard": true/false` e il conteggio dei dati tolti (`"pii_removed": N`, mai i valori), accanto a `model`, `provider` e `models_used` della 1.15.4.
+- **Niente log di prompt o tabella:** il guard non chiama mai `logging`/`print` con il testo, anonimizzato o no, né con la tabella. Le eccezioni portano solo codici e tipi. Un test controlla i messaggi delle eccezioni.
 - **La cronologia** salvata (`add_message`) contiene i valori veri, perché la risposta è già ripristinata: resta sul computer. A ogni turno si anonimizza di nuovo tutto il `full_prompt`, quindi la numerazione dei segnaposto è coerente **dentro** la chiamata.
+
+### 3.1 La regola unica: la destinazione reale
+
+*(Scelta dell'Hub, da confermare da Gilles; nel codice dal giro 3, `core/egress.py`.)* Il guard **e** i blocchi di KB, KB Chat, upload e immagini decidono con la stessa funzione, `classify_destination(connection_type, provider, base_url)`:
+
+| Destinazione | Esito |
+|---|---|
+| `Cloud provider` OpenAI, Anthropic, Google | **fuori casa**, sempre (senza risolvere il nome) |
+| qualunque altra (Ollama locale, Remote host, cloud «Custom»): `classify_url(base_url)` → `loopback` o `private` (LAN, Tailscale 100.64/10) | **in casa** |
+| `public`, `link_local`, `invalid` (nome non risolvibile, URL rotto) | **fuori casa** (nel dubbio, si blocca) |
+
+Quindi un Remote host su IP pubblico si comporta come il cloud (decisione 5) e un cloud «Custom» su `localhost` (es. LM Studio) come «in casa». La chiave API resta chiesta in base all'etichetta (`Cloud provider`), perché serve al client, non alla privacy.
+
+**Restano sull'etichetta**, da riallineare con il guard (P6): il dialogo privacy (`ui/privacy_warning.py`), l'avviso sulla conversazione caricata (`ui/sidebar/llm_config.py`), le icone 🔒 delle conversazioni sensibili (`ui/sidebar/conversations.py`), il bordo rosso e il banner «☁️ Cloud».
 
 Il vantaggio di questo punto: il cambio in `app.py` è quasi nullo (una riga per passare le impostazioni), e nessuna via nuova verso il modello può nascere senza passare dal guard.
 
@@ -131,7 +152,7 @@ Altre cose dal codice e dalle prove del 23/10:
 | **B** | **Annona come libreria** | `pip install annona==0.1.3` nel `venv`, e nel guard: `classify_text` → `place` → `Ledger.record` | decide prima, l'Interface tiene il suo client e lo streaming; nessun demone da accendere | ~94 pacchetti in più nel venv dell'Interface (fra cui textual, uvicorn, fastapi, pdfplumber); `datapizza-ai-core` è già `0.1.3` in tutti e due, quindi oggi compatibile, ma i pin dovranno restare allineati; il registro va scritto nel file del demone senza che il demone sia in esecuzione (o con due scrittori, che Annona protegge solo con un lock **nel processo**) |
 | **C** | **Un endpoint nuovo in Annona** | chiedere ad Akaion `POST /api/kernel/place` (testo + destinazione → placement + voce nel registro, senza esecuzione) | la forma giusta: servizi separati, l'Interface decide con Annona e chiama il suo client | dipende da Akaion; nel frattempo serve A o B |
 
-**La mia proposta per la 1.16.0:** rizzo-pii dentro il guard dell'Interface (§3), con la regola fissa «verso fuori casa solo testo anonimizzato»; di Annona, **le letture** (stato, registro, verifica della catena) in una sezione della sidebar, e la **strada A come opzione sperimentale** per chi vuole che sia Annona a decidere e chiamare. La strada C si chiede ad Akaion, dichiarando il conflitto d'interessi (§9). La B la sconsiglio per una «installazione semplice».
+**Deciso (§13, decisioni 1 e 2):** rizzo-pii dentro il guard dell'Interface (§3), con la regola fissa «verso fuori casa solo testo anonimizzato»; di Annona, **le letture** (stato, registro, verifica della catena) in una sezione della sidebar, e la **strada A come opzione sperimentale**. La **C** si chiede ad Akaion (la richiesta la manda Gilles, con la dichiarazione della §10). La **B no**.
 
 Il client attuale (`core/annona_client.py`) serve già ad A e alle letture; `decide()`/`record()` restano pronti per C.
 
@@ -159,6 +180,10 @@ system_prompt ─┘                          │
 
 La tabella dei segnaposto **non** va nei log, nel registro di Annona, nella cronologia salvata, nella KB Chat né nell'export: vive solo per la durata della chiamata (`AnonymizedText.mapping` ha `repr=False`).
 
+**Nella UI** (decisioni 4 e 9): con rizzo-pii attivo il dialogo privacy offre **«Procedi con anonimizzazione»** al posto di «Procedi comunque»; dopo l'invio la risposta porta il badge **«🛡️ N dati tolti prima dell'invio»** e un riquadro richiudibile **«cosa ha visto il modello»** con il testo anonimizzato (solo in memoria, per la sessione). La tabella dei valori veri non si salva mai. Senza rizzo-pii, il dialogo di oggi.
+
+**RAG e upload verso fuori casa restano bloccati nella 1.16.0**, anche con rizzo-pii attivo (decisione 3): lo sblocco si valuta in una 1.16.x, dopo aver misurato rizzo-pii sui documenti veri.
+
 ---
 
 ## 7. Configurazione: spenta per default
@@ -173,7 +198,7 @@ hybrid:
     url: "http://127.0.0.1:5005"    # solo loopback: il client rifiuta altri indirizzi
     timeout_s: 30
     apply_to: ["cloud", "remote_public"]   # dove si anonimizza
-    exclude_tags: []                # tag lasciati in chiaro, es. ["AMOUNT"]
+    exclude_tags: []                # nessun tag in chiaro (decisione 7); es. ["AMOUNT"]
   annona:
     enabled: false
     url: "http://127.0.0.1:7070"
@@ -183,7 +208,9 @@ hybrid:
     local: "proceed"
 ```
 
-`on_service_down.cloud` si legge ma **non accetta** altri valori: un'impostazione che permette di mandare in chiaro al cloud quando rizzo-pii è spento è la cosa che questa versione esiste per evitare.
+`on_service_down.cloud` si legge ma **non accetta** altri valori: un'impostazione che permette di mandare in chiaro al cloud quando rizzo-pii è spento è la cosa che questa versione esiste per evitare. Qui «cloud» vuol dire **fuori casa** (§3.1).
+
+**Il lettore** (giro 3, `config/hybrid_settings.py`, `load_hybrid_settings()`): file assente, sezione assente o vuota → tutti i default (tutto spento); chiavi sconosciute ignorate; tipi sbagliati → errore esplicito (`HybridSettingsError`); `on_service_down.cloud` diverso da `block` → errore, mai un ripiego silenzioso. Con l'ibrido spento l'app si comporta come la 1.15.4.
 
 ---
 
@@ -199,8 +226,12 @@ hybrid:
 | Annona spento, modo `gateway` | si procede col client dell'Interface | **si blocca**: chi ha scelto il gateway ha scelto che decida Annona |
 | Annona risponde `held` | — | si blocca e si mostra `placement.reason` |
 | `MediaBlock` (immagine) verso fuori casa | — | errore, sempre (ADR-0001) |
+| immagine verso un **Remote host su IP pubblico** | — | **bloccata** come verso il cloud: l'upload è disattivato e nessun `MediaBlock` parte (§3.1, decisione 5). Anche con l'ibrido spento, dal giro 3 |
+| **errore del cloud** (chiave sbagliata, rete, 4xx/5xx del fornitore) | — | **l'errore resta visibile in chat accanto alla domanda**, segnata «non inviata» (non è partita) o «rifiutata» (il fornitore ha risposto con un errore), anche dopo il rerun (decisione 11). Con rizzo-pii acceso anche un invio rifiutato era già anonimizzato. Nessun controllo preventivo della chiave |
 
 In tutti i blocchi: nessun byte verso il fornitore, un `st.error` chiaro, nessun testo dell'utente nei log.
+
+*Il comportamento della 1.15.4 sull'errore del cloud (giro 2c):* la domanda è salvata **prima** della chiamata al modello; un'eccezione mostra «❌ Errore: …» sotto il modulo, senza rerun; al rerun successivo l'errore sparisce e la domanda resta senza risposta. È questo che la riga sopra corregge.
 
 ---
 
@@ -218,15 +249,19 @@ In tutti i blocchi: nessun byte verso il fornitore, un `st.error` chiaro, nessun
 - che la chiamata HTTP a un binario AGPL che gira **sullo stesso computer** non renda l'Interface un'opera combinata: l'interpretazione comune dice di no (comunicazione fra programmi separati), ma va confermata;
 - se in futuro l'installer dell'Interface **scaricasse** l'AppImage di rizzo-pii, diventerebbe distribuzione: va evitato o valutato a parte;
 - la strada B porta ~94 pacchetti con licenze proprie: va fatto l'elenco prima di sceglierla;
-- la licenza dell'Interface stessa: il README dichiara MIT e rimanda a `LICENSE`, ma **nel repo il file `LICENSE` non c'è**. Va aggiunto, insieme al NOTICE.
+- la licenza dell'Interface: `LICENSE` (MIT) c'è dalla 1.15.4; il `NOTICE` è nel ramo dal giro 3.
+
+**La regola, intanto (decisione 10):** l'Interface **non distribuisce né scarica** i binari né l'immagine Docker di rizzo-pii. Il punto AGPL si chiede **per iscritto** all'autore di rizzo-pii (la richiesta la manda Gilles).
 
 ---
 
 ## 10. Conflitto d'interessi
 
-Gilles è **Technical Advisor di Akaion**, l'azienda che sviluppa Annona. Va scritto nel README della 1.16.0, nella sezione dell'ambiente ibrido, con parole semplici. Proposta:
+Gilles ha un ruolo **non retribuito** di **Technical Advisor in Akaion**, l'azienda che sviluppa Annona. Va scritto nel README della 1.16.0, nella sezione dell'ambiente ibrido, con queste parole (decisione 2):
 
-> **Dichiarazione:** sono Technical Advisor di Akaion, che sviluppa Annona. Annona è opzionale e spenta per default; l'ambiente ibrido funziona anche solo con rizzo-pii, che non ha legami con Akaion.
+> Ho un ruolo non retribuito di Technical Advisor in Akaion, che sviluppa Annona. Annona è opzionale e spenta per default.
+
+L'ambiente ibrido funziona anche solo con rizzo-pii, che non ha legami con Akaion.
 
 Lo stesso vale per la richiesta della strada C ad Akaion e per le segnalazioni elencate nel dossier delle prove.
 
@@ -236,6 +271,7 @@ Lo stesso vale per la richiesta della strada C ad Akaion e per le segnalazioni e
 
 - **Pseudonimizzato non è anonimo** (GDPR): la tabella esiste, sul computer, per la durata della chiamata.
 - **rizzo-pii lavora bene su testo italiano**, non su codice o testo tecnico: lì toglie troppo (in modo prudente). Un prompt con codice incollato può tornare pieno di segnaposto.
+- **rizzo-pii toglie per default anche importi, date e URL:** in una domanda tecnica («il bonifico del 12/06 di € 1.200») il modello perde informazioni utili. Per default non si lascia in chiaro nessun tag (decisione 7); chi vuole aggiunge `AMOUNT` o `DATE` a `exclude_tags`.
 - **Il contesto si perde:** il modello cloud vede `[FULLNAME_1]`, non sa se è un cliente o un fornitore. Va detto nella UI.
 - **Annona scrive il testo del passo in chiaro nel suo log** (`logs/annona.log`) e il `payload_digest` del registro non ha sale: con la strada A, chi ha accesso al computer vede quei file.
 - **La numerazione** dei segnaposto vale dentro una chiamata: `[FULLNAME_1]` di un turno può essere un'altra persona nel turno dopo, se cambia l'ordine nel testo. Il modello cloud non lo sa.
@@ -245,44 +281,54 @@ Lo stesso vale per la richiesta della strada C ad Akaion e per le segnalazioni e
 
 ## 12. Piano dei test
 
-**Già nel ramo** (56 test, servizi simulati con `tests/fakes_http.py`, nessuna chiamata di rete; `venv/bin/python -m unittest tests.test_pii_client tests.test_annona_client`):
+**Il comando:** `venv/bin/python -m pytest` (pytest nei requisiti di sviluppo dalla 1.15.4).
+
+**Già nel ramo** (56 test dei client, servizi simulati con `tests/fakes_http.py`, nessuna chiamata di rete):
 - `tests/test_pii_client.py`: solo loopback; `/health` pronto, in caricamento (503), spento, timeout; `/analyze` ok, payload, tag esclusi, testo vuoto, 503, 400, JSON rotto, modalità definitiva; nessun valore nel testo pulito né nel `repr`; ripristino (forme con e senza parentesi, indici inventati, confini di parola con lettere accentate, una passata sola, `_10` contro `_1`, grassetto markdown); streaming spezzato a caso e un carattere alla volta.
 - `tests/test_annona_client.py`: solo loopback; health, status, policy 404, ledger con i parametri, verify, substrati; `ask` con `redacted`, con `held` in HTTP 200, 503 senza executor, 409, prompt vuoto, timeout lungo, `egress` fuori dal `repr`; `decide`/`record` → `AnnonaUnsupported`.
 
-**Da scrivere col collegamento (giro 2):**
-1. `GuardedClient`: stringa e lista di blocchi; `system_prompt`; `MediaBlock` verso il cloud → errore; destinazione da `classify_url`.
+**Dal giro 3:** `tests/test_egress.py` (destinazioni finte: pubblica, LAN, Tailscale, localhost, cloud fisso, Custom, non risolvibile; i blocchi di KB e upload) e `tests/test_hybrid_settings.py` (file assente, sezione assente, `cloud: allow` rifiutato, tipi sbagliati).
+
+**Da scrivere col collegamento (P6, giro 4):**
+1. `GuardedClient`: stringa e lista di blocchi; `system_prompt` e prompt in **una** chiamata a rizzo-pii (stessa numerazione); `invoke` → oggetto con `.text`; `MediaBlock` verso fuori casa → errore; destinazione da `classify_destination`; mappa della sessione ripristinata dopo il parsing («Lucia D'Angelo»); nessun log di prompt o tabella.
 2. Tutte e quattro le vie della §2.2 passano dal guard (test che fallisce se una chiamata arriva al client vero senza guard).
 3. Tabella §8, una riga per test: ogni blocco = zero chiamate al client cloud finto.
 4. Il chunk cumulativo dello streaming resta coerente con il calcolo dei delta di `app.py:860-866`.
-5. Ibrido spento → comportamento identico alla 1.15.3 (regressione zero).
-6. **Prova dal vivo** (a mano, con Gilles): rizzo-pii acceso, un cloud vero con il testo di Mario Rossi inventato, e il controllo che verso il fornitore arrivino solo i segnaposto (stesso metodo `strace` delle prove del 23/10, o un proxy locale).
+5. Ibrido spento → comportamento identico alla 1.15.4 (regressione zero), salvo i blocchi della §3.1.
+6. L'errore del cloud resta visibile accanto alla domanda dopo il rerun (§8).
+7. **Prova dal vivo** (a mano, con Gilles): rizzo-pii acceso, un cloud vero con il testo di Mario Rossi inventato, e il controllo che verso il fornitore arrivino solo i segnaposto (stesso metodo `strace` delle prove del 23/10, o un proxy locale).
 
 ---
 
-## 13. Domande aperte per Gilles
+## 13. Decisioni di Gilles, 06/11/2026
 
-1. **Annona, quale strada** (§5.3): A sperimentale + letture, come propongo? Oppure aspettare C? La B è da escludere?
-2. **Chiedere ad Akaion l'endpoint `place`** (strada C), dichiarando il ruolo di Technical Advisor?
-3. **Il RAG sul cloud:** oggi è bloccato (`app.py:713`). Con rizzo-pii attivo lo vuoi **sbloccare** (pezzi di documento anonimizzati verso il cloud) o resta bloccato in ogni caso? Stessa domanda per l'upload dei file.
-4. **Il dialogo privacy** (`ui/privacy_warning.py`): con rizzo-pii attivo, «Procedi comunque» diventa «Procedi con anonimizzazione»? Oppure resta com'è?
-5. **«Remote host» con IP pubblico:** lo trattiamo come cloud (anonimizza) come propongo?
-6. **Annona spento in modo `read`:** il cloud procede con il solo rizzo-pii (passo non registrato) o si blocca anche lui?
-7. **Quali tag lasciare in chiaro** per default: nessuno, o `AMOUNT` (importi, spesso utili) e `DATE`?
-8. **Configurazione:** va bene la sezione `hybrid:` in `security_settings.yaml`, o preferisci un file nuovo `hybrid_settings.yaml`?
-9. **La UI:** un'icona o un badge sul messaggio («🛡️ 3 dati tolti prima dell'invio») e una vista «cosa ha visto il modello», come la sezione `egress` di Annona?
-10. **Il NOTICE e la licenza** dell'Interface: chi controlla il punto AGPL della §9? E aggiungiamo il file `LICENSE` (MIT) che il README cita ma che manca?
+| # | Domanda | Decisione |
+|---|---|---|
+| 1 | Annona, quale strada (§5.3) | **A come opzione sperimentale + le letture** (stato, registro, verifica della catena) nella sidebar. La B no. |
+| 2 | Chiedere ad Akaion l'endpoint `place` (C) | **Sì**, con la dichiarazione della §10 (ruolo **non retribuito**). La richiesta la manda Gilles. |
+| 3 | RAG e upload verso il cloud | **Restano bloccati nella 1.16.0**, anche con rizzo-pii. Lo sblocco si valuta in una 1.16.x dopo aver misurato rizzo-pii sui documenti veri. |
+| 4 | Il dialogo privacy | Con rizzo-pii attivo diventa **«Procedi con anonimizzazione»**, e dopo l'invio il messaggio dice quanti dati sono stati tolti. Senza rizzo-pii, il dialogo di oggi. |
+| 5 | Remote host su IP pubblico | **Come il cloud:** si anonimizza, e KB, allegati e immagini si bloccano. LAN e Tailscale restano «in casa» (§3.1, nel codice dal giro 3). |
+| 6 | Annona spenta in modo `read` | **Si procede** con il solo rizzo-pii, e la sidebar dice che il passo **non è registrato** (§8). |
+| 7 | Tag lasciati in chiaro | **Nessuno** per default (`exclude_tags: []`). |
+| 8 | Dove la configurazione | **Sezione `hybrid:` in `security_settings.yaml`** (§7, nel codice dal giro 3). |
+| 9 | La UI | **Il badge** «🛡️ N dati tolti prima dell'invio» e un riquadro richiudibile **«cosa ha visto il modello»** con il testo anonimizzato; la tabella dei valori veri non si salva mai (§6). |
+| 10 | NOTICE e AGPL | `LICENSE` dalla 1.15.4; `NOTICE` dal giro 3. Il punto AGPL si chiede per iscritto all'autore di rizzo-pii; intanto l'Interface non distribuisce né scarica i binari di rizzo-pii (§9). |
+| 11 | Gli errori del cloud (prove del 06/11) | **L'errore resta visibile** in chat accanto alla domanda, segnata «non inviata» o «rifiutata». Con rizzo-pii acceso anche un invio rifiutato è già anonimizzato. Niente controllo preventivo della chiave (§8). |
+
+**Da confermare:** la regola unica della destinazione reale (§3.1), scelta dell'Hub.
 
 ---
 
 ## 14. Il posto nella roadmap
 
-`ROADMAP.md` va oggi dalla 1.15.x (completate) alla 2.0.0 (pianificata: Semantic Layer, Docker, API REST). La 1.16.0 si mette **fra la 1.15.3 e la 2.0.0**, come versione minore (funzione nuova, opzionale, spenta per default, nessuna rottura):
+`ROADMAP.md` va oggi dalla 1.15.x (completate) alla 2.0.0 (pianificata: Semantic Layer, Docker, API REST). La 1.16.0 si mette **fra la 1.15.4 e la 2.0.0**, come versione minore (funzione nuova, opzionale, spenta per default, nessuna rottura):
 
-- **v1.16.0 «ibrida»** — rizzo-pii nel guard, letture di Annona, strada A sperimentale;
-- **v1.16.x** — strada C quando Akaion la offre; prova dal vivo documentata;
+- **v1.16.0 «ibrida»** — destinazione reale per i blocchi, rizzo-pii nel guard, letture di Annona, strada A sperimentale;
+- **v1.16.x** — strada C quando Akaion la offre; prova dal vivo documentata; lo sblocco eventuale di RAG e upload verso il cloud con rizzo-pii (decisione 3);
 - **v2.0.0** — la sezione «Docker & Deployment» può includere rizzo-pii e Annona come servizi del `docker-compose` (con la nota AGPL per l'immagine di rizzo-pii).
 
-ROADMAP, README e CHANGELOG si aggiornano dopo la lettura di questa SPEC.
+ROADMAP, README e CHANGELOG si aggiornano con il cambio di versione, a guard collegato.
 
 ---
 
