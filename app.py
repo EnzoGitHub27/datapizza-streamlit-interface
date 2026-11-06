@@ -1074,7 +1074,12 @@ Cita sempre le fonti quando usi informazioni dai documenti.
             # non resta in chat come inviata, il testo torna nella casella
             msgs = st.session_state.get("messages", [])
             if msgs and msgs[-1].get("role") == "user":
-                msgs.pop()
+                _blocked_msg = msgs.pop()
+                # v1.16.0 giro 6 — la domanda non è in chat: fuori anche dalla stima dei token
+                st.session_state["total_tokens_estimate"] = max(
+                    0, st.session_state.get("total_tokens_estimate", 0)
+                    - estimate_tokens(_blocked_msg.get("content", ""))
+                )
                 st.session_state["n_domande_sessione"] = max(
                     0, st.session_state.get("n_domande_sessione", 1) - 1
                 )

@@ -113,3 +113,20 @@ def test_broken_hybrid_config_keeps_text(app):
     assert any("Configurazione ibrida non valida" in e.value for e in at.error)
     _sidebar_action(at)
     assert _box(at) == DOMANDA
+
+
+# --- giro 6, difetto 2: la stima dei token --------------------------------------------
+
+def test_blocked_question_not_in_token_estimate(app):
+    start, rizzo, _ = app
+    at = start({"pii": {"enabled": True}})
+    before = at.session_state["total_tokens_estimate"]
+    _send(at, DOMANDA)
+    assert at.session_state["messages"] == []
+    assert at.session_state["total_tokens_estimate"] == before  # la domanda bloccata non conta
+    rizzo["down"] = False
+    _send(at)
+    from core.conversation import estimate_tokens
+
+    assert at.session_state["total_tokens_estimate"] == before + sum(
+        estimate_tokens(m["content"]) for m in at.session_state["messages"])
