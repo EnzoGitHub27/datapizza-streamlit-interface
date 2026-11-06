@@ -61,12 +61,30 @@ from core import (
     reindex_all_chat_kb,
     get_kb_chat_stats,
     conversation_models,  # v1.15.4
+    delete_conversation,  # v1.16.0
 )
 
 # 🆕 v1.5.0 - File processors
 from core.file_processors import get_attachment_names
 from core.url_validator import is_blocked, classify_url
 from core.egress import classify_destination, outside_label  # v1.16.0 P2
+from core.pii_guard import PIIGuardBlocked  # v1.16.0 P6
+from config.hybrid_settings import load_hybrid_settings, HybridSettingsError  # v1.16.0 P5
+
+# 🛡️ v1.16.0 — Ambiente ibrido (security_settings.yaml, sezione hybrid:).
+# Spento per default: create_client() resta quello della 1.15.4.
+try:
+    HYBRID = load_hybrid_settings()
+    HYBRID_ERROR = None
+except HybridSettingsError as _hybrid_exc:
+    HYBRID = None
+    HYBRID_ERROR = str(_hybrid_exc)
+
+
+def _on_pii_anonymized(n_removed: int) -> None:
+    """Metadati della conversazione: guard usato e quanti dati tolti (mai i valori)."""
+    st.session_state["pii_guard"] = True
+    st.session_state["pii_removed"] = st.session_state.get("pii_removed", 0) + int(n_removed or 0)
 
 # ============================================================================
 # RAG
@@ -271,6 +289,8 @@ def _save_current_conversation():
         socratic_history=SocraticHistory.to_serializable(),  # v1.9.0
         kb_metadata=st.session_state.get("kb_metadata"),  # v1.14.0
         vault_used=st.session_state.get("vault_used", False),  # v1.14.2
+        pii_guard=st.session_state.get("pii_guard"),  # v1.16.0
+        pii_removed=st.session_state.get("pii_removed", 0),  # v1.16.0
     )
 
 def reset_conversation():
@@ -283,6 +303,9 @@ def reset_conversation():
     st.session_state["kb_metadata"] = dict(KB_METADATA_DEFAULT)
     # v1.14.2 - Reset vault_used
     st.session_state["vault_used"] = False
+    # v1.16.0 - Reset metadati del guard
+    st.session_state.pop("pii_guard", None)
+    st.session_state["pii_removed"] = 0
     # 🆕 v1.5.0 - Pulisci anche file pending e flag privacy
     clear_pending_files()
     reset_privacy_flags()
@@ -315,7 +338,9 @@ def get_socratic_client(connection_type, provider, api_key, model, base_url, tem
             model,
             "Sei un assistente che genera prospettive alternative e stimola la riflessione critica.",
             base_url,
-            temperature
+            temperature,
+            hybrid=HYBRID,  # v1.16.0 P6
+            on_anonymized=_on_pii_anonymized,
         )
     except Exception:
         return None
@@ -684,6 +709,11 @@ if processed_files:
     if valid_count > 0:
         st.success(f"📎 {valid_count} file pronti per l'invio")
 
+# 🛡️ v1.16.0 P6 — messaggio bloccato dal guard: l'avviso resta, il testo torna nella casella
+_guard_notice = st.session_state.pop("_guard_blocked_notice", None)
+if _guard_notice:
+    st.error(_guard_notice)
+
 # ========== FORM MESSAGGIO ==========
 with st.form("msg_form", clear_on_submit=True):
     placeholder = (
@@ -693,7 +723,7 @@ with st.form("msg_form", clear_on_submit=True):
     )
     user_input = st.text_area(
         "Messaggio", 
-        "", 
+        st.session_state.pop("_restore_input", ""),  # v1.16.0: testo non inviato
         height=100, 
         placeholder=placeholder, 
         label_visibility="collapsed"
@@ -736,6 +766,10 @@ if submit and user_input.strip():
         st.error(f"🔒 {outside_label(destination)} bloccato con Knowledge Base o KB Chat attiva!")
     elif _url_blocked:
         st.error(f"🔒 Connessione bloccata per sicurezza: {_url_block_reason}")
+    elif HYBRID_ERROR and destination["outside"]:
+        # v1.16.0 — configurazione ibrida illeggibile: non si sa se rizzo-pii
+        # doveva essere acceso, quindi verso fuori casa non parte niente
+        st.error(f"🛡️ Configurazione ibrida non valida, messaggio non inviato: {HYBRID_ERROR}")
     else:
         try:
             # 🆕 v1.5.0 - Recupera file da session_state
@@ -813,7 +847,9 @@ if submit and user_input.strip():
                     model, 
                     system_prompt, 
                     base_url, 
-                    temperature
+                    temperature,
+                    hybrid=HYBRID,  # v1.16.0 P6
+                    on_anonymized=_on_pii_anonymized,
                 )
             
             # Prepare prompt
@@ -924,7 +960,26 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                     st.session_state["nudge_mostrato"] = True
 
             st.rerun()
-            
+
+        except PIIGuardBlocked as e:
+            # 🛡️ v1.16.0 P6 — verso fuori casa non è partito niente: la domanda
+            # non resta in chat come inviata, il testo torna nella casella
+            msgs = st.session_state.get("messages", [])
+            if msgs and msgs[-1].get("role") == "user":
+                msgs.pop()
+                st.session_state["n_domande_sessione"] = max(
+                    0, st.session_state.get("n_domande_sessione", 1) - 1
+                )
+                if st.session_state.get("auto_save_enabled", True):
+                    if msgs:
+                        _save_current_conversation()
+                    else:
+                        # la conversazione era solo questa domanda: niente file vuoto
+                        delete_conversation(st.session_state["conversation_id"])
+            st.session_state["_restore_input"] = user_input
+            st.session_state["_guard_blocked_notice"] = str(e)
+            st.rerun()
+
         except Exception as e:
             st.error(f"❌ Errore: {e}")
 
