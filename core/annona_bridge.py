@@ -26,13 +26,25 @@ from typing import Any, Dict, List, Optional
 from .annona_client import (
     AnnonaClient,
     AnnonaError,
+    AnnonaUnavailable,
     LedgerVerification,
+    Placement,
 )
 
 READ_TIMEOUT = 3.0  # la sidebar non deve bloccare l'app se Annona è giù
 
 # i soli campi del registro che la sidebar può mostrare
 LEDGER_FIELDS = ("seq", "ts", "kind", "class", "outcome", "substrate", "rule_id", "reason")
+
+GATEWAY_LOSSES = (
+    "niente streaming (la risposta arriva tutta insieme)",
+    "il modello lo sceglie la policy di Annona, non la sidebar",
+    "le chiavi dei fornitori stanno nella policy di Annona, non nell'Interface",
+)
+
+
+class AnnonaGatewayBlocked(Exception):
+    """Il passo non è partito (Annona giù, senza policy, o «held»). Messaggio per l'utente."""
 
 def make_client(settings: Any, timeout: float = READ_TIMEOUT) -> AnnonaClient:
     """AnnonaClient dalla sezione hybrid.annona (solo loopback)."""
@@ -94,3 +106,50 @@ def read_state(client: AnnonaClient, limit: int = 8) -> AnnonaState:
     except AnnonaError as exc:
         state.problem = state.problem or f"verifica non riuscita ({type(exc).__name__})"
     return state
+
+
+# ── P8: il gateway sperimentale ─────────────────────────────────────────────
+
+
+@dataclass
+class GatewayResult:
+    text: str
+    placement: Optional[Placement]
+    egress_text: str = field(default="", repr=False)  # solo per la sessione corrente
+
+    @property
+    def summary(self) -> Dict[str, str]:
+        p = self.placement
+        if p is None:
+            return {}
+        return {k: v for k, v in (
+            ("class", p.klass), ("outcome", p.outcome),
+            ("substrate", p.substrate), ("rule_id", p.rule_id),
+        ) if v}
+
+
+def gateway_ask(client: AnnonaClient, prompt: str) -> GatewayResult:
+    """Fa eseguire il passo ad Annona (max_iterations=1, nessuno strumento)."""
+    try:
+        result = client.ask(prompt, max_iterations=1, escalate=False)
+    except AnnonaUnavailable as exc:
+        raise AnnonaGatewayBlocked(
+            "🧭 Annona non risponde o non ha una policy: con il gateway acceso il "
+            "messaggio non è stato inviato."
+        ) from exc
+    except AnnonaError as exc:
+        raise AnnonaGatewayBlocked(
+            f"🧭 Annona ha risposto con un errore ({type(exc).__name__}): il messaggio non è stato inviato."
+        ) from exc
+
+    if result.cancelled:
+        raise AnnonaGatewayBlocked("🧭 Il passo è stato annullato in Annona: nessuna risposta.")
+    if result.held:
+        reason = result.placement.reason if result.placement else ""
+        raise AnnonaGatewayBlocked(
+            f"🧭 Annona ha trattenuto il passo (held): {reason or 'nessun substrato permesso'}"
+        )
+    egress = "\n\n".join(
+        str(e.get("text", "")) for e in result.egress if isinstance(e, dict) and e.get("text")
+    )
+    return GatewayResult(text=result.response, placement=result.placement, egress_text=egress)

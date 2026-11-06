@@ -102,6 +102,11 @@ def render_chat_message(
         # v1.16.0 P7 (decisione 6) — invio fuori casa non registrato in Annona
         if role == "assistant" and message.get("annona_recorded") is False:
             st.caption("📒 non registrato in Annona")
+        # v1.16.0 P8 — risposta arrivata dal gateway sperimentale di Annona
+        if role == "assistant" and message.get("annona_gateway"):
+            p = message.get("annona_placement") or {}
+            bits = " · ".join(v for v in (p.get("class"), p.get("outcome"), p.get("substrate")) if v)
+            st.caption(f"🧭 via Annona (sperimentale){' · ' + bits if bits else ''} · registrato in Annona")
 
         # v1.16.0 (decisione 11) — la domanda senza risposta porta il suo errore
         send_status = message.get("send_status") if role == "user" else None

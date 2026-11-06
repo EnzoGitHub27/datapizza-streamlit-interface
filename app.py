@@ -135,6 +135,7 @@ from ui import (
 )
 from ui.sidebar.kb_panel import render_kb_panel
 from ui.sidebar.annona_panel import render_annona_panel  # v1.16.0 P7
+from core import annona_bridge  # v1.16.0 P8
 from ui.sidebar import render_socratic_mode_settings
 
 # 🆕 v1.5.0 - File upload widget
@@ -616,6 +617,18 @@ else:
 
 render_privacy_warning_banner()
 
+# 🧭 v1.16.0 P8 — il gateway sperimentale si dichiara, con quello che si perde
+_use_gateway = bool(
+    HYBRID is not None and HYBRID.annona.enabled and HYBRID.annona.mode == "gateway"
+    and destination["outside"]
+)
+if _use_gateway:
+    st.warning(
+        "🧭 **Gateway Annona — SPERIMENTALE.** Verso fuori casa decide, redige, chiama il "
+        "modello e registra Annona. Si perde: " + "; ".join(annona_bridge.GATEWAY_LOSSES) + "."
+    )
+
+
 # ============================================================================
 # KNOWLEDGE BASE BANNER
 # ============================================================================
@@ -930,45 +943,73 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                         vision_err,
                     )
 
+            _gateway_result = None
+            if _use_gateway:
+                # 🧭 v1.16.0 P8 — Annona esegue il passo: niente streaming
+                with st.chat_message("assistant"):
+                    st.caption("🧭 Gateway Annona — sperimentale")
+                    _gw_prompt = full_prompt if context_text else (
+                        f"{system_prompt}\n\n{full_prompt}" if system_prompt else full_prompt
+                    )
+                    with st.spinner("🧭 Annona sta eseguendo il passo (niente streaming)..."):
+                        _gateway_result = annona_bridge.gateway_ask(
+                            annona_bridge.make_client(HYBRID.annona), _gw_prompt
+                        )
+                    response_text = _gateway_result.text
+                    st.markdown(response_text)
+
             # Display streaming response with typing indicator + auto-scroll
-            with st.chat_message("assistant"):
-                # v1.14.3 — Typing indicator: pallini animati prima del primo token
-                typing_placeholder = st.empty()
-                with typing_placeholder:
-                    show_typing_indicator()
+            if _gateway_result is None:
+                with st.chat_message("assistant"):
+                    # v1.14.3 — Typing indicator: pallini animati prima del primo token
+                    typing_placeholder = st.empty()
+                    with typing_placeholder:
+                        show_typing_indicator()
 
-                placeholder = st.empty()
-                response_text = ""
-                previous_text = ""
+                    placeholder = st.empty()
+                    response_text = ""
+                    previous_text = ""
 
-                _stream_started = True
-                for chunk in client.stream_invoke(llm_input):
-                    # Prima iterazione: rimuovi typing indicator
-                    typing_placeholder.empty()
+                    _stream_started = True
+                    for chunk in client.stream_invoke(llm_input):
+                        # Prima iterazione: rimuovi typing indicator
+                        typing_placeholder.empty()
 
-                    current_text = getattr(chunk, "text", str(chunk))
-                    if current_text:
-                        new_text = current_text[len(previous_text):]
-                        if new_text:
-                            response_text += new_text
-                            previous_text = current_text
-                            # v1.14.3 — Cursore ▌ durante lo streaming
-                            placeholder.markdown(response_text + "▌")
+                        current_text = getattr(chunk, "text", str(chunk))
+                        if current_text:
+                            new_text = current_text[len(previous_text):]
+                            if new_text:
+                                response_text += new_text
+                                previous_text = current_text
+                                # v1.14.3 — Cursore ▌ durante lo streaming
+                                placeholder.markdown(response_text + "▌")
 
-                # Risposta finale senza cursore
-                placeholder.markdown(response_text)
-                # v1.14.3 — Scroll finale a fondo pagina
-                inject_scroll_to_bottom()
+                    # Risposta finale senza cursore
+                    placeholder.markdown(response_text)
+                    # v1.14.3 — Scroll finale a fondo pagina
+                    inject_scroll_to_bottom()
 
             # Add response with sources to conversation
-            add_message(
-                "assistant",
-                response_text,
-                model=model,
-                sources=sources if sources else None,
-                provider=connection_type,  # v1.15.4
-                extra=_answer_extra(client, destination),  # v1.16.0
-            )
+            if _gateway_result is not None:
+                # 🧭 v1.16.0 P8 — chi ha risposto lo ha scelto la policy di Annona
+                _gw = _gateway_result.summary
+                add_message(
+                    "assistant",
+                    response_text,
+                    model=f"annona:{_gw.get('substrate', '?')}",
+                    sources=sources if sources else None,
+                    provider="Annona gateway (sperimentale)",
+                    extra={"annona_gateway": True, "annona_placement": _gw},
+                )
+            else:
+                add_message(
+                    "assistant",
+                    response_text,
+                    model=model,
+                    sources=sources if sources else None,
+                    provider=connection_type,  # v1.15.4
+                    extra=_answer_extra(client, destination),  # v1.16.0
+                )
             
             # 🆕 v1.5.0 - Pulisci file pending dopo invio
             clear_pending_files()
