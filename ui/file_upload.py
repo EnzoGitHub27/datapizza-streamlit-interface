@@ -178,7 +178,8 @@ def render_file_preview(
 def render_file_upload_widget(
     connection_type: str,
     current_model: str,
-    key: str = "chat_file_upload"
+    key: str = "chat_file_upload",
+    outside: Optional[bool] = None,  # v1.16.0 P2
 ) -> Tuple[List[ProcessedFile], bool, Optional[str]]:
     """
     Renderizza il widget di upload file con controlli privacy.
@@ -190,6 +191,8 @@ def render_file_upload_widget(
         connection_type: "Local (Ollama)" | "Remote host" | "Cloud provider"
         current_model: Nome del modello selezionato
         key: Chiave univoca per st.file_uploader
+        outside: True se la destinazione reale è fuori casa (core.egress);
+            None = come prima, decide l'etichetta «Cloud provider»
         
     Returns:
         Tuple:
@@ -201,14 +204,19 @@ def render_file_upload_widget(
     has_valid_images = False
     warning_message = None
     
-    # ========== BLOCCO CLOUD PROVIDER (PRIVACY) ==========
-    if connection_type == "Cloud provider":
+    # ========== BLOCCO FUORI CASA (PRIVACY) ==========
+    # 🔒 v1.16.0 P2: conta la destinazione reale, non l'etichetta. Vale anche
+    # per le immagini (Vision local-only): senza upload nessun MediaBlock parte.
+    if outside is None:
+        outside = connection_type == "Cloud provider"
+    if outside:
         st.warning(
             "📎 **Upload file disabilitato per privacy**\n\n"
-            "Stai usando un Cloud provider. Per proteggere i tuoi documenti, "
-            "l'upload è disponibile solo con **Ollama locale** o **Remote host**."
+            "Il modello è fuori dalla tua rete (Cloud provider o host su internet). "
+            "Per proteggere i tuoi documenti e le immagini, l'upload è disponibile solo "
+            "con una destinazione **in casa**: Ollama locale, server in LAN o Tailscale."
         )
-        return [], False, "Cloud provider - upload disabilitato per privacy"
+        return [], False, "Destinazione fuori casa - upload disabilitato per privacy"
     
     # ========== FILE UPLOADER ==========
     st.markdown("##### 📎 Allega file (opzionale)")
