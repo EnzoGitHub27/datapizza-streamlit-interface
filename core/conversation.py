@@ -10,6 +10,7 @@ from typing import Dict, Any, List, Optional
 # con l'errore accanto, anche dopo il rerun e ricaricando la conversazione.
 SEND_NOT_SENT = "non_inviata"   # non è partita (client, rete, connessione)
 SEND_REJECTED = "rifiutata"     # partita, il fornitore ha risposto con un errore
+SEND_EMPTY = "senza_risposta"   # partita, ma nessun testo (gateway di Annona, giro 7b)
 
 # nomi di eccezione che dicono «non è partita»
 _NOT_SENT_ERRORS = (

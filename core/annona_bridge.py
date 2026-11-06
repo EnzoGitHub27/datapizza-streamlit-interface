@@ -20,6 +20,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -45,6 +46,29 @@ GATEWAY_LOSSES = (
 
 class AnnonaGatewayBlocked(Exception):
     """Il passo non è partito (Annona giù, senza policy, o «held»). Messaggio per l'utente."""
+
+
+class AnnonaGatewayEmpty(AnnonaGatewayBlocked):
+    """Il passo è partito ma Annona non ha prodotto testo (giro 7b).
+
+    Caso tipico: Annona 0.1.3 offre sempre gli strumenti al modello (``/ask``
+    non ha un campo per toglierli, e il profilo «read-nothing» li nega senza
+    toglierli); un modello piccolo prova uno strumento, Annona lo trattiene
+    (``tool_call`` «held») e la risposta resta vuota."""
+
+
+def held_tools(decisions: List[Dict[str, Any]]) -> List[str]:
+    """I nomi degli strumenti che il modello ha tentato e Annona ha trattenuto.
+    Solo il nome (lettere, cifre, «_», «-»): mai percorsi o argomenti."""
+    names: List[str] = []
+    for d in decisions or []:
+        if not isinstance(d, dict) or d.get("kind") != "tool_call" or d.get("outcome") != "held":
+            continue
+        detail = d.get("detail") if isinstance(d.get("detail"), dict) else {}
+        name = str(detail.get("tool", "") or "")
+        if name and re.fullmatch(r"[\w\-]{1,40}", name) and name not in names:
+            names.append(name)
+    return names
 
 def make_client(settings: Any, timeout: float = READ_TIMEOUT) -> AnnonaClient:
     """AnnonaClient dalla sezione hybrid.annona (solo loopback)."""
@@ -149,6 +173,17 @@ def gateway_ask(client: AnnonaClient, prompt: str) -> GatewayResult:
         raise AnnonaGatewayBlocked(
             f"🧭 Annona ha trattenuto il passo (held): {reason or 'nessun substrato permesso'}"
         )
+    if not (result.response or "").strip():
+        tools = held_tools(result.decisions)
+        if tools:
+            raise AnnonaGatewayEmpty(
+                "🧭 Annona non ha prodotto testo: il modello ha tentato "
+                + ("lo strumento " if len(tools) == 1 else "gli strumenti ")
+                + ", ".join(f"«{t}»" for t in tools)
+                + ", che Annona ha fermato. Il gateway di Annona 0.1.3 offre sempre gli "
+                "strumenti al modello: prova un modello più grande o la strada senza gateway."
+            )
+        raise AnnonaGatewayEmpty("🧭 Annona non ha prodotto testo: nessuna risposta dal modello.")
     egress = "\n\n".join(
         str(e.get("text", "")) for e in result.egress if isinstance(e, dict) and e.get("text")
     )

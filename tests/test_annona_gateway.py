@@ -159,3 +159,56 @@ def test_gateway_not_used_in_house(gateway_app):
     at = run(connection="Local (Ollama)")
     assert state["raw_calls"] == 1  # Ollama locale: il client di sempre
     assert not any("SPERIMENTALE" in w.value for w in at.warning)
+
+
+# --- giro 7b: il gateway che non resta muto ----------------------------------------------
+
+TOOL_HELD = {"seq": 9, "kind": "tool_call", "outcome": "held", "class": "internal",
+             "substrate": "local", "detail": {"tool": "explorer", "reason": "nessuna regola",
+                                              "paths": ["/home/finto/segreto.txt"]}}
+ASK_EMPTY_TOOL = dict(ASK_OK, response="", egress=[], decisions=[TOOL_HELD])
+ASK_EMPTY = dict(ASK_OK, response="  ", egress=[], decisions=[])
+
+
+def test_gateway_empty_with_held_tool_says_so():
+    from core.annona_bridge import AnnonaGatewayEmpty
+
+    with pytest.raises(AnnonaGatewayEmpty) as exc:
+        gateway_ask(_client(FakeResponse(200, ASK_EMPTY_TOOL)), "x")
+    msg = str(exc.value)
+    assert "non ha prodotto testo" in msg and "«explorer»" in msg and "fermato" in msg
+    assert "segreto" not in msg and "/home" not in msg  # mai percorsi o argomenti
+
+
+def test_gateway_empty_without_tool():
+    from core.annona_bridge import AnnonaGatewayEmpty
+
+    with pytest.raises(AnnonaGatewayEmpty) as exc:
+        gateway_ask(_client(FakeResponse(200, ASK_EMPTY)), "x")
+    assert "non ha prodotto testo" in str(exc.value) and "strumento" not in str(exc.value)
+
+
+def test_gateway_full_answer_unchanged_even_with_held_tool():
+    r = gateway_ask(_client(FakeResponse(200, dict(ASK_OK, decisions=[TOOL_HELD]))), "x")
+    assert r.text == ASK_OK["response"]
+
+
+def test_held_tools_ignores_cleared_and_bad_names():
+    from core.annona_bridge import held_tools
+
+    decisions = [TOOL_HELD, dict(TOOL_HELD, outcome="cleared", detail={"tool": "reader"}),
+                 dict(TOOL_HELD, detail={"tool": "rm -rf /"}), {"kind": "egress", "outcome": "held"},
+                 TOOL_HELD]
+    assert held_tools(decisions) == ["explorer"]
+
+
+def test_app_gateway_empty_answer_not_silent(gateway_app):
+    run, state, conv_dir = gateway_app
+    state["ask"] = FakeResponse(200, ASK_EMPTY_TOOL)
+    at = run()
+    msgs = at.session_state["messages"]
+    assert [m["role"] for m in msgs] == ["user"]  # nessuna bolla vuota
+    assert msgs[0]["send_status"] == "senza_risposta" and "explorer" in msgs[0]["send_error"]
+    assert any("Senza risposta" in w.value and "explorer" in w.value for w in at.warning)
+    assert state["raw_calls"] == 0
+    assert "segreto" not in next(conv_dir.glob("conv_*.json")).read_text(encoding="utf-8")
