@@ -11,6 +11,8 @@ from datetime import datetime
 import streamlit as st
 from typing import Optional, Callable
 
+from core.pii_guard import PIIGuardBlocked  # v1.16.0 giro 5b
+
 from .history import SocraticExploration, SocraticHistory
 from .prompts import (
     get_alternatives_prompt,
@@ -134,6 +136,8 @@ def generate_alternatives(
 
         return alternatives_text
 
+    except PIIGuardBlocked:
+        raise  # v1.16.0 — non è partito niente: il messaggio va mostrato
     except Exception as e:
         return f"❌ Errore nella generazione: {str(e)}"
 
@@ -182,6 +186,8 @@ def generate_assumptions(
 
         return assumptions_text
 
+    except PIIGuardBlocked:
+        raise  # v1.16.0 — non è partito niente: il messaggio va mostrato
     except Exception as e:
         return f"❌ Errore nella generazione: {str(e)}"
 
@@ -230,6 +236,8 @@ def generate_limits(
 
         return limits_text
 
+    except PIIGuardBlocked:
+        raise  # v1.16.0 — non è partito niente: il messaggio va mostrato
     except Exception as e:
         return f"❌ Errore nella generazione: {str(e)}"
 
@@ -278,6 +286,8 @@ def generate_confute(
 
         return confute_text
 
+    except PIIGuardBlocked:
+        raise  # v1.16.0 — non è partito niente: il messaggio va mostrato
     except Exception as e:
         return f"❌ Errore nella generazione: {str(e)}"
 
@@ -328,6 +338,8 @@ def generate_reflect(
 
         return reflect_text
 
+    except PIIGuardBlocked:
+        raise  # v1.16.0 — non è partito niente: il messaggio va mostrato
     except Exception as e:
         return f"❌ Errore nella generazione: {str(e)}"
 
@@ -481,7 +493,7 @@ def render_socratic_buttons(
                 st.session_state[alt_loading_key] = False
                 st.rerun()
             except Exception as e:
-                st.error(f"Errore: {e}")
+                st.error(str(e) if isinstance(e, PIIGuardBlocked) else f"Errore: {e}")
                 st.session_state[alt_loading_key] = False
 
     # Generazione assunzioni se in loading
@@ -496,7 +508,7 @@ def render_socratic_buttons(
                 st.session_state[assum_loading_key] = False
                 st.rerun()
             except Exception as e:
-                st.error(f"Errore: {e}")
+                st.error(str(e) if isinstance(e, PIIGuardBlocked) else f"Errore: {e}")
                 st.session_state[assum_loading_key] = False
 
     # Generazione limiti se in loading
@@ -511,7 +523,7 @@ def render_socratic_buttons(
                 st.session_state[limits_loading_key] = False
                 st.rerun()
             except Exception as e:
-                st.error(f"Errore: {e}")
+                st.error(str(e) if isinstance(e, PIIGuardBlocked) else f"Errore: {e}")
                 st.session_state[limits_loading_key] = False
 
     # Generazione confutazione se in loading (v1.8.0)
@@ -526,7 +538,7 @@ def render_socratic_buttons(
                 st.session_state[confute_loading_key] = False
                 st.rerun()
             except Exception as e:
-                st.error(f"Errore: {e}")
+                st.error(str(e) if isinstance(e, PIIGuardBlocked) else f"Errore: {e}")
                 st.session_state[confute_loading_key] = False
 
     # Generazione riflessione se in loading (v1.8.0)
@@ -542,7 +554,7 @@ def render_socratic_buttons(
                 st.session_state[reflect_loading_key] = False
                 st.rerun()
             except Exception as e:
-                st.error(f"Errore: {e}")
+                st.error(str(e) if isinstance(e, PIIGuardBlocked) else f"Errore: {e}")
                 st.session_state[reflect_loading_key] = False
 
     # ========== EXPANDER CON RISULTATI ==========

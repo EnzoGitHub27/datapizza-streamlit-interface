@@ -48,6 +48,34 @@ class PIIGuardBlocked(Exception):
     """Il testo non è partito verso fuori casa. Il messaggio è per l'utente."""
 
 
+GATEWAY_NEEDS_PII = (
+    "🧭 Con il gateway di Annona, questa funzione verso il cloud richiede rizzo-pii: "
+    "non è partito niente. Accendi rizzo-pii (hybrid.pii) oppure usa un modello in casa."
+)
+
+
+class GatewaySideCallBlocked(PIIGuardBlocked):
+    """Gateway acceso, rizzo-pii spento: una chiamata fuori da Annona non parte (giro 5b)."""
+
+
+class GatewayBlockedClient:
+    """Al posto del client vero per le chiamate che non passano da Annona
+    (bottoni socratici, nudge, generazione e rigenerazione della mappa) quando
+    il gateway è acceso, la destinazione è fuori casa e rizzo-pii è spento.
+    Non chiama niente: ogni invio solleva GatewaySideCallBlocked."""
+
+    pii_guard = False
+    gateway_blocked = True
+    last_removed = 0
+    last_egress = ""
+
+    def invoke(self, *args: Any, **kwargs: Any) -> Any:
+        raise GatewaySideCallBlocked(GATEWAY_NEEDS_PII)
+
+    def stream_invoke(self, *args: Any, **kwargs: Any) -> Iterator[Any]:
+        raise GatewaySideCallBlocked(GATEWAY_NEEDS_PII)
+
+
 @dataclass
 class GuardedResponse:
     """Risposta di invoke: .text con i valori veri, già sul computer.
