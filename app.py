@@ -403,12 +403,14 @@ if st.sidebar.button("🔄 Aggiorna KB Chat", key="reindex_chat_kb"):
 
     _reindex_result = reindex_all_chat_kb(progress_callback=_reindex_cb)
     _progress_bar.empty()
+    _orphans = _reindex_result.get("orphans_removed", 0)
     st.sidebar.success(
         f"✅ Indicizzate {_reindex_result['chats_indexed']} chat, "
         f"{_reindex_result['total_chunks']} chunk totali"
+        + (f" · 🧹 tolte {_orphans} chat non più incluse" if _orphans else "")
     )
 
-st.sidebar.caption("Indicizza tutte le chat flaggate — fallo dopo aver salvato nuove chat")
+st.sidebar.caption("Indicizza tutte le chat flaggate e toglie quelle eliminate o non più incluse — fallo dopo aver salvato nuove chat")
 
 # Stats rapide
 _kb_stats = get_kb_chat_stats()
