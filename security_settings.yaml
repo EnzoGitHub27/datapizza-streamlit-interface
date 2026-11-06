@@ -17,6 +17,24 @@ cloud_api_keys:
   # Messaggio mostrato quando la key è visibile
   visible_message: "✅ Key salvata (visibile)"
 
+# 🆕 v1.16.0 — Ambiente ibrido (tutto spento per default)
+# rizzo-pii toglie i dati personali prima che il testo esca di casa (cloud o
+# host su internet); Annona mostra stato e registro. Servizi separati, da
+# installare a parte, chiamati solo su 127.0.0.1. Vedi docs/SPEC_v1.16.0_hybrid.md §7.
+hybrid:
+  pii:
+    enabled: false                  # rizzo-pii prima di uscire di casa
+    url: "http://127.0.0.1:5005"    # solo loopback: il client rifiuta altri indirizzi
+    timeout_s: 30
+    exclude_tags: []                # tag lasciati in chiaro, es. ["AMOUNT", "DATE"]
+  annona:
+    enabled: false
+    url: "http://127.0.0.1:7070"
+    mode: "read"                    # read = stato e registro in sidebar; gateway = sperimentale
+  on_service_down:
+    cloud: "block"                  # fisso: rizzo-pii giù → verso fuori casa non parte niente
+    local: "proceed"                # in casa si procede ("block" per fermarsi anche lì)
+
 # Impostazioni future (placeholder)
 # remote_servers:
 #   require_authentication: false

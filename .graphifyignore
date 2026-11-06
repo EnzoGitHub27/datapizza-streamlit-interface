@@ -1,0 +1,35 @@
+# .graphifyignore — che cosa Graphify non deve leggere (v1.16.0, giro 4)
+# Dati dell'utente: conversazioni, KB, cache delle wiki, segreti
+conversations/
+knowledge_base/
+wiki_cache/
+secrets/
+# Ambiente e roba vecchia
+venv/
+old/
+__pycache__/
+.pytest_cache/
+.claude/
+.streamlit/
+graphify-out/
+# Chiavi e variabili d'ambiente
+.env
+.env.*
+*.env
+*.key
+*.pem
+*api_key*
+*apikey*
+*token*
+# Configurazioni locali (host, server, sorgenti wiki)
+remote_servers.yaml
+wiki_sources.yaml
+security_settings.yaml
+# Solo il codice: documenti e immagini restano fuori (niente estrazione LLM)
+*.md
+*.txt
+*.pdf
+*.png
+*.ico
+*.jpg
+*.bak

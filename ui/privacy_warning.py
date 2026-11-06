@@ -16,6 +16,18 @@ import streamlit as st
 from typing import Tuple, Optional
 
 
+def destination_is_outside() -> bool:
+    """
+    🔒 v1.16.0 — La destinazione reale (core.egress, calcolata dalla sidebar
+    LLM), non l'etichetta «Cloud provider». Senza destinazione calcolata
+    vale l'etichetta, come nella 1.15.x.
+    """
+    dest = st.session_state.get("egress_destination")
+    if isinstance(dest, dict) and "outside" in dest:
+        return bool(dest["outside"])
+    return st.session_state.get("connection_type") == "Cloud provider"
+
+
 def check_privacy_risk() -> bool:
     """
     Verifica se esiste un rischio privacy nella sessione corrente.
@@ -54,7 +66,7 @@ def render_privacy_warning_banner():
     if not st.session_state.get("documents_uploaded_this_session", False):
         return
     
-    if st.session_state.get("connection_type") != "Cloud provider":
+    if not destination_is_outside():
         return
     
     files_summary = get_uploaded_files_summary()
@@ -66,7 +78,7 @@ def render_privacy_warning_banner():
     )
 
 
-def render_privacy_dialog() -> Tuple[bool, Optional[str]]:
+def render_privacy_dialog(pii_active: bool = False) -> Tuple[bool, Optional[str]]:
     """
     Renderizza il dialog di conferma privacy.
     
@@ -77,6 +89,10 @@ def render_privacy_dialog() -> Tuple[bool, Optional[str]]:
         Tuple:
         - can_proceed: True se l'utente può procedere con Cloud
         - action: "reset" | "proceed" | None (se ancora in attesa di decisione)
+
+    Args:
+        pii_active: True se rizzo-pii è acceso (hybrid.pii.enabled): la seconda
+            scelta diventa «Procedi con anonimizzazione» (decisione 4)
     """
     files_summary = get_uploaded_files_summary()
     
@@ -108,8 +124,8 @@ def render_privacy_dialog() -> Tuple[bool, Optional[str]]:
             La **cronologia della chat** potrebbe contenere informazioni estratte 
             da questi documenti (risposte dell'AI, citazioni, riassunti).
             
-            Passando a un **Cloud provider**, queste informazioni verrebbero 
-            inviate a server esterni.
+            Il modello scelto è **fuori dalla tua rete** (Cloud provider o host
+            su internet): queste informazioni verrebbero inviate a server esterni.
             """
         )
         
@@ -136,25 +152,46 @@ def render_privacy_dialog() -> Tuple[bool, Optional[str]]:
             )
         
         with col2:
-            st.markdown(
-                """
-                **✅ Procedi comunque**
+            if pii_active:
+                # 🛡️ v1.16.0 — decisione 4: con rizzo-pii acceso
+                st.markdown(
+                    """
+                    **🛡️ Procedi con anonimizzazione**
+                    
+                    Prima di ogni invio rizzo-pii toglie i dati 
+                    personali (nomi, CF, IBAN, indirizzi...) e li 
+                    rimette solo sul tuo computer.
+                    
+                    ⚠️ Pseudonimizzato non è anonimo: il resto 
+                    del testo parte com'è.
+                    """
+                )
+                confirmed = st.checkbox(
+                    "Ho capito: parte il testo senza i dati personali riconosciuti",
+                    key="privacy_confirm_checkbox"
+                )
+                proceed_label = "🛡️ Procedi con anonimizzazione"
+            else:
+                st.markdown(
+                    """
+                    **✅ Procedi comunque**
+                    
+                    Conferma che i documenti non 
+                    contenevano dati sensibili.
+                    
+                    ⚠️ A tuo rischio
+                    """
+                )
                 
-                Conferma che i documenti non 
-                contenevano dati sensibili.
-                
-                ⚠️ A tuo rischio
-                """
-            )
-            
-            # Checkbox obbligatoria
-            confirmed = st.checkbox(
-                "Confermo: i documenti non contenevano dati riservati",
-                key="privacy_confirm_checkbox"
-            )
+                # Checkbox obbligatoria
+                confirmed = st.checkbox(
+                    "Confermo: i documenti non contenevano dati riservati",
+                    key="privacy_confirm_checkbox"
+                )
+                proceed_label = "✅ Procedi con Cloud"
             
             proceed_clicked = st.button(
-                "✅ Procedi con Cloud",
+                proceed_label,
                 key="privacy_proceed_btn",
                 disabled=not confirmed,
                 use_container_width=True
@@ -198,16 +235,16 @@ def handle_privacy_action(action: str):
         st.session_state["uploaded_files_history"] = []
         st.session_state["privacy_acknowledged_for_cloud"] = False
         
-        # Mantieni Cloud provider selezionato
-        st.session_state["connection_type"] = "Cloud provider"
+        # Mantieni la connessione selezionata (cloud o host esterno): la
+        # selectbox della sidebar la riscrive comunque a ogni giro
         
-        st.success("✅ Chat resettata! Ora puoi usare Cloud provider in sicurezza.")
+        st.success("✅ Chat resettata! Ora puoi usare il modello esterno in sicurezza.")
         st.rerun()
     
     elif action == "proceed":
         # Utente ha confermato - salva il consenso
         st.session_state["privacy_acknowledged_for_cloud"] = True
-        st.info("✅ Hai confermato. Puoi procedere con Cloud provider.")
+        st.info("✅ Hai confermato. Puoi procedere con il modello esterno.")
         st.rerun()
     
     elif action == "back":
@@ -255,18 +292,21 @@ def reset_privacy_flags():
     st.session_state["privacy_dialog_shown"] = False
 
 
-def should_show_privacy_dialog(new_connection_type: str) -> bool:
+def should_show_privacy_dialog(new_connection_type: str, outside: Optional[bool] = None) -> bool:
     """
     Determina se mostrare il dialog di privacy.
     
     Args:
         new_connection_type: Il tipo di connessione selezionato
+        outside: destinazione reale fuori casa (v1.16.0); None = vale l'etichetta
         
     Returns:
         True se bisogna mostrare il dialog
     """
-    # Solo se si sta passando a Cloud
-    if new_connection_type != "Cloud provider":
+    # Solo se si sta uscendo di casa (v1.16.0: la destinazione reale)
+    if outside is None:
+        outside = new_connection_type == "Cloud provider"
+    if not outside:
         return False
     
     # Solo se ci sono documenti caricati
