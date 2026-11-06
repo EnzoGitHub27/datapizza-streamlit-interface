@@ -26,7 +26,6 @@ hybrid:
     enabled: false                  # rizzo-pii prima di uscire di casa
     url: "http://127.0.0.1:5005"    # solo loopback: il client rifiuta altri indirizzi
     timeout_s: 30
-    apply_to: ["cloud", "remote_public"]   # fisso: fuori casa si anonimizza sempre
     exclude_tags: []                # tag lasciati in chiaro, es. ["AMOUNT", "DATE"]
   annona:
     enabled: false

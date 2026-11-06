@@ -86,8 +86,6 @@ def test_pii_on_with_tags(tmp_path):
         {"pii": {"timeout_s": 0}},
         {"pii": {"timeout_s": "30"}},
         {"pii": {"exclude_tags": "AMOUNT"}},           # non elenco
-        {"pii": {"apply_to": ["cloud"]}},              # manca remote_public
-        {"pii": {"apply_to": ["cloud", "remote_public", "local"]}},
         {"pii": {"url": ""}},
         {"annona": {"mode": "auto"}},
         {"on_service_down": {"local": "allow"}},
@@ -98,6 +96,13 @@ def test_pii_on_with_tags(tmp_path):
 def test_bad_values_rejected(raw):
     with pytest.raises(HybridSettingsError):
         parse_hybrid_settings(raw)
+
+
+@pytest.mark.parametrize("apply_to", [["cloud"], [], ["local"], "tutto"])
+def test_apply_to_is_fixed_and_ignored(apply_to):
+    """apply_to non è configurabile: fuori casa si anonimizza sempre."""
+    s = parse_hybrid_settings({"pii": {"enabled": True, "apply_to": apply_to}})
+    assert s.pii.apply_to == ("cloud", "remote_public")
 
 
 def test_broken_yaml_is_an_error_not_off(tmp_path):

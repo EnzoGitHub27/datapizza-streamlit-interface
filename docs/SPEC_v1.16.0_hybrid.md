@@ -197,7 +197,6 @@ hybrid:
     enabled: false                  # rizzo-pii prima del cloud
     url: "http://127.0.0.1:5005"    # solo loopback: il client rifiuta altri indirizzi
     timeout_s: 30
-    apply_to: ["cloud", "remote_public"]   # fisso: fuori casa si anonimizza sempre
     exclude_tags: []                # nessun tag in chiaro (decisione 7); es. ["AMOUNT"]
   annona:
     enabled: false
@@ -210,7 +209,7 @@ hybrid:
 
 `on_service_down.cloud` si legge ma **non accetta** altri valori: un'impostazione che permette di mandare in chiaro al cloud quando rizzo-pii è spento è la cosa che questa versione esiste per evitare. Qui «cloud» vuol dire **fuori casa** (§3.1).
 
-**Il lettore** (giro 3, `config/hybrid_settings.py`, `load_hybrid_settings()`): file assente, sezione assente o vuota → tutti i default (tutto spento); chiavi sconosciute ignorate; tipi sbagliati → errore esplicito (`HybridSettingsError`); `on_service_down.cloud` diverso da `block` → errore, mai un ripiego silenzioso; `pii.apply_to` deve contenere `cloud` e `remote_public` (togliere una delle due manderebbe testo in chiaro fuori casa, come `cloud: allow`); YAML illeggibile → errore, non «spento». Con l'ibrido spento l'app si comporta come la 1.15.4.
+**Il lettore** (giro 3, `config/hybrid_settings.py`, `load_hybrid_settings()`): file assente, sezione assente o vuota → tutti i default (tutto spento); chiavi sconosciute ignorate; tipi sbagliati → errore esplicito (`HybridSettingsError`); `on_service_down.cloud` diverso da `block` → errore, mai un ripiego silenzioso; **dove si anonimizza non è configurabile** (decisione del giro 4): sempre fuori casa, cioè cloud e host su internet (§3.1); una chiave `apply_to` nel file viene ignorata; YAML illeggibile → errore, non «spento». Con l'ibrido spento l'app si comporta come la 1.15.4.
 
 ---
 

@@ -9,8 +9,9 @@
 # Regole fisse (SPEC §7):
 #   on_service_down.cloud  → solo "block": se rizzo-pii non risponde, verso
 #                            fuori casa non parte niente
-#   pii.apply_to           → deve coprire "cloud" e "remote_public"
-#                            (decisione 5: un Remote host pubblico è il cloud)
+#   dove si anonimizza     → sempre fuori casa (cloud e host su internet,
+#                            core/egress.py): APPLY_TO non è configurabile;
+#                            una chiave `apply_to` nel file viene ignorata
 #
 # Nessuno lo usa ancora: il guard arriva con P6 (giro 4). Con l'ibrido spento
 # l'app è identica alla 1.15.4.
@@ -27,7 +28,7 @@ except ImportError:  # pragma: no cover - PyYAML è nei requisiti
 
 from .constants import SECURITY_SETTINGS_ALT, SECURITY_SETTINGS_FILE
 
-APPLY_TO_REQUIRED = ("cloud", "remote_public")
+APPLY_TO = ("cloud", "remote_public")
 ANNONA_MODES = ("read", "gateway")
 LOCAL_DOWN_CHOICES = ("proceed", "block")
 
@@ -41,8 +42,12 @@ class PIISettings:
     enabled: bool = False
     url: str = "http://127.0.0.1:5005"
     timeout_s: float = 30.0
-    apply_to: Tuple[str, ...] = APPLY_TO_REQUIRED
     exclude_tags: Tuple[str, ...] = ()
+
+    @property
+    def apply_to(self) -> Tuple[str, ...]:
+        """Fisso (decisione di Gilles, giro 4): fuori casa si anonimizza sempre."""
+        return APPLY_TO
 
 
 @dataclass(frozen=True)
@@ -123,21 +128,10 @@ def parse_hybrid_settings(raw: Optional[Dict[str, Any]]) -> HybridSettings:
     timeout = p.get("timeout_s", PIISettings.timeout_s)
     if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or timeout <= 0:
         raise HybridSettingsError(f"hybrid.pii.timeout_s deve essere un numero positivo, non {timeout!r}")
-    apply_to = _str_list(p, "apply_to", APPLY_TO_REQUIRED, "hybrid.pii")
-    unknown = [a for a in apply_to if a not in APPLY_TO_REQUIRED]
-    missing = [a for a in APPLY_TO_REQUIRED if a not in apply_to]
-    if unknown or missing:
-        raise HybridSettingsError(
-            "hybrid.pii.apply_to deve essere [\"cloud\", \"remote_public\"]: "
-            "verso fuori casa si anonimizza sempre"
-            + (f" (sconosciuti: {unknown})" if unknown else "")
-            + (f" (mancano: {missing})" if missing else "")
-        )
     pii = PIISettings(
         enabled=_bool(p, "enabled", False, "hybrid.pii"),
         url=_str(p, "url", PIISettings.url, "hybrid.pii"),
         timeout_s=float(timeout),
-        apply_to=apply_to,
         exclude_tags=_str_list(p, "exclude_tags", (), "hybrid.pii"),
     )
 
