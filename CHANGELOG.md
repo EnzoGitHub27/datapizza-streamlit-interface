@@ -6,6 +6,29 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ---
+## [1.15.4] — 2026-11-06
+
+Versione di sole correzioni, dall'audit `docs/AUDIT_pre_v1.16.0.md` (ramo `feat/hybrid-pii-annona`).
+
+### Corretto
+- **Blocchi di codice e «[object Object]»** (`ui/chat.py`, `ui/styles.py`): copiando dalla chat il codice scritto dal modello (es. Python) e incollandolo in un editor comparivano scritte «[object Object]». Causa: il Markdown veniva convertito in HTML (`markdown_it`) e `st.markdown` lo rileggeva come Markdown; alla prima riga vuota del codice il blocco HTML si chiudeva, il resto diventava un blocco annidato e il frontend di Streamlit scriveva «[object Object]», anche nel testo copiato. Ora la bolla è un contenitore Streamlit con `key` e il contenuto passa a `st.markdown` nativo (lo stesso dello streaming), senza HTML grezzo; il CSS delle bolle è sulle classi `st-key-*-bubble-N`
+- **«🗑️ Elimina» non toglieva la chat dalla KB Chat** (`core/kb_chat_indexer.py`, `ui/sidebar/conversations.py`): veniva cancellato solo il file, i pezzi indicizzati restavano recuperabili dalla ricerca e la chat spariva dal pannello di gestione. Nuova `delete_conversation_and_kb()`: prima i chunk, poi il file. «🗑️ Elimina» ora chiede conferma
+- **«🔄 Aggiorna KB Chat» toglie le chat orfane** (`remove_orphan_chats_from_kb()`): file eliminato o `includi_in_kb` spento. Decide chat per chat dal file; nel dubbio (file illeggibile) tiene
+
+### Aggiunto
+- **`LICENSE`** (MIT): il README lo citava ma il file mancava
+- **`requirements-dev.txt`** con `pytest`, e `tests/conftest.py`: i test girano con `venv/bin/python -m pytest`, sempre su CPU (con la build di torch installata alcune GPU, es. MX250, davano «CUDA error: no kernel image» negli embedding)
+- Test: `tests/test_chat_render.py` (AppTest), `tests/test_delete_kb_chat.py`
+- `graphify-out/` nel `.gitignore`
+
+### Documentazione
+- **`MANUALE_DeepAiUG.md`** allineato alla v1.15.4: tutte le voci di gravità alta e media dell'audit (limiti privacy scritti come stanno, limite file reale 200 MB, Anthropic/Google con pacchetti aggiuntivi, Windows, Poetry non supportato, KB con una sola sorgente attiva, finding di sicurezza, ecc.)
+
+### Note
+- **Limiti noti ancora aperti** (scritti nel manuale): il widget allegati non si svuota dopo l'invio né con «Nuova»; `MAX_FILE_SIZE_MB` non è controllato; Anthropic e Google richiedono `datapizza-ai-clients-anthropic` / `-google`; un Remote host su IP pubblico riceve KB, allegati e immagini con il solo banner «Host esterno»; una chat caricata e poi usata sul cloud manda tutta la cronologia
+- **Da verificare nell'app**: sui portatili con GPU non supportate da torch anche l'indicizzazione della KB nell'app potrebbe fallire allo stesso modo dei test
+
+---
 ## [1.15.3] — 2026-08-04
 
 ### Aggiunto
