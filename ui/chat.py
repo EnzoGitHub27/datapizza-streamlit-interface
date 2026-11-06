@@ -99,6 +99,17 @@ def render_chat_message(
 
             st.markdown(content)
 
+        # v1.16.0 P9 (decisione 9) — badge e «cosa ha visto il modello»
+        if role == "assistant" and message.get("pii_removed") is not None:
+            n = int(message.get("pii_removed") or 0)
+            st.caption(f"🛡️ {n} {'dato tolto' if n == 1 else 'dati tolti'} prima dell'invio")
+        if role == "assistant":
+            egress = (st.session_state.get("egress_views") or {}).get(index)
+            if egress:
+                with st.expander("👁️ Cosa ha visto il modello", expanded=False):
+                    st.text(egress)
+                    st.caption("Solo in questa sessione: non si salva nella conversazione.")
+
         # v1.16.0 P7 (decisione 6) — invio fuori casa non registrato in Annona
         if role == "assistant" and message.get("annona_recorded") is False:
             st.caption("📒 non registrato in Annona")

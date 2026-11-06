@@ -89,11 +89,25 @@ st.session_state["hybrid_pii_active"] = bool(HYBRID and HYBRID.pii.enabled)
 def _answer_extra(client, destination) -> dict:
     """Metadati della risposta: niente valori, solo stato (v1.16.0)."""
     extra = {}
+    # 🛡️ P9 (decisione 9) — quanti dati tolti: il conteggio si salva, i valori mai
+    if getattr(client, "pii_guard", False) and getattr(client, "last_removed", None) is not None:
+        extra["pii_removed"] = int(client.last_removed)
     # 🧭 P7, decisione 6: Annona in sola lettura non vede gli invii fuori casa
     if (HYBRID is not None and HYBRID.annona.enabled and HYBRID.annona.mode == "read"
             and destination["outside"]):
         extra["annona_recorded"] = False
     return extra
+
+
+def _remember_egress(text: str) -> None:
+    """
+    🛡️ P9 — «cosa ha visto il modello» per l'ultima risposta: SOLO nella
+    sessione corrente (scelta dell'Hub), mai nella conversazione salvata.
+    """
+    if not text:
+        return
+    idx = len(st.session_state.get("messages", [])) - 1
+    st.session_state.setdefault("egress_views", {})[idx] = text
 
 
 def _on_pii_anonymized(n_removed: int) -> None:
@@ -326,6 +340,7 @@ def reset_conversation():
     # v1.16.0 - Reset metadati del guard
     st.session_state.pop("pii_guard", None)
     st.session_state["pii_removed"] = 0
+    st.session_state["egress_views"] = {}  # P9: solo sessione
     # 🆕 v1.5.0 - Pulisci anche file pending e flag privacy
     clear_pending_files()
     reset_privacy_flags()
@@ -1001,6 +1016,7 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                     provider="Annona gateway (sperimentale)",
                     extra={"annona_gateway": True, "annona_placement": _gw},
                 )
+                _remember_egress(_gateway_result.egress_text)
             else:
                 add_message(
                     "assistant",
@@ -1010,6 +1026,8 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                     provider=connection_type,  # v1.15.4
                     extra=_answer_extra(client, destination),  # v1.16.0
                 )
+                if getattr(client, "pii_guard", False):
+                    _remember_egress(client.last_egress)
             
             # 🆕 v1.5.0 - Pulisci file pending dopo invio
             clear_pending_files()

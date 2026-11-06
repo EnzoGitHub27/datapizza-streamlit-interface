@@ -309,6 +309,7 @@ def _load_conversation(conversation_id: str):
     else:
         st.session_state.pop("pii_guard", None)
     st.session_state["pii_removed"] = int(data.get("pii_removed", 0) or 0)
+    st.session_state["egress_views"] = {}  # P9: il riquadro non si salva, non torna
 
     # Ripristina impostazioni Knowledge Base
     kb_settings = extract_kb_settings(data)
