@@ -20,7 +20,8 @@
 # rotta → PIIGuardBlocked PRIMA di ogni chiamata al client vero: verso fuori
 # casa non parte niente. Un'immagine (MediaBlock) verso fuori casa → blocco.
 #
-# La tabella segnaposto → valore vive solo durante la chiamata: mai in log,
+# La tabella segnaposto → valore vive solo in memoria, per la sessione
+# (PIISessionMemory, giro 7b): mai in log,
 # messaggi d'errore, cronologia, KB Chat o export. Questo modulo non scrive
 # log; le eccezioni portano solo testi fissi e il tipo dell'errore.
 # ============================================================================
@@ -153,12 +154,15 @@ class GuardedClient:
         pii: PIIClient,
         exclude_tags: Sequence[str] = (),
         on_anonymized: Optional[Callable[[int], None]] = None,
+        memory: Optional[Any] = None,
     ):
         self._factory = client_factory
         self._system_prompt = system_prompt or ""
         self._pii = pii
         self._exclude_tags = list(exclude_tags)
         self._on_anonymized = on_anonymized
+        # giro 7b — PIISessionMemory: i valori già tolti nella sessione
+        self._memory = memory
         # P9 — l'ultimo invio, solo in memoria: quanti dati tolti e il testo
         # com'è partito (con i segnaposto). Mai la tabella.
         self.last_removed: Optional[int] = None
@@ -203,6 +207,12 @@ class GuardedClient:
             if self._system_prompt.strip() else PLACEHOLDER_NOTE
         )
         joined = _SEP.join([system_prompt, *texts])
+        # giro 7b — i valori già tolti in questa sessione si coprono PRIMA di
+        # rizzo-pii, per confronto di testo: si tolgono anche dove rizzo-pii,
+        # alla seconda passata, non li riconoscerebbe
+        marks: dict = {}
+        if self._memory is not None:
+            joined, marks = self._memory.cover(joined)
 
         try:
             anon = self._pii.anonymize(joined, exclude_tags=self._exclude_tags)
@@ -221,6 +231,13 @@ class GuardedClient:
                 f"🛡️ rizzo-pii ha risposto con un errore ({type(exc).__name__}): "
                 "il messaggio non è stato inviato."
             ) from exc
+
+        if self._memory is not None:
+            if any(anon.text.count(mark) != joined.count(mark) for mark in marks):
+                raise PIIGuardBlocked(
+                    "🛡️ Risposta di rizzo-pii non coerente: il messaggio non è stato inviato."
+                )
+            anon = self._memory.merge(anon, marks)
 
         parts = [p.strip("\n") for p in anon.text.split(_SEP_MARK)]
         if len(parts) != len(texts) + 1:

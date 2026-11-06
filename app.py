@@ -70,6 +70,7 @@ from core.file_processors import get_attachment_names
 from core.url_validator import is_blocked, classify_url
 from core.egress import classify_destination, outside_label  # v1.16.0 P2
 from core.pii_guard import PIIGuardBlocked  # v1.16.0 P6
+from core.pii_memory import PIISessionMemory  # v1.16.0 giro 7b
 from config.hybrid_settings import load_hybrid_settings, HybridSettingsError  # v1.16.0 P5
 
 # 🛡️ v1.16.0 — Ambiente ibrido (security_settings.yaml, sezione hybrid:).
@@ -84,6 +85,13 @@ except HybridSettingsError as _hybrid_exc:
 
 # letto dagli avvisi della sidebar e dal dialogo privacy (decisione 4)
 st.session_state["hybrid_pii_active"] = bool(HYBRID and HYBRID.pii.enabled)
+
+
+def _pii_memory():
+    """giro 7b — i valori già tolti in questa sessione (solo in memoria, mai salvati)."""
+    if "_pii_memory" not in st.session_state:
+        st.session_state["_pii_memory"] = PIISessionMemory()
+    return st.session_state["_pii_memory"]
 
 
 def _answer_extra(client, destination) -> dict:
@@ -341,6 +349,7 @@ def reset_conversation():
     st.session_state.pop("pii_guard", None)
     st.session_state["pii_removed"] = 0
     st.session_state["egress_views"] = {}  # P9: solo sessione
+    st.session_state.pop("_pii_memory", None)  # giro 7b: la memoria dei valori tolti si azzera
     # 🆕 v1.5.0 - Pulisci anche file pending e flag privacy
     clear_pending_files()
     reset_privacy_flags()
@@ -376,6 +385,7 @@ def get_socratic_client(connection_type, provider, api_key, model, base_url, tem
             temperature,
             hybrid=HYBRID,  # v1.16.0 P6
             on_anonymized=_on_pii_anonymized,
+            pii_memory=_pii_memory(),  # giro 7b
         )
     except Exception:
         return None
@@ -929,6 +939,7 @@ if submit and user_input.strip():
                     temperature,
                     hybrid=HYBRID,  # v1.16.0 P6
                     on_anonymized=_on_pii_anonymized,
+                    pii_memory=_pii_memory(),  # giro 7b
                 )
             
             # Prepare prompt
