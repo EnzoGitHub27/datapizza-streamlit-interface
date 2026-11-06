@@ -1,8 +1,8 @@
 # SPEC v1.16.0 «ibrida» — rizzo-pii e Annona come servizi opzionali
 
-**Stato:** decisa (giro 3) · **Data:** 2026-11-05, aggiornata il 2026-11-06 · **Base:** v1.15.4 · **Ramo:** `feat/hybrid-pii-annona`
-**Cosa c'è già nel ramo:** questa SPEC, `core/pii_client.py`, `core/annona_client.py` e i loro test con i servizi simulati; il `NOTICE`; i blocchi decisi sulla destinazione reale (P2, `core/egress.py`); la sezione `hybrid:` di `security_settings.yaml` con il suo lettore (P5, `config/hybrid_settings.py`). **Il guard non è ancora collegato all'interfaccia** (P6, giro 4).
-**Cosa non c'è:** `GuardedClient`, la UI ibrida (badge, «cosa ha visto il modello», letture di Annona), il cambio di versione, README, CHANGELOG e ROADMAP.
+**Stato:** decisa; guard collegato (giro 4) · **Data:** 2026-11-05, aggiornata il 2026-11-06 · **Base:** v1.15.4 · **Ramo:** `feat/hybrid-pii-annona`
+**Cosa c'è già nel ramo:** questa SPEC, `core/pii_client.py`, `core/annona_client.py` e i loro test con i servizi simulati; il `NOTICE`; i blocchi decisi sulla destinazione reale (P2, `core/egress.py`); la sezione `hybrid:` di `security_settings.yaml` con il suo lettore (P5, `config/hybrid_settings.py`). Dal giro 4: il guard **collegato** (P6, `core/pii_guard.py`, `GuardedClient` in `create_client()`), gli avvisi sulla destinazione reale (dialogo privacy, chat caricata, icone 🔒, bordo, titolo), l'errore del cloud che resta accanto alla domanda (§8), `apply_to` non più configurabile, `.graphifyignore`.
+**Cosa non c'è:** P7-P9 (letture di Annona, gateway, badge «🛡️ N dati tolti» e riquadro «cosa ha visto il modello»), il cambio di versione, README, CHANGELOG e ROADMAP.
 **Giro 3:** le decisioni di Gilles sono nella §13; le correzioni dell'audit (`docs/AUDIT_pre_v1.16.0.md` §2.1) sono dentro le sezioni a cui si riferiscono.
 
 ---
@@ -92,7 +92,7 @@ GuardedClient(inner, destination, pii, annona, settings)
 
 Quindi un Remote host su IP pubblico si comporta come il cloud (decisione 5) e un cloud «Custom» su `localhost` (es. LM Studio) come «in casa». La chiave API resta chiesta in base all'etichetta (`Cloud provider`), perché serve al client, non alla privacy.
 
-**Restano sull'etichetta**, da riallineare con il guard (P6): il dialogo privacy (`ui/privacy_warning.py`), l'avviso sulla conversazione caricata (`ui/sidebar/llm_config.py`), le icone 🔒 delle conversazioni sensibili (`ui/sidebar/conversations.py`), il bordo rosso e il banner «☁️ Cloud».
+**Confermata da Gilles** (giro 4). Dal giro 4 usano la stessa regola anche il dialogo privacy (`ui/privacy_warning.py`), l'avviso sulla conversazione caricata (`ui/sidebar/llm_config.py`), le icone 🔒 delle conversazioni (`ui/sidebar/conversations.py`), il bordo rosso e il titolo. Restano sull'etichetta solo la chiave API, il nome del provider nel titolo e l'ambito del controllo SSRF.
 
 Il vantaggio di questo punto: il cambio in `app.py` è quasi nullo (una riga per passare le impostazioni), e nessuna via nuova verso il modello può nascere senza passare dal guard.
 
@@ -288,7 +288,9 @@ Lo stesso vale per la richiesta della strada C ad Akaion e per le segnalazioni e
 
 **Dal giro 3:** `tests/test_egress.py` (destinazioni finte: pubblica, LAN, Tailscale, localhost, cloud fisso, Custom, non risolvibile; i blocchi di KB e upload) e `tests/test_hybrid_settings.py` (file assente, sezione assente, `cloud: allow` rifiutato, tipi sbagliati).
 
-**Da scrivere col collegamento (P6, giro 4):**
+**Dal giro 4:** `tests/test_pii_guard.py` (rizzo-pii e cloud finti: solo segnaposto verso il cloud, una chiamata sola per system prompt e prompt, «Lucia D'Angelo», streaming pezzo per pezzo, servizio giù = zero chiamate, mappa ripristinata dopo il parsing, metadati), `tests/test_pii_guard_app.py` (app intera: invio bloccato, testo di nuovo nella casella), `tests/test_egress_labels.py`, `tests/test_cloud_error_visible.py`.
+
+**Il piano iniziale (P6), coperto dai test qui sopra:**
 1. `GuardedClient`: stringa e lista di blocchi; `system_prompt` e prompt in **una** chiamata a rizzo-pii (stessa numerazione); `invoke` → oggetto con `.text`; `MediaBlock` verso fuori casa → errore; destinazione da `classify_destination`; mappa della sessione ripristinata dopo il parsing («Lucia D'Angelo»); nessun log di prompt o tabella.
 2. Tutte e quattro le vie della §2.2 passano dal guard (test che fallisce se una chiamata arriva al client vero senza guard).
 3. Tabella §8, una riga per test: ogni blocco = zero chiamate al client cloud finto.
@@ -315,7 +317,7 @@ Lo stesso vale per la richiesta della strada C ad Akaion e per le segnalazioni e
 | 10 | NOTICE e AGPL | `LICENSE` dalla 1.15.4; `NOTICE` dal giro 3. Il punto AGPL si chiede per iscritto all'autore di rizzo-pii; intanto l'Interface non distribuisce né scarica i binari di rizzo-pii (§9). |
 | 11 | Gli errori del cloud (prove del 06/11) | **L'errore resta visibile** in chat accanto alla domanda, segnata «non inviata» o «rifiutata». Con rizzo-pii acceso anche un invio rifiutato è già anonimizzato. Niente controllo preventivo della chiave (§8). |
 
-**Da confermare:** la regola unica della destinazione reale (§3.1), scelta dell'Hub.
+**Confermato (giro 4):** la regola unica della destinazione reale (§3.1); gli avvisi riallineati alla stessa regola; `apply_to` tolto dalla configurazione.
 
 ---
 
