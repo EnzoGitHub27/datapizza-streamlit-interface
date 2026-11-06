@@ -300,6 +300,12 @@ def _load_conversation(conversation_id: str):
     st.session_state["kb_metadata"] = get_kb_metadata(data)
     # v1.14.2 - Ripristina vault_used (retrocompatibile)
     st.session_state["vault_used"] = data.get("vault_used", False)
+    # v1.16.0 - Ripristina i metadati del guard (retrocompatibile)
+    if "pii_guard" in data:
+        st.session_state["pii_guard"] = bool(data["pii_guard"])
+    else:
+        st.session_state.pop("pii_guard", None)
+    st.session_state["pii_removed"] = int(data.get("pii_removed", 0) or 0)
 
     # Ripristina impostazioni Knowledge Base
     kb_settings = extract_kb_settings(data)

@@ -79,6 +79,8 @@ def save_conversation(
     kb_metadata: Dict[str, Any] = None,  # v1.14.0
     vault_used: bool = False,  # v1.14.2
     models_used: List[str] = None,  # v1.15.4
+    pii_guard: Optional[bool] = None,  # v1.16.0
+    pii_removed: int = 0,  # v1.16.0
 ) -> bool:
     """
     Salva una conversazione su file.
@@ -95,6 +97,9 @@ def save_conversation(
         kb_metadata: Metadati per inclusione nella KB epistemica (v1.14.0, opzionale)
         vault_used: True se la conversazione ha usato un vault (v1.14.2)
         models_used: modelli che hanno risposto, scritto solo se più di uno (v1.15.4)
+        pii_guard: True se rizzo-pii ha anonimizzato almeno un invio (v1.16.0);
+            None = guard mai usato, il campo non si scrive (file come la 1.15.4)
+        pii_removed: quanti dati sono stati tolti in tutto (mai i valori)
 
     Returns:
         True se salvato con successo
@@ -120,6 +125,9 @@ def save_conversation(
         }
         if models_used and len(models_used) > 1:  # v1.15.4
             conversation_data["models_used"] = list(models_used)
+        if pii_guard is not None:  # v1.16.0
+            conversation_data["pii_guard"] = bool(pii_guard)
+            conversation_data["pii_removed"] = int(pii_removed or 0)
         
         filename = get_conversation_filename(conversation_id)
         with open(filename, "w", encoding="utf-8") as f:

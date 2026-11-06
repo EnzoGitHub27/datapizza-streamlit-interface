@@ -93,6 +93,55 @@ def get_remote_ollama_models(base_url: str) -> List[str]:
 
 
 def create_client(
+    connection_type: str,
+    provider: str,
+    api_key: str,
+    model: str,
+    system_prompt: str,
+    base_url: str,
+    temperature: float,
+    hybrid: Any = None,
+    on_anonymized: Any = None,
+) -> Any:
+    """
+    Il punto unico verso i modelli (SPEC §3).
+
+    Senza `hybrid`, o con `hybrid.pii.enabled` falso, o con la destinazione
+    in casa: il client di sempre (_create_raw_client), identico alla 1.15.4.
+    Con rizzo-pii acceso e la destinazione fuori casa (core.egress):
+    GuardedClient, che anonimizza prima dell'invio e ripristina in locale.
+
+    Args:
+        hybrid: HybridSettings (config.hybrid_settings), opzionale
+        on_anonymized: callback(n_dati_tolti), opzionale
+    """
+    if hybrid is not None and getattr(hybrid.pii, "enabled", False):
+        from core.egress import classify_destination
+
+        if classify_destination(connection_type, provider, base_url)["outside"]:
+            from core.pii_client import PIIClient
+            from core.pii_guard import GuardedClient
+
+            def factory(clean_system_prompt: str) -> Any:
+                return _create_raw_client(
+                    connection_type, provider, api_key, model,
+                    clean_system_prompt, base_url, temperature,
+                )
+
+            return GuardedClient(
+                client_factory=factory,
+                system_prompt=system_prompt,
+                pii=PIIClient(hybrid.pii.url, timeout=hybrid.pii.timeout_s),
+                exclude_tags=hybrid.pii.exclude_tags,
+                on_anonymized=on_anonymized,
+            )
+
+    return _create_raw_client(
+        connection_type, provider, api_key, model, system_prompt, base_url, temperature
+    )
+
+
+def _create_raw_client(
     connection_type: str, 
     provider: str, 
     api_key: str, 

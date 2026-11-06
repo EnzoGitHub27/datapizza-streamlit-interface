@@ -292,11 +292,27 @@ class SessionMapAnalyzer:
         prompt = SESSION_MAP_PROMPT.format(lista_domande=lista_domande)
 
         result = llm_invoke_fn(prompt)
-        raw_text = _extract_llm_text(result)
+
+        # v1.16.0 P6 — con il guard (GuardedResponse) si analizza il testo con
+        # i segnaposto e si ripristina DOPO, campo per campo: un valore vero con
+        # virgolette, apostrofi o a capo non rompe il formato della risposta.
+        restore = getattr(result, "restore", None)
+        guarded_raw = getattr(result, "raw_text", None)
+        if callable(restore) and isinstance(guarded_raw, str):
+            raw_text = guarded_raw
+        else:
+            restore = None
+            raw_text = _extract_llm_text(result)
 
         dominant_frame, entries, unexplored_frames = _parse_llm_response(
             raw_text, questions
         )
+
+        if restore is not None:
+            dominant_frame = restore(dominant_frame)
+            for entry in entries:
+                entry.frame_contribution = restore(entry.frame_contribution)
+            unexplored_frames = [restore(f) for f in unexplored_frames]
 
         return SessionMap(
             entries=entries,
