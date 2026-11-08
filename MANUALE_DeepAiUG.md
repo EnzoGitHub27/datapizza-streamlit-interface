@@ -104,7 +104,7 @@ Dalla v1.15.2 il `requirements.txt` **pinna tutte le dipendenze** (`==`) per bui
 | Export | `reportlab==4.4.9` |
 | Upload file | `python-docx==1.2.0`, `Pillow==12.3.0` |
 
-⚠️ **Anthropic e Google Gemini non funzionano con la sola installazione standard**: usano i client `datapizza-ai-clients-anthropic` e `datapizza-ai-clients-google`, che non sono in `requirements.txt` e non vengono installati dagli installer. Senza di essi, scegliendo quei provider la chat risponde con «❌ Errore: …» (ImportError). Per usarli: `pip install datapizza-ai-clients-anthropic datapizza-ai-clients-google` dentro il venv (`~/DeepAiUG/venv`). OpenAI e gli endpoint compatibili OpenAI funzionano senza pacchetti aggiuntivi.
+⚠️ **Anthropic e Google Gemini non funzionano con la sola installazione standard**: usano i client `datapizza-ai-clients-anthropic` e `datapizza-ai-clients-google`, che non sono in `requirements.txt` e non vengono installati dagli installer. Senza di essi, scegliendo quei provider la domanda resta in chat segnata «⚠️ **Non inviata** — ImportError: …». Per usarli: `pip install datapizza-ai-clients-anthropic datapizza-ai-clients-google` dentro il venv (`~/DeepAiUG/venv`). OpenAI e gli endpoint compatibili OpenAI funzionano senza pacchetti aggiuntivi.
 
 ⚠️ **Ordine di installazione critico**: `datapizza-ai` va installato **prima** di `requirements.txt`, perché `datapizza-ai-clients-openai-like` ne dipende. Gli installer ufficiali rispettano già quest'ordine.
 
@@ -507,26 +507,27 @@ L'app è pensata per **uso mono-utente locale**. Non ha login: "utente" è chiun
 All'apertura del browser (di norma `http://localhost:8501`) trovi:
 
 - **Tema "Matrix"**: sfondo verde scurissimo, testo verde-teal, titoli con effetto glitch e, se abilitata, la "pioggia" di caratteri in sottofondo (personalizzabile o disattivabile dal sistemista via `branding.yaml`).
-- **Titolo dinamico** che indica il backend attivo: `🧠 DeepAiUG Chat → Ollama 1.16.0` (locale), `→ Remote` o `→ {provider}` (cloud).
-- **Banner novità** con le note della versione (se non è attiva la Knowledge Base).
+- **Titolo dinamico** che indica il backend attivo: `🧠 DeepAiUG Chat → Ollama 1.16.0` (locale), `→ Remote` o `→ {provider}` (cloud). Dalla 1.16.0, se il testo va «fuori casa» il titolo aggiunge « ☁️»: `→ OpenAI ☁️`, `→ Remote esterno ☁️` per un Remote host su Internet, `→ Ollama ☁️` per un Base URL locale che punta fuori.
+- **Banner novità** («✨ **Novità 1.16.0**: …») con le note della versione; con la Knowledge Base attiva al suo posto c'è il banner della KB (Cap. 14.1).
 - **Indicatore di connessione** — dalla v1.15.2 per Local/Remote riflette la **destinazione reale** dell'URL (Cap. 20.0), non l'etichetta della modalità:
   - `🔒 Rete fidata - i dati restano nella tua rete ({host})` (verde: loopback, LAN, Tailscale)
   - `⚠️ Host esterno - i dati escono dalla tua rete verso {host}` (giallo: IP pubblico)
   - `🔒 Connessione bloccata - endpoint metadati cloud` (rosso: 169.254.x, connessione rifiutata)
   - `ℹ️ URL non valido o non risolvibile - verifica l'indirizzo` (informativo)
-  - `☁️ Cloud - Dati esterni (KB e Upload disabilitati)` (giallo, per i provider cloud)
-- **Quattro contatori**: `📝 Messaggi` (totale), `👤 Domande` (tuoi messaggi), `🪙 Token` (stima, ~4 caratteri per token), `🆔 ID` (identificativo della conversazione).
+  - `☁️ Cloud - Dati esterni (KB e Upload disabilitati)` (giallo, per i provider cloud fuori casa)
+  - `🔒 Rete fidata - endpoint «Custom» nella tua rete ({host})` (verde, per un provider «Custom» su loopback o LAN)
+- **Quattro contatori**: `📝 Messaggi` (totale), `👤 Domande` (tuoi messaggi), `🪙 Token` (stima del solo testo dei messaggi, ~4 caratteri per token: esclusi allegati, contesto KB e system prompt), `🆔 ID` (ultimi 8 caratteri dell'identificativo della conversazione, es. `8_143022`).
 - L'**area conversazione** (vuota: "👋 Inizia una conversazione!") e in fondo la sezione **✍️ Messaggio** con allegati e campo di invio.
-- A sinistra la **sidebar** con tutte le impostazioni: ⚙️ Configurazione, 📚 Knowledge Base, 💬 Conversazione, 🧠 Modalità Socratica, 📊 Mappa sessione, 📤 Export.
+- A sinistra la **sidebar**, in quest'ordine: expander ⚙️ Configurazione (chiuso), expander 📚 Knowledge Base (Wiki / Vault) (aperto), 💬 Conversazione, 📚 Includi nella Knowledge Base, 🔄 Aggiorna KB Chat, 📚 Gestione Knowledge Base, 🧭 Annona (solo con l'ambiente ibrido), 📚 Usa KB Chat, 📊 Mappa sessione, 🧠 Modalità Socratica con 📋 Esplorazioni socratiche, 📤 Export e 🗂️ Batch Export.
 
-Il bordo superiore della pagina è **verde** quando lavori in locale/remoto e **rosso** quando sei su cloud: un colpo d'occhio sulla privacy.
+Il bordo superiore della pagina è **verde** quando il testo resta «in casa» e **rosso** quando va «fuori casa» (cloud, ma anche un Remote host su Internet): un colpo d'occhio sulla privacy. Un provider «Custom» su loopback o LAN ha il bordo verde.
 
 ## 11.2 Il flusso di base
 
 1. Scegli (o lascia) il backend nella sidebar → ⚙️ Configurazione (default: Ollama locale).
 2. Scrivi nel campo "Scrivi il tuo messaggio..." e premi **🚀 Invia**.
 3. La risposta appare **in streaming**: prima tre pallini animati ("sta scrivendo"), poi il testo che cresce con un cursore `▌`, con scorrimento automatico della pagina.
-4. Sotto ogni risposta trovi i **bottoni socratici** (Capitolo 16), salvo modalità "Veloce".
+4. Sotto ogni risposta trovi i **bottoni socratici** (Capitolo 16), salvo modalità "Veloce"; senza modello selezionato sono disattivati.
 5. Con **Auto-save** attivo (default) la conversazione si salva da sola a ogni messaggio.
 
 Ogni messaggio appare in una "bolla": la tua con avatar 👤 e sfondo blu, quella dell'AI con avatar 🤖, il nome del modello e l'orario. Le risposte supportano Markdown completo (tabelle, blocchi di codice).
@@ -542,36 +543,39 @@ Sidebar → expander **⚙️ Configurazione** → selettore **"Tipo connessione
 Modalità predefinita, massima privacy: tutto resta sul tuo computer.
 
 - **Base URL**: default `http://localhost:11434/v1`.
-- **🔄 Aggiorna**: rileva i modelli installati in Ollama (accanto compare il conteggio).
+- **🔄 Aggiorna**: rileva i modelli installati in Ollama (accanto compare il conteggio). L'elenco si carica anche da solo all'avvio. ℹ️ Usa `ollama list` sulla macchina dell'app e **ignora il Base URL**: se lo cambi, l'elenco resta quello locale.
 - **Modello**: selezione dall'elenco; se non viene trovato nulla puoi digitare il nome (default proposto `llama3.2`).
 
 ## 12.2 Remote host — `### 🌐 Remote`
 
 Per usare un server Ollama nella tua rete locale (es. una macchina con GPU).
 
-- A seconda della configurazione del sistemista: server fisso, elenco di server (**"Server"**), oppure elenco più inserimento manuale (**"✏️ Inserisci manualmente..."** → campo **Host**, es. `http://192.168.1.10:11434/v1`).
+- A seconda della configurazione del sistemista: server fisso (un riquadro con nome e descrizione, nessuna scelta), elenco di server (**"Server"**), oppure elenco più inserimento manuale (**"✏️ Inserisci manualmente..."** → campo **Host**, es. `http://192.168.1.10:11434/v1`). Senza `remote_servers.yaml` compare direttamente il campo **Host**.
 - **API Key (opzionale)** se il server la richiede.
-- **🔄 Aggiorna modelli** interroga il server e popola l'elenco **Modello**.
+- **🔄 Aggiorna modelli** interroga il server e popola l'elenco **Modello**. Se l'elenco è vuoto, o il bottone è disattivato dal sistemista, **Modello** è un campo di testo (default `llama3.2`). ℹ️ Cambiando server, l'elenco resta quello del server precedente finché non premi di nuovo il bottone.
+- ⚠️ Dalla 1.16.0 un Remote host che risolve a un **IP pubblico** si comporta come il cloud (Cap. 21.4).
 
 ## 12.3 Cloud provider — `### ☁️ Cloud`
 
 Per usare OpenAI, Anthropic (Claude), Google Gemini o un endpoint custom.
 
-> ⚠️ Anthropic e Google funzionano solo se il sistemista ha installato i loro client nel venv (Capitolo 2.3); altrimenti l'invio del messaggio dà «❌ Errore: …».
+> ⚠️ Anthropic e Google funzionano solo se il sistemista ha installato i loro client nel venv (Capitolo 2.3); altrimenti la domanda resta in chat segnata «⚠️ **Non inviata** — ImportError: …».
 
-- **Provider**: elenco configurato dal sistemista (o i quattro predefiniti).
-- **API Key**: se non ne hai una salvata, inseriscila e premi **💾 Salva** (verrà ricordata). Se ne esiste una salvata vedrai "✅ Key salvata (nascosta per sicurezza)" e il bottone **🔄 Usa altra key** per sostituirla.
-- **Modello**: dall'elenco del provider; se abilitato, l'opzione **✏️ Altro...** permette di digitare un modello non in lista.
+- **Provider**: elenco configurato dal sistemista, con icona («🟢 OpenAI», «🟣 Anthropic (Claude)», «🔵 Google Gemini», «⚙️ Custom»), o i quattro predefiniti se `cloud_models.yaml` manca. «Custom» non ha un campo Base URL: funziona solo se il sistemista l'ha scritto nel file (Cap. 6.2).
+- **API Key**: se non ne hai una salvata, scrivila nel campo «API Key» e premi **💾 Salva** (compare dopo che hai scritto; verrà ricordata). Se ne esiste una salvata vedrai "✅ Key salvata (nascosta per sicurezza)" e il bottone **🔄 Usa altra key**, che apre il campo «Nuova API Key» con **💾 Salva** / **❌ Annulla**. Se il sistemista rende visibili le chiavi, vedrai «✅ Key salvata (visibile)», il campo «API Key» e **💾 Salva modifiche**. Conta come «salvata» anche una chiave presa dall'ambiente (Cap. 7).
+- **Modello**: dall'elenco del provider; se abilitato, l'opzione **✏️ Altro...** apre il campo «Nome modello» per un modello non in lista.
 
-⚠️ In modalità cloud **l'upload di file e la Knowledge Base sono disabilitati** per proteggere i tuoi dati (Capitolo 20). Se la Knowledge Base è attiva, il passaggio al cloud viene proprio **bloccato** e la connessione torna su "Local (Ollama)".
+⚠️ Fuori casa **l'upload di file e la Knowledge Base sono disabilitati** per proteggere i tuoi dati (Capitolo 20). Se la Knowledge Base o la KB Chat sono attive, il passaggio viene proprio **bloccato**: «🔒 **Cloud provider bloccato**: Knowledge Base o KB Chat attiva. I tuoi dati locali rimangono privati!», con l'indicazione «Disattiva Knowledge Base e KB Chat, oppure usa una destinazione in casa (Ollama locale, LAN, Tailscale)», e la connessione torna su "Local (Ollama)".
 
 ## 12.4 Parametri del modello — expander `⚙️ Parametri`
 
 | Parametro | Range | Default | Significato |
 |---|---|---|---|
-| System Prompt | testo libero | "Sei un assistente utile. Rispondi in modo chiaro e preciso." | Istruzioni permanenti date al modello |
+| System Prompt | testo libero | "Sei un assistente utile. Rispondi in modo chiaro e preciso." | Istruzioni permanenti date al modello. Con rizzo-pii attivo, verso fuori casa gli si aggiunge (senza che compaia nel campo) una riga che chiede al modello di usare i segnaposto così come sono (Cap. 21.7) |
 | Temperature | 0.0 – 2.0 (step 0.1) | 0.7 | Creatività: bassa = risposte prevedibili, alta = più varie |
 | Max messaggi | 10 – 100 (step 10) | 50 | Quanti messaggi recenti restano nel contesto. Vale solo **senza** contesto KB: quando la Knowledge Base o la KB Chat trovano risultati, la domanda viene inviata con il solo contesto dei documenti, senza la cronologia |
+
+Non ci sono altri parametri (per esempio niente «max token»). I bottoni socratici e la Mappa Sessione non usano il tuo System Prompt ma un prompt fisso.
 
 ---
 
@@ -583,29 +587,33 @@ Sopra il campo messaggio puoi trascinare o selezionare **più file**:
 
 | Tipo | Formati | Cosa succede |
 |---|---|---|
-| Documenti | PDF, TXT, MD, DOCX | Il testo viene estratto e aggiunto al tuo messaggio |
+| Documenti | PDF, TXT, MD, DOCX | Il testo viene estratto e aggiunto al tuo messaggio (solo a quello: vedi sotto) |
 | Immagini | PNG, JPG, JPEG, GIF, WEBP | Richiedono un modello "Vision" (vedi sotto) |
 
 **Limiti**: il widget indica «Max 10MB per file», ma è solo un'indicazione: il limite effettivo è quello di Streamlit, **200 MB**. File grandi rallentano l'estrazione e allungano molto il messaggio; il testo estratto da un documento viene troncato a **50.000 caratteri** (con nota esplicita nel messaggio). Dai PDF viene estratto il testo pagina per pagina (`[Pagina N]`); dai DOCX paragrafi e tabelle; i PDF di sole immagini vengono segnalati come privi di testo estraibile.
 
-Ogni file allegato appare in un'**anteprima** richiudibile: thumbnail per le immagini, primi 500 caratteri per i documenti, con icona per tipo (📕 PDF, 📘 DOCX, 📄 TXT, 📝 MD, 🖼️ immagine).
+Ogni file allegato appare in un'**anteprima** sotto l'intestazione «**📎 N file allegati:**», un expander per file «{icona} {nome} ({dimensione})»: thumbnail per le immagini, primi 500 caratteri per i documenti, con icona per tipo (📕 PDF, 📘 DOCX, 📄 TXT, 📝 MD, 🖼️ immagine). Sotto compare «📎 N file pronti per l'invio».
 
-**Modelli Vision**: le immagini sono accettate solo se il nome del modello è riconosciuto come multimodale (LLaVA e varianti, Granite3-Vision, Moondream, BakLLaVA, CogVLM, Fuyu, MiniCPM-V). Con un modello non-Vision compare l'avviso "⚠️ Immagini rilevate ma il modello non supporta Vision" e le immagini vengono ignorate.
+ℹ️ **Il testo di un documento arriva al modello solo nel messaggio in cui lo alleghi.** Nella cronologia si salva solo quello che hai scritto tu (più i nomi dei file): nei turni successivi il modello non vede più il documento, se non nella risposta che ha già dato.
 
-> ✅ **Novità v1.15.3 (Vision local-only)**: con un modello Vision le immagini allegate vengono **inviate davvero al modello** insieme al testo (nelle versioni precedenti venivano preparate ma non inviate). Funziona solo su **Local (Ollama)** e **Remote host** — mai verso il cloud, dove l'upload resta disabilitato. ⚠️ Se il Remote host punta a un indirizzo Internet (banner giallo «Host esterno»), anche le immagini e i file allegati escono dalla tua rete: il blocco riguarda solo la modalità «Cloud provider». Le immagini sono **effimere**: non vengono salvate in conversazioni, KB o vault; nella cronologia restano solo i nomi dei file allegati.
+**Modelli Vision**: le immagini sono accettate solo se il nome del modello contiene uno dei nomi riconosciuti (LLaVA e varianti, Granite3-Vision, Moondream, BakLLaVA, CogVLM, Fuyu, MiniCPM-V). Modelli vision con altri nomi (es. `llama3.2-vision`, `qwen2.5vl`, `gemma3`) **non** vengono riconosciuti. Con un modello non riconosciuto compare «⚠️ **Immagini rilevate** ma il modello `{modello}` non supporta Vision. Le immagini verranno **ignorate**…» e le immagini non compaiono nell'anteprima.
 
-**Su cloud** l'upload è disabilitato: "📎 Upload file disabilitato per privacy".
+> ✅ **Novità v1.15.3 (Vision local-only)**: con un modello Vision le immagini allegate vengono **inviate davvero al modello** insieme al testo (nelle versioni precedenti venivano preparate ma non inviate). Funziona solo verso destinazioni «in casa»: **Local (Ollama)** e **Remote host** in LAN o Tailscale — mai verso il cloud, dove l'upload resta disabilitato. Dalla 1.16.0 anche un Remote host che punta a un indirizzo Internet conta come «fuori casa»: allegati e immagini sono disabilitati come per il cloud (Cap. 21.4). Le immagini sono **effimere**: non vengono salvate in conversazioni, KB o vault; nella cronologia restano solo i nomi dei file allegati.
+
+**Fuori casa** (cloud o host su Internet) l'upload è disabilitato: «📎 **Upload file disabilitato per privacy** — Il modello è fuori dalla tua rete (Cloud provider o host su internet)…».
 
 ## 13.2 Inviare e ricevere
 
 - Scrivi nel campo (placeholder "Scrivi il tuo messaggio...", oppure "Chiedi qualcosa sui tuoi documenti..." se la KB è attiva) e premi **🚀 Invia**.
-- Prima dell'invio l'app verifica: modello selezionato ("❌ Seleziona un modello!"), chiave API per il cloud ("❌ Inserisci API key!"), blocco KB+cloud ("🔒 Cloud bloccato con Knowledge Base o KB Chat attiva!").
+- Prima dell'invio l'app verifica: modello selezionato («❌ Seleziona un modello!»), chiave API per il cloud («❌ Inserisci API key!»), blocco KB fuori casa («🔒 Cloud provider bloccato con Knowledge Base o KB Chat attiva!», oppure «🔒 host esterno ({host}) bloccato…»), URL bloccato («🔒 Connessione bloccata per sicurezza: …»), configurazione ibrida («🛡️ Configurazione ibrida non valida, messaggio non inviato: …»). Il messaggio d'errore compare in rosso sopra la casella.
+- **Dalla 1.16.0 il testo resta nella casella** dopo un blocco (questi, e quelli di rizzo-pii, Cap. 21.4), anche se poi tocchi la sidebar, finché non invii di nuovo o non la svuoti tu. Dopo un invio partito la casella si svuota; durante lo streaming la domanda resta nella casella finché la risposta non è finita. ⚠️ Il messaggio rosso invece sparisce alla prima interazione successiva (limite noto, Appendice B).
+- **Se l'invio fallisce** dopo la partenza (chiave sbagliata, rete, errore del fornitore, pacchetto mancante), la domanda resta in chat con «⚠️ **Non inviata** — {tipo}: {errore}» o, se il fornitore aveva cominciato a rispondere, «⛔ **Rifiutata** dal fornitore — …». Vale per ogni destinazione; la domanda si salva così segnata e non viene rimandata al modello nei turni successivi.
 - Le risposte con **blocchi di codice** si possono copiare con l'icona in alto a destra del blocco.
 
 > ✅ **Novità v1.15.4**: i blocchi di codice restano interi anche dopo la fine dello streaming e nelle conversazioni ricaricate. Prima, un blocco con righe vuote (quasi tutto il codice Python) veniva spezzato e, copiandolo, negli appunti comparivano scritte «[object Object]».
 
-- Se la Knowledge Base è attiva vedrai gli spinner "🔍 Ricerca documenti rilevanti..." e/o "📚 Ricerca nella KB Chat...", con il conteggio dei documenti trovati; le **fonti** usate compaiono sotto la risposta nell'expander **"📎 Fonti (N)"**.
-- Il bottone **🔄 Nuova** azzera e apre una conversazione nuova (messaggi, contatori, storico socratico, mappa sessione).
+- Se la Knowledge Base è attiva vedrai gli spinner "🔍 Ricerca documenti rilevanti..." e/o "📚 Ricerca nella KB Chat...", con il conteggio dei documenti trovati («📎 Trovati N documenti KB», «📚 Trovati N risultati dalla KB Chat»); le **fonti** usate compaiono sotto la risposta nell'expander **"📎 Fonti (N)"**.
+- Il bottone **🔄 Nuova** azzera e apre una conversazione nuova (messaggi, contatori, storico socratico, mappa sessione, metadati KB della chat, e dalla 1.16.0 la memoria dei dati tolti e il riquadro «👁️ Cosa ha visto il modello»). Non spegne la Knowledge Base.
 - ⚠️ **Limite noto:** il riquadro degli allegati **non si svuota** da solo, né dopo l'invio né con «🔄 Nuova». Prima del messaggio successivo togli a mano i file dal riquadro (la ✕ accanto a ciascuno) o ricarica la pagina, altrimenti potrebbero essere allegati di nuovo.
 
 ---
@@ -737,16 +745,19 @@ Selettore **"Profondità analisi"**:
 
 | Bottone | Cosa produce |
 |---|---|
-| 🪞 **Rifletti** | L'unico che analizza la **tua domanda**, non la risposta: presupposizioni implicite, destinatario implicito, e la "domanda sotto la domanda". Non risponde: ti aiuta a capire se stai facendo la domanda giusta |
+| 🪞 **Rifletti** | L'unico che analizza la **tua domanda**, non la risposta: presupposizioni implicite, destinatario implicito, e la "domanda sotto la domanda". Non risponde: ti aiuta a capire se stai facendo la domanda giusta. Compare solo se prima della risposta c'è una tua domanda |
 
 Dettagli utili:
-- Ogni bottone mostra uno spinner durante la generazione e poi diventa ✅ (es. "✅ Alternative"); il risultato si apre in un pannello dedicato con una domanda-guida finale (es. "💡 Quale prospettiva ti sembra più utile?").
-- I risultati sono **memorizzati**: ripremere il bottone non rigenera. In calce compare il modello e l'ora di generazione.
-- In modalità 🧠 Socratico, dopo i bottoni compare l'invito: *"Prima di accettare questa risposta, chiediti: quali alternative non ho considerato? Cosa sto dando per scontato?"*.
+- Ogni bottone mostra uno spinner durante la generazione e poi diventa ✅: «✅ Alternative», «✅ Assunzioni», «✅ Limiti», «✅ Confutato», «✅ Riflettuto». Il risultato si apre in un pannello dedicato («🔄 **Alternative generate** - Esplora prospettive diverse», «🤔 **Assunzioni implicite** - Cosa si dà per scontato?», «⚠️ **Limiti di validità** - Quando NON funziona», «🎭 **Confutazione** - Avvocato del diavolo», «🪞 **Riflessione sulla domanda** - Sfida il tuo perimetro») con una domanda-guida finale (es. "💡 Quale prospettiva ti sembra più utile?").
+- I risultati sono **memorizzati** nella sessione: ripremere il bottone non rigenera. In calce compare «🤖 {modello}  •  🕐 HH:MM» (l'ora è quella in cui la pagina viene mostrata, non quella della generazione). Caricando una conversazione i pannelli non ricompaiono: i risultati restano nello storico (16.3).
+- In modalità 🧠 Socratico, sotto ogni risposta compare l'invito: «🧠 **Modalità Socratica attiva** - Prima di accettare questa risposta, chiediti: *Quali alternative non ho considerato? Cosa sto dando per scontato?*».
+- I bottoni usano il modello corrente: se sei fuori casa, anche queste richieste vanno al fornitore (con rizzo-pii acceso, solo con i segnaposto: Cap. 21.4).
 
 ## 16.3 Storico delle esplorazioni — sidebar `📋 Esplorazioni socratiche`
 
-Ogni uso di un bottone viene registrato (tipo, orario, domanda, risposta analizzata, risultato) e salvato con la conversazione. Nella sidebar trovi: il **totale**, il conteggio per tipo (🔄 🤔 ⚠️ 🎭 🪞), l'elenco delle **ultime 10 esplorazioni** consultabili una per una, e la cancellazione protetta (checkbox "Conferma cancellazione" + "🗑️ Cancella storico").
+Ogni uso di un bottone viene registrato (tipo, orario, domanda, i primi 200 caratteri della risposta analizzata, risultato) e salvato con la conversazione. Nella sidebar trovi: il **totale** («Totale: N esplorazioni»), il conteggio per tipo (🔄 🤔 ⚠️ 🎭 🪞), l'expander «📜 Ultime N esplorazioni» (fino a 10, voci «{emoji} HH:MM - {domanda}») consultabili una per una, e la cancellazione protetta (checkbox "Conferma cancellazione" + "🗑️ Cancella storico"). Senza esplorazioni: «Nessuna esplorazione ancora.». In modalità 🚀 Veloce la sezione è nascosta.
+
+⚠️ **Limiti noti** (Appendice B): premendo «🗑️ Cancella storico» lo storico si svuota ma può comparire un errore di Streamlit; e la cancellazione non viene salvata da sola: lo storico può ricomparire ricaricando la chat prima di un nuovo messaggio.
 
 ---
 
@@ -759,8 +770,10 @@ Domanda dopo domanda, ogni sessione costruisce senza accorgersene una **cornice 
 | Modalità | Comportamento |
 |---|---|
 | 🔄 Progressiva | La mappa si aggiorna dopo ogni risposta e diventa visibile dopo **4** domande |
-| 🔔 A soglia *(default)* | Dopo **5** domande compare un invito (una sola volta per sessione): *"Hai fatto 5 domande in questa sessione. Sai da dove stai guardando il problema?"* con il bottone **📊 Mostra mappa sessione** |
-| ⏹️ Disattivata | Nessuna mappa, nessun invito |
+| 🔔 A soglia *(default)* | Dopo **5** domande compare un invito: «💡 Hai fatto {N} domande in questa sessione. Sai da dove stai guardando il problema?» con il bottone **📊 Mostra mappa sessione**. L'invito resta nella sidebar finché non generi la mappa |
+| ⏹️ Disattivata | Nessuna nuova mappa, nessun invito (una mappa già generata resta visibile) |
+
+Le domande si contano **dall'inizio della sessione**: caricando una conversazione il conteggio riparte da zero.
 
 Il popover **"❓ Cos'è la Mappa Sessione?"** accanto al titolo spiega la funzione e i suoi riferimenti teorici (sovrascopo, vincolo teleologico, capitale semantico → `PHILOSOPHY.md`).
 
@@ -772,7 +785,7 @@ La mappa (expander **"📊 Mappa della sessione"**) contiene tre elementi:
 2. **Domande → frame** — per ogni tua domanda, come ha costruito o rinforzato quella cornice;
 3. **Frame non esplorati** — 2–3 prospettive alternative, formulate come domande, che la sessione non ha percorso.
 
-La mappa non giudica e non dà consigli. È generata **dallo stesso modello che stai già usando**: è una chiamata in più, che contiene tutte le tue domande della sessione. Se sei su cloud, quelle domande vengono inviate di nuovo al provider; in modalità **Progressiva** la chiamata parte dopo **ogni** risposta. Richiede almeno **2 domande** e può essere rigenerata con **🔄 Rigenera mappa** (o creata su una conversazione caricata con **📊 Genera mappa**).
+La mappa non giudica e non dà consigli. È generata **dallo stesso modello che stai già usando**: è una chiamata in più, che contiene tutte le tue domande della sessione. Se sei su cloud, quelle domande vengono inviate di nuovo al provider; in modalità **Progressiva** la chiamata parte dopo **ogni** risposta. Richiede almeno **2 domande** (con una sola, «📊 Genera mappa» non produce niente e non dice nulla) e può essere rigenerata con **🔄 Rigenera mappa**. **📊 Genera mappa** compare ogni volta che non c'è ancora una mappa e la modalità non è Disattivata, anche su una conversazione caricata. Sotto la mappa: «Mappa generata alle HH:MM  •  🤖 {modello}».
 
 ---
 
@@ -782,11 +795,11 @@ Sidebar → `### 💬 Conversazione`.
 
 ## 18.1 Salvataggio automatico
 
-La checkbox **"Auto-save"** (attiva di default) salva la conversazione su disco a ogni messaggio. Dopo un'esplorazione socratica la conversazione viene salvata **anche con Auto-save spento**: con Auto-save spento e senza bottoni socratici, invece, la chat non viene salvata (e la KB Chat non la trova). Non esiste — e non serve — un bottone "Salva" manuale. Le conversazioni non si possono rinominare: sono identificate da data e ora di creazione.
+La checkbox **"Auto-save"** (attiva di default) salva la conversazione su disco a ogni messaggio. Dopo un'esplorazione socratica la conversazione viene salvata **anche con Auto-save spento**: con Auto-save spento e senza bottoni socratici, invece, la chat non viene salvata (e la KB Chat non la trova). Non esiste — e non serve — un bottone "Salva" manuale. Le conversazioni non si possono rinominare: il file prende nome da data e ora di creazione, l'elenco mostra la data dell'ultimo aggiornamento.
 
 ## 18.2 Caricare una conversazione
 
-Il menu **"Carica"** elenca le conversazioni salvate come `{icone} {data} - {modello} ({N messaggi})`. Le icone raccontano il contenuto:
+Il menu **"Carica"** elenca le conversazioni salvate, dalla più recente, come `{icone} {data ultimo aggiornamento} - {modello} ({N})` (modello tagliato a 12 caratteri, N = numero di messaggi); la prima voce è «-- Seleziona --». Senza conversazioni: «💡 Nessuna conversazione salvata». Le icone raccontano il contenuto:
 
 | Icona | Significato |
 |---|---|
@@ -794,37 +807,39 @@ Il menu **"Carica"** elenca le conversazioni salvate come `{icone} {data} - {mod
 | 📚 | Usava una wiki come KB / inclusa nella KB Chat (📚⭐ rilevanza media, 📚⭐⭐ alta) |
 | 📁 🟣 🟤 ⬛ | Usava cartella locale / vault Obsidian / LogSeq / Notion |
 | 📎 | Contiene allegati |
-| 🔒 (prefisso) | Sei su cloud e la chat contiene dati locali: caricamento protetto |
+| 🔒 | Sei fuori casa e la chat contiene dati locali (wiki, cartella, allegati): caricamento protetto. Compare dopo 🧠 |
 
 Selezionata la conversazione, premi **📂 Carica**:
-- se sei su **cloud** e la chat contiene dati locali, il caricamento è **bloccato** per privacy;
-- se la chat usava una KB locale "pesante" (**≥ 50 file**) viene chiesta conferma, con stima del tempo di ri-indicizzazione (**✅ Procedi** / **❌ Annulla**);
-- al caricamento vengono ripristinati messaggi, contatori, impostazioni KB, storico socratico e metadati, e, se la chat usava una **cartella locale o un vault** ancora presente, la Knowledge Base viene **ri-indicizzata automaticamente** con barra di avanzamento. Per le **wiki** viene solo riattivata la KB con l'indice già presente, che può essere di un'altra sorgente: in quel caso risincronizza la wiki a mano.
+- se sei **fuori casa** (cloud, o dalla 1.16.0 un Remote host su Internet) e la chat contiene dati locali, il caricamento è **bloccato** per privacy («… Questa conversazione contiene dati locali (…). Non può essere caricata con un provider cloud…»); vale anche per una chat con fonti dalla KB Chat, che però non ha l'icona 🔒;
+- se la chat usava una KB locale "pesante" (**≥ 50 file**) viene chiesta conferma, con il numero di file e «⏱️ Ri-indicizzazione stimata» (**✅ Procedi** / **❌ Annulla**);
+- al caricamento vengono ripristinati messaggi, contatori, impostazioni KB, storico socratico e metadati (la mappa sessione, il conteggio delle domande e i pannelli socratici ripartono da zero), e, se la chat usava una **cartella locale o un vault** ancora presente, la Knowledge Base viene **ri-indicizzata automaticamente** con barra di avanzamento. Per le **wiki** viene solo riattivata la KB con l'indice già presente, che può essere di un'altra sorgente: in quel caso risincronizza la wiki a mano.
 
-**🗑️ Elimina** chiede conferma (**✅ Elimina** / **❌ Annulla**) e poi cancella definitivamente la conversazione dal disco. Dalla **v1.15.4** toglie anche i suoi pezzi dalla **KB Chat**, se ne faceva parte. Per le chat eliminate con versioni precedenti, «🔄 Aggiorna KB Chat» toglie ora dalla KB Chat i pezzi delle chat che non esistono più o non sono più incluse.
+**🗑️ Elimina** chiede conferma («🗑️ Eliminare definitivamente questa conversazione?», con «Verrà tolta anche dalla KB Chat.» se ne faceva parte; **✅ Elimina** / **❌ Annulla**) e poi cancella definitivamente la conversazione dal disco. Dalla **v1.15.4** toglie anche i suoi pezzi dalla **KB Chat**; se la KB Chat non risponde lo dice («⚠️ Conversazione eliminata, ma la KB Chat non ha risposto…») e basta «🔄 Aggiorna KB Chat». ⚠️ Se elimini la conversazione **aperta**, i messaggi restano sullo schermo e l'Auto-save la ricrea al messaggio successivo: dopo l'eliminazione premi «🔄 Nuova». Per le chat eliminate con versioni precedenti, «🔄 Aggiorna KB Chat» toglie ora dalla KB Chat i pezzi delle chat che non esistono più o non sono più incluse.
 
 ---
 
 # Capitolo 19 — Esportazione
 
-Sidebar → `### 📤 Export` (attivo appena c'è almeno un messaggio).
+Sidebar → `### 📤 Export` (attivo appena c'è almeno un messaggio; prima: «💡 Inizia una conversazione per abilitare l'export»).
 
 ## 19.1 Esportare la conversazione corrente
 
 1. **Formato Export**: `📝 Markdown (.md)`, `📋 JSON (.json)`, `📄 TXT (.txt)`, `📕 PDF (.pdf)`.
 2. **Contenuto**: conversazione completa, oppure ultimi 10 / 20 / 50 messaggi.
-3. **Nome file** (senza estensione; default `conversation_{id}`).
-4. **👁️ Anteprima Export** mostra il risultato nell'area principale (il PDF non è anteprimabile); **📥 Download** genera il file e fa comparire il bottone di salvataggio **💾 Salva**.
+3. **Nome file (senza estensione)** — default `conversation_{id}`.
+4. **👁️ Anteprima Export** mostra il risultato nell'area principale, con **❌ Chiudi Anteprima** (il PDF non è anteprimabile: «📕 Preview PDF non disponibile…»); **📥 Download** genera il file e fa comparire il bottone di salvataggio **💾 Salva {formato}** (es. «💾 Salva Markdown»).
 
 Contenuto per formato:
-- **Markdown**: titolo, data, modello, messaggi con intestazioni `## 👤 Tu / 🤖 AI` e orari, fonti in corsivo, footer con versione;
-- **JSON**: struttura completa e rielaborabile (info export + conversazione con id, date, modello, provider e messaggi integrali);
+- **Markdown**: «# Conversazione LLM» con **Data** (di creazione), **Modello** e **Messaggi**, messaggi con intestazioni `## 👤 Tu - {data ora}` / `## 🤖 AI - {data ora}`, fonti in corsivo, footer «*Generato con DeepAiUG v1.16.0 - …*»;
+- **JSON**: struttura completa e rielaborabile (info export + conversazione con id, data di creazione, modello, provider e messaggi integrali);
 - **TXT**: testo semplice con `[Tu]` / `[AI]`;
-- **PDF**: documento impaginato (richiede `reportlab`).
+- **PDF**: testo semplice impaginato (richiede `reportlab`): il Markdown non viene interpretato. ⚠️ Senza `reportlab` il bottone non produce niente e non dà errore.
+
+Gli allegati non vengono esportati, solo i loro nomi.
 
 ## 19.2 Batch Export — `### 🗂️ Batch Export`
 
-Esporta **tutte** le conversazioni salvate in un colpo solo: scegli il **Formato batch** e premi **📦 Genera ZIP** → **💾 Download ZIP** (`conversations_batch_{data}.zip`).
+Esporta **tutte** le conversazioni salvate in un colpo solo (la sezione compare con una chat aperta non vuota e almeno una conversazione salvata: «📁 N conversazioni salvate»): scegli il **Formato batch** e premi **📦 Genera ZIP** → «✅ ZIP pronto (N conversazioni, {formato})» → **💾 Download ZIP** (`conversations_batch_{AAAAMMGG_HHMMSS}.zip`, con un file `conversation_{id}.{ext}` per chat). ⚠️ In formato PDF senza `reportlab` lo ZIP esce vuoto.
 
 ---
 
