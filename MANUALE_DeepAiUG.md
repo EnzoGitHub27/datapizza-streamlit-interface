@@ -406,15 +406,17 @@ L'orchestrazione è in `rag/manager.py` (`KnowledgeBaseManager`). Ogni indicizza
 
 ## 9.2 Chunking
 
-- Unità: **caratteri** (non token). Default: **chunk 1000, overlap 200** (regolabili da UI: 200–3000 / 0–500).
-- Split gerarchico sui separatori in ordine di priorità: intestazioni Markdown (`\n## `, `\n### `), paragrafi (`\n\n`), righe, frasi (`. `, `! `, `? `, `; `), virgole, spazi. I chunk non vengono mai tagliati prima di 1/3 della dimensione target.
+- Unità: **caratteri** (non token). Default: **chunk 1000, overlap 200** (regolabili da UI: 200–3000 a passi di 100 / 0–500 a passi di 50).
+- Split gerarchico sui separatori in ordine di priorità: intestazioni Markdown (`\n## `, `\n### `), sezioni (`\n\n\n`), paragrafi (`\n\n`), righe, frasi (`. `, `! `, `? `, `; `), virgole, spazi. I chunk non vengono mai tagliati prima di 1/3 della dimensione target.
+- ⚠️ Gli slider permettono un overlap uguale o maggiore della dimensione del chunk (es. chunk 200, overlap 500): in quel caso i chunk diventano moltissimi e quasi identici. Tieni l'overlap ben sotto la dimensione del chunk.
+- La **KB Chat** ha un suo chunker fisso (1000/200, separatori: turni della conversazione, paragrafi, righe, frasi, spazi), non regolabile dalla UI.
 
 ## 9.3 Embedding
 
-- Modello di default: **`intfloat/multilingual-e5-small`** (384 dimensioni, multilingua, ~118 MB, CPU-friendly), via `sentence-transformers`, vettori normalizzati per cosine similarity, con prefissi e5 (`passage:` per i documenti, `query:` per le query).
+- Modello di default: **`intfloat/multilingual-e5-small`** (384 dimensioni, multilingua, ~118 MB, CPU-friendly), via `sentence-transformers`, vettori normalizzati, con prefissi e5 (`passage:` per i documenti, `query:` per le query). Le collection usano la distanza di default di ChromaDB (L2): con vettori normalizzati l'ordine dei risultati è lo stesso del coseno.
 - Override con `DEEPAIUG_EMBEDDING_MODEL`; alternative note: `intfloat/multilingual-e5-base` (768 dim), `intfloat/multilingual-e5-large` (1024 dim), `paraphrase-multilingual-MiniLM-L12-v2` (384 dim).
 - **Fallback**: se `sentence-transformers` non è disponibile, il sistema non si blocca: ChromaDB usa la propria embedding function di default (`all-MiniLM-L6-v2`, orientata all'inglese, qualità inferiore sull'italiano). La UI lo segnala ("🔤 Embedding: ChromaDB default (MiniLM-L6, EN)").
-- **Migrazione automatica**: la collection memorizza il tag del modello di embedding; se al riavvio il tag non coincide (o è assente, caso pre-1.15.0), la collection viene svuotata e va ri-indicizzata manualmente.
+- **Migrazione automatica**: ogni collection (KB documentale e KB Chat) memorizza il tag del modello di embedding; se al riavvio il tag non coincide (o è assente, caso pre-1.15.0), la collection viene svuotata e va ri-indicizzata manualmente. ⚠️ Se il modello e5 non si carica (anche per un problema passeggero), il tag diventa quello del fallback (`chromadb_default`) e lo svuotamento scatta lo stesso: vedi Appendice B.
 - **Rete** (dalla 1.16.0): il modello si scarica da `huggingface.co` solo al primo uso, con una riga nel terminale («🌐 … primo uso, lo scarico da huggingface.co»); se è già nella cache sul disco si carica senza nessuna richiesta di rete. Con la cache incompleta lo riscarica, e lo dice.
 - Gli embedding **non usano Ollama**: girano nel processo Streamlit, di solito in CPU (CPU al 100% durante l'indicizzazione è normale); la GPU solo se torch la supporta (vedi §2.4).
 
@@ -422,8 +424,8 @@ L'orchestrazione è in `rag/manager.py` (`KnowledgeBaseManager`). Ogni indicizza
 
 - **ChromaDB persistente** su disco (vedi Cap. 8); fallback in memoria con ricerca keyword se ChromaDB non è installato.
 - Indicizzazione in batch da **500** chunk.
-- Retrieval: **top-k = 5** di default (regolabile 1–10 da UI). **Non esistono soglie di similarità né reranker**: vengono restituiti sempre i k risultati più vicini.
-- KB Chat: retrieval con **boost per rilevanza** (distanza divisa per 1.0/1.15/1.30 per rilevanza bassa/media/alta) e filtro opzionale per tipo.
+- Retrieval: **top-k = 5** di default (regolabile 1–10 da UI, slider visibile solo con la KB documentale attiva e indicizzata). **Non esistono soglie di similarità né reranker**: vengono restituiti sempre i k risultati più vicini.
+- KB Chat: stesso top-k, retrieval con **boost per rilevanza** (distanza divisa per 1.0/1.15/1.30 per rilevanza bassa/media/alta). Senza filtro si prendono i k risultati più vicini e il boost li **riordina** soltanto; con il **filtro per tipo** si prendono 3×k risultati e si filtrano dopo, quindi possono uscirne meno di k (anche nessuno).
 
 ## 9.5 Client LLM e scoperta modelli
 
@@ -432,8 +434,9 @@ L'orchestrazione è in `rag/manager.py` (`KnowledgeBaseManager`). Ogni indicizza
 
 ## 9.6 Sincronizzazione wiki
 
-- Adapter MediaWiki (`mwclient`) e DokuWiki; pausa di **0,5 s** tra le richieste (`request_delay`), user-agent dedicato, strip del markup wiki.
-- A fine sync viene scritto un file di statistiche in `wiki_cache/` (non è una cache dei contenuti).
+- Adapter MediaWiki (`mwclient`) e DokuWiki; pausa di **0,5 s** tra le richieste (`request_delay`), timeout 30 s, batch da 50, strip del markup wiki.
+- **User-agent**: solo l'adapter MediaWiki ne imposta uno (`DeepAiUGBot/<versione>`); per le sorgenti di `wiki_sources.yaml` vale quello di `global_settings.user_agent`, che nel file fornito è ancora `DatapizzaBot/1.4.1 (...)`. L'adapter DokuWiki non ne imposta.
+- A fine sync viene scritto un file di statistiche in `wiki_cache/` (`sync_<id>.json` per MediaWiki, `sync_doku_<id>.json` per DokuWiki): non è una cache dei contenuti.
 
 ---
 
@@ -449,7 +452,7 @@ L'app è pensata per **uso mono-utente locale**. Non ha login: "utente" è chiun
 
 1. **Non esporre la porta 8501** fuori dall'host o dalla LAN fidata; per accessi multipli usare un reverse proxy con autenticazione (es. nginx + basic auth/SSO) e binding su `127.0.0.1`.
 2. **Chiavi API**: `chmod 600 secrets/*.txt`; preferire `.env`/variabili d'ambiente; `show_saved_keys: false`.
-3. **Blocco privacy** (findings H2/H3, corretti in v1.15.2): il blocco verso il cloud copre ora sia la Knowledge Base documentale sia il toggle "Usa KB Chat"; i banner di connessione riflettono la destinazione reale dell'URL (classificatore, Cap. 20.0) e avvisano se un host "Remote"/"Local" risolve a un indirizzo esterno. L'avviso per host esterni non è bloccante: istruire comunque gli utenti a non puntare host "remote" verso endpoint Internet.
+3. **Blocco privacy** (findings H2/H3, corretti in v1.15.2): il blocco verso il cloud copre ora sia la Knowledge Base documentale sia il toggle "Usa KB Chat"; i banner di connessione riflettono la destinazione reale dell'URL (classificatore, Cap. 20.0) e avvisano se un host "Remote"/"Local" risolve a un indirizzo esterno. **Dalla 1.16.0** con KB o KB Chat attiva ogni destinazione «fuori casa» è bloccata, compresi un Remote host su IP pubblico e un URL non risolvibile (Cap. 21.4); senza KB l'host esterno resta usabile, con il banner giallo. Al contrario, un cloud «Custom» su localhost o LAN conta come «in casa». Istruire comunque gli utenti a non puntare host "remote" verso endpoint Internet.
 4. **SSRF (H1, mitigato in v1.15.2)**: gli URL (server remoti, wiki, base_url) sono classificati e gli endpoint metadati cloud (`169.254.0.0/16`) sono bloccati; gli altri indirizzi interni restano raggiungibili per design (Ollama locale/LAN). Su host esposti a terzi limitare comunque la rete in uscita.
 5. **Percorsi cartelle RAG (H4)**: l'utente può indicizzare qualunque cartella leggibile dal processo; in contesti multi-utente eseguire l'app con un utente di sistema dedicato con permessi minimi.
 6. **Dipendenze (M4, corretto in v1.15.2)**: `PyPDF2` (deprecato) è stato sostituito da `pypdf` e le dipendenze sono pinnate (`==`) in `requirements.txt`; mantenere scansioni periodiche (`pip-audit`).
@@ -573,44 +576,61 @@ Ogni file allegato appare in un'**anteprima** richiudibile: thumbnail per le imm
 
 La Knowledge Base (KB) permette all'AI di rispondere **sui tuoi documenti**: l'app cerca i passaggi più pertinenti alla tua domanda e li fornisce al modello come contesto, chiedendogli di citare le fonti.
 
-Sidebar → expander **📚 Knowledge Base** (aperto di default).
+Sidebar → expander **📚 Knowledge Base (Wiki / Vault)** (aperto di default). Con la KB spenta una riga elenca le sorgenti disponibili.
 
 ## 14.1 Attivazione
 
 Spunta **"🔍 Usa Knowledge Base"**. Comparirà:
-- `🔒 Privacy reale - dati e chat restano nella tua rete` se sei in Local/Remote verso un indirizzo della tua rete;
-- `⚠️ La chat che usa la KB va a un host esterno ({host})` se il Remote host risolve a un indirizzo Internet (la KB **non** viene bloccata in questo caso);
-- `🔒 Cloud provider bloccato per privacy!` se sei su cloud (la KB non funziona con il cloud, per scelta di design).
+- `🔒 Privacy reale - dati e chat restano nella tua rete` se la destinazione è «in casa» (Ollama locale, Remote host in LAN o Tailscale);
+- `🔒 Cloud provider: KB bloccata per privacy!` se sei su un provider cloud;
+- dalla 1.16.0, `🔒 host esterno ({host}): KB bloccata per privacy!` se il Remote host risolve a un indirizzo Internet, `🔒 destinazione non verificabile ({host}): KB bloccata per privacy!` se l'indirizzo non si risolve, `🔒 Connessione bloccata - endpoint metadati cloud` per un indirizzo link-local.
 
-Quando la KB è attiva e indicizzata, nell'area principale appare il banner: `📚 Knowledge Base ATTIVA - N documenti | N chunks`.
+In tutti i casi «fuori casa» la sidebar riporta la connessione su «Local (Ollama)» (Cap. 20.1 e 21.4).
+
+Nell'area principale:
+- KB attiva e indicizzata: `📚 Knowledge Base ATTIVA - N documenti | N chunks`;
+- KB attiva ma vuota: `📚 Knowledge Base attivata ma non indicizzata. Configura una cartella nella sidebar.`;
+- a chat vuota: `👋 Knowledge Base attiva! Fai una domanda sui tuoi documenti.`
 
 ## 14.2 Sorgenti disponibili — `📁 Sorgente Documenti`
 
-| Sorgente | Icona | Formati/Note |
-|---|---|---|
-| Cartella Locale | 📁 | `.md`, `.txt`, `.html`(+`.htm`), `.pdf` — con checkbox per formato e "📂 Includi sottocartelle" |
-| MediaWiki | 🌐 | wiki tipo Wikipedia; richiede il pacchetto `mwclient` |
-| DokuWiki | 📘 | richiede il pacchetto `dokuwiki` |
-| Vault Obsidian | 🟣 | `.md`, `.canvas`; ignora `.obsidian`, `templates`, `.trash`, `.archive` |
-| Vault LogSeq | 🟤 | `.md`, `.org`; ignora le cartelle di backup di LogSeq |
-| Export Notion | ⬛ | `.md` |
+Il menu dipende da `mode` in `wiki_sources.yaml` (Cap. 6.5):
 
-Il tipo di vault viene **riconosciuto automaticamente** dal percorso ("🟣 Obsidian rilevato — N file compatibili trovati"). Oltre alle sorgenti predisposte dal sistemista (in `wiki_sources.yaml`), l'opzione **"➕ Configura manualmente..."** (disponibile solo se il sistemista imposta `mode: "custom"` in `wiki_sources.yaml`, o se il file non ha sorgenti; il file fornito usa `mode: "selectable"`) permette di inserire URL wiki o percorsi ad hoc, con opzioni avanzate (namespace, numero massimo di pagine, autenticazione username/password).
+- **`selectable`** (file fornito): menu **"Seleziona sorgente"** con le sorgenti del file, ciascuna con l'icona scritta nel YAML (es. «📁 Documenti Locali», le wiki con 🌐 🖥️ 🌍 📘 📗…), più in coda **🟣 Vault Obsidian**, **🟤 Vault LogSeq** e **⬛ Export Notion**. Per le sorgenti del YAML si preme solo **🔄 Sincronizza**.
+- **`custom`**, o file senza sorgenti: menu **"Tipo sorgente"** con i tipi liberi — 📁 Cartella Locale, 🌐 MediaWiki, 📘 DokuWiki e i tre vault — e i campi per inserire URL o percorso. Per le wiki c'è l'expander **⚙️ Opzioni avanzate**: Namespace, «Max pagine» (0 = tutte), «Richiede autenticazione» (username/password).
+- **`fixed`**: solo la sorgente predefinita, senza scelta (e senza vault).
+
+| Sorgente | Formati letti | Note |
+|---|---|---|
+| Cartella Locale | `.md`, `.txt`, `.html`/`.htm`, `.pdf` | checkbox per formato e "📂 Includi sottocartelle" |
+| MediaWiki | pagine wiki | richiede il pacchetto `mwclient` |
+| DokuWiki | pagine wiki | richiede il pacchetto `dokuwiki` |
+| Vault Obsidian | `.md`, `.canvas` | |
+| Vault LogSeq | `.md` | i file `.org` vengono contati ma **non** letti |
+| Export Notion | `.md` | riconosciuto dai file `_index*.csv` |
+
+⚠️ **Le cartelle da ignorare dei vault** (`.obsidian`, `templates`, `.trash`, `.archive` per Obsidian; `logseq/bak`, `logseq/version-files` per LogSeq) nella 1.16.0 valgono solo per il **conteggio** dei file, non per l'indicizzazione: i file `.md` che contengono finiscono anch'essi nella KB (limite noto, Appendice B).
+
+Nel campo **"Percorso cartella"** della Cartella Locale il tipo viene **riconosciuto automaticamente** («🟣 **Vault Obsidian rilevato**», con «N file compatibili trovati»). Nel pannello di un vault scelto dal menu compare «N file trovati (.md, .canvas)»: lì il tipo non viene verificato, si usa quello scelto.
+
+> ℹ️ Il codice prevede anche una voce **"➕ Configura manualmente..."** nel menu `selectable`, ma con le condizioni attuali non compare mai: per inserire sorgenti ad hoc il sistemista imposta `mode: "custom"` (vedi sopra).
 
 ## 14.3 Indicizzazione
 
 1. Configura la sorgente (percorso o URL).
-2. (Facoltativo) Regola i **⚙️ Parametri Chunking**: dimensione chunk 200–3000 caratteri (default 1000), overlap 0–500 (default 200).
-3. Leggi il **banner di stima**: numero di file/pagine e tempo previsto in base al modello di embedding ("💡 CPU al 100% durante l'embedding — è normale, non chiudere l'app").
-4. Premi il bottone di indicizzazione (**🔄 Indicizza Documenti**, **🔄 Indicizza Obsidian**, **🔄 Sincronizza Wiki**, ecc.) e segui la barra di avanzamento fino a "✅ Indicizzazione completata!".
+2. (Facoltativo) Regola i **⚙️ Parametri Chunking**: dimensione chunk 200–3000 caratteri (default 1000, passi di 100), overlap 0–500 (default 200, passi di 50). Tieni l'overlap sotto la dimensione del chunk (Cap. 9.2).
+3. Premi il bottone di indicizzazione: **🔄 Indicizza Documenti** (cartella), **🔄 Indicizza Vault Obsidian** / **🔄 Indicizza Vault LogSeq** / **🔄 Indicizza Export Notion**, **🔄 Sincronizza Wiki** / **🔄 Sincronizza DokuWiki** (modalità custom) o **🔄 Sincronizza** (sorgenti del YAML).
+4. Subito dopo il clic compare il **banner di stima** (numero di file/pagine e tempo previsto in base al modello di embedding, con «💡 CPU al 100% durante l'embedding — è normale, non chiudere l'app»; per una wiki senza limite di pagine «⚠️ **Numero pagine non limitato** — durata variabile»), poi la barra di avanzamento («🔄 Avvio sincronizzazione...») fino a "✅ Indicizzazione completata!" (o «❌ Errore indicizzazione»).
 
-Ogni indicizzazione ricostruisce da zero l'intera Knowledge Base: indicizzare una sorgente nuova **sostituisce** quella precedente (una sola sorgente attiva alla volta). Per le wiki già configurate viene mostrata la data dell'ultimo sync e il numero di pagine.
+Ogni indicizzazione ricostruisce da zero l'intera Knowledge Base: indicizzare una sorgente nuova **sostituisce** quella precedente (una sola sorgente attiva alla volta). Per le wiki già configurate viene mostrata la data dell'ultimo sync e il numero di pagine; dopo una cartella o un vault compare il riquadro «🟣 **Vault Obsidian attivo**» (o «📁 Cartella attivo») con l'ultima sync e il numero di file.
 
 ## 14.4 Statistiche e parametri di ricerca
 
-La sezione **📊 Statistiche** mostra: documenti e chunk indicizzati, data ultimo aggiornamento, tipo di storage ("💾 ChromaDB (persistente)" oppure "⚠️ Memoria (temporaneo)") e il modello di embedding in uso ("🌍 Embedding: intfloat/multilingual-e5-small").
+La sezione **📊 Statistiche** mostra: «📄 Documenti» e «📦 Chunks», «🕐 Ultimo update», il tipo di storage («💾 Storage: ChromaDB (persistente)» oppure «⚠️ Storage: Memoria (temporaneo)») e il modello di embedding («🌍 Embedding: `multilingual-e5-small`»; con un indice creato prima della 1.15.0 «⚠️ Embedding: legacy (pre-1.15.0) — re-indicizza per usare e5»). Senza indice: «💡 Configura una sorgente e sincronizza per iniziare».
 
-In **⚙️ Parametri RAG** lo slider **"Documenti per query"** (1–10, default 5) decide quanti passaggi vengono recuperati per ogni domanda.
+ℹ️ Il numero di documenti è tenuto solo in memoria: dopo un riavvio dell'app, con l'indice ancora su disco, può comparire «0 documenti» accanto ai chunk giusti.
+
+In **⚙️ Parametri RAG** lo slider **"Documenti per query"** (1–10, default 5) decide quanti passaggi vengono recuperati per ogni domanda, dalla KB documentale e dalla KB Chat. Durante l'invio compaiono «🔍 Ricerca documenti rilevanti...» e «📎 Trovati N documenti KB».
 
 ---
 
@@ -623,27 +643,30 @@ Oltre ai documenti, DeepAiUG può usare **le tue conversazioni passate** come ba
 Nella sidebar, per la conversazione corrente:
 
 - Checkbox **"Includi questa chat nella Knowledge Base"**;
-- **Rilevanza**: `Bassa` / `Media` / `Alta` — le chat più rilevanti pesano di più nelle ricerche (boost 1.0 / 1.15 / 1.30);
+- **Rilevanza**: `Bassa` / `Media` / `Alta` — le chat più rilevanti salgono nell'ordine dei risultati (boost 1.0 / 1.15 / 1.30, Cap. 9.4);
 - **Tipo** (multiselezione): `decisione`, `insight`, `memoria_aziendale`, `riferimento`, `sperimentale`;
 - **Note** libere.
 
-Se la chat non è ancora salvata su disco compare l'avviso di inviare un messaggio (o attendere l'auto-save) prima di indicizzare.
+Rilevanza, Tipo e Note restano disattivati finché non spunti la checkbox. Se la chat non è ancora salvata su disco, nella sidebar compare: «⚠️ Hai flaggato questa chat per la KB ma non è ancora salvata su disco. Invia un messaggio (o attendi l'auto-save) prima di aggiornare.»
 
 ## 15.2 Indicizzare — `🔄 Aggiorna KB Chat`
 
-L'indicizzazione **non è automatica**: dopo aver flaggato le chat premi **"🔄 Aggiorna KB Chat"**. Al termine: "✅ Indicizzate N chat, M chunk totali".
+L'indicizzazione **non è automatica**: dopo aver flaggato le chat premi **"🔄 Aggiorna KB Chat"**. Al termine: «✅ Indicizzate N chat, M chunk totali» e, se ce n'erano, « · 🧹 tolte N chat non più incluse»: dalla 1.15.4 il bottone toglie anche le chat eliminate o non più flaggate. Sotto, la riga «📊 N chat · M chunk indicizzati».
 
 ## 15.3 Gestire la KB — expander `📚 Gestione Knowledge Base`
 
-- Elenco delle chat incluse, con data, modello, stelle di rilevanza (⭐/⭐⭐/⭐⭐⭐), tipi, numero di chunk e note.
-- **✏️ Modifica** (rilevanza/tipo/note, con re-indicizzazione) e **🗑️ Rimuovi** (con conferma: la chat esce dalla KB ma **non** viene cancellata).
-- Sezione **"Flagga chat esistenti"** per aggiungere in blocco vecchie conversazioni (checkbox multiple + "➕ Aggiungi alla KB (N)").
+- In testa: «📚 N chat indicizzate · M chunk totali · Ultima indicizzazione: …».
+- Elenco delle chat incluse, ciascuna come «data · modello», con stelle di rilevanza (⭐/⭐⭐/⭐⭐⭐), tipi, numero di chunk e note.
+- **✏️ Modifica** (rilevanza/tipo/note; **💾 Salva** re-indicizza la chat, **❌ Annulla**) e **🗑️ Rimuovi** («Rimuovere questa chat dalla KB? La chat non verrà eliminata.» → **✅ Conferma** / **❌ No**).
+- Sezione **"Flagga chat esistenti"** per aggiungere in blocco vecchie conversazioni: checkbox multiple, «Rilevanza per le selezionate» e **"➕ Aggiungi alla KB (N)"**. Il bottone segna soltanto le chat: per indicizzarle premi poi «🔄 Aggiorna KB Chat».
+
+Eliminando una conversazione (Cap. 18.2) la si toglie anche dalla KB Chat.
 
 ## 15.4 Usare la KB Chat nelle risposte — `📚 Usa KB Chat`
 
-Attiva il toggle **"📚 Usa KB Chat"** per includere le chat indicizzate nel recupero. Puoi **filtrare per tipo** (es. solo `decisione`). Durante l'invio vedrai "📚 Ricerca nella KB Chat..." e le fonti appariranno come `💬 {titolo della chat}`.
+Spunta la checkbox **"📚 Usa KB Chat"** per includere le chat indicizzate nel recupero. Con **"Filtra per tipo"** scegli i tipi (vuoto = tutti). Durante l'invio vedrai «📚 Ricerca nella KB Chat...» e «📚 Trovati N risultati dalla KB Chat»; le fonti appaiono come `💬 {identificativo della conversazione}` (le conversazioni non hanno un titolo).
 
-> 🔒 **Privacy**: dalla v1.15.2 il toggle "Usa KB Chat" **è coperto dal blocco cloud** come la KB documentale: con il toggle attivo il passaggio a un provider cloud è impedito ("🔒 Cloud bloccato: Knowledge Base o KB Chat attiva"). Nella v1.15.1 questo blocco non esisteva (limite noto, risolto).
+> 🔒 **Privacy**: dalla v1.15.2 «Usa KB Chat» **è coperto dal blocco** come la KB documentale. Nella sidebar: «🔒 **Cloud provider bloccato**: Knowledge Base o KB Chat attiva. I tuoi dati locali rimangono privati!» (dalla 1.16.0 anche «🔒 **host esterno ({host}) bloccato**: …» per un Remote host su IP pubblico), e la connessione torna su Local. All'invio: «🔒 Cloud provider bloccato con Knowledge Base o KB Chat attiva!».
 
 ---
 
