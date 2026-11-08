@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.16.0"
+VERSION = "1.16.1"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "🛡️ Ambiente ibrido (opzionale, spento per default): con rizzo-pii al cloud vanno solo segnaposto, e i valori veri tornano sul tuo computer."
+VERSION_DESCRIPTION = "🛠️ Correzioni di sicurezza e dati: con la configurazione ibrida illeggibile verso fuori casa non parte niente, la KB non si svuota più se il modello degli embedding non si carica, le esclusioni dei vault valgono anche nell'indicizzazione."
 
 # ============================================================================
 # PATHS

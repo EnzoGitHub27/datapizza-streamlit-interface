@@ -11,6 +11,7 @@ from .embeddings import (
     get_embedding_function,
     get_embeddings_helper,
     get_active_model_tag,
+    embedding_unavailable,
 )
 from config import KNOWLEDGE_BASE_DIR, DEFAULT_TOP_K_RESULTS
 
@@ -45,6 +46,9 @@ class SimpleVectorStore:
         self.use_chromadb = False
         self.collection = None
         self.client = None
+        # v1.16.1 — il messaggio se il modello degli embedding non si carica:
+        # allora la KB non si usa e non si tocca (niente altro embedding)
+        self.embedding_error: Optional[str] = None
         self._init_store()
     
     def _init_store(self):
@@ -61,9 +65,17 @@ class SimpleVectorStore:
             # Crea directory se non esiste
             Path(self.persist_path).mkdir(parents=True, exist_ok=True)
 
+            # v1.16.1 — senza il modello configurato non si apre né si
+            # ricrea niente: la collection sul disco resta com'è
+            self.embedding_error = embedding_unavailable()
+            if self.embedding_error:
+                self.use_chromadb = False
+                self.collection = None
+                return
+
             self.client = chromadb.PersistentClient(path=self.persist_path)
 
-            embedding_fn = get_embedding_function()  # None se st non installato
+            embedding_fn = get_embedding_function()
             active_tag = get_active_model_tag()
 
             # Migrazione: se la collection esistente è stata costruita con un
@@ -108,6 +120,13 @@ class SimpleVectorStore:
                   "Usando store in memoria.")
             self.use_chromadb = False
     
+    def ready(self) -> bool:
+        """v1.16.1 — True se si può usare la KB; se il modello non c'era,
+        riprova ad aprirla (il modello può essere tornato)."""
+        if self.embedding_error:
+            self._init_store()
+        return not self.embedding_error
+
     def add_chunks(
         self,
         chunks: List[Chunk],
@@ -123,6 +142,9 @@ class SimpleVectorStore:
             progress_callback: Callback(status: str, progress: float) per aggiornamenti
         """
         if not chunks:
+            return
+        if not self.ready():
+            print(f"⚠️ Indicizzazione non fatta: {self.embedding_error}")
             return
 
         if self.use_chromadb and self.collection:
@@ -189,6 +211,8 @@ class SimpleVectorStore:
         Returns:
             Lista di risultati con text, metadata, distance
         """
+        if not self.ready():
+            return []  # v1.16.1 — la KB non si usa: la chat prosegue senza
         if self.use_chromadb and self.collection:
             try:
                 results = self.collection.query(
@@ -260,6 +284,14 @@ class SimpleVectorStore:
         Returns:
             Dizionario con chunk_count, using_chromadb, persist_path
         """
+        if not self.ready():
+            return {
+                "chunk_count": 0,
+                "using_chromadb": False,
+                "persist_path": self.persist_path,
+                "embedding_model": None,
+                "embedding_unavailable": self.embedding_error,  # v1.16.1
+            }
         if self.use_chromadb and self.collection:
             try:
                 count = self.collection.count()
@@ -282,6 +314,8 @@ class SimpleVectorStore:
     
     def clear(self):
         """Svuota il vector store, preservando embedding_function e metadata."""
+        if not self.ready():
+            return  # v1.16.1 — senza il modello non si tocca niente
         if self.use_chromadb and self.collection:
             try:
                 self.client.delete_collection(COLLECTION_NAME)

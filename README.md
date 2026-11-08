@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.16.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.16.0)
+[![Version](https://img.shields.io/badge/version-1.16.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.16.1)
 [![Python](https://img.shields.io/badge/python-3.10+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.53-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -64,6 +64,19 @@ Dalla 1.16.0 c'è un **ambiente ibrido**, **opzionale e spento per default**: pr
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
+
+### 🛠️ Novità v1.16.1 — Correzioni di sicurezza e dati
+
+Sette correzioni trovate rileggendo il manuale contro il codice:
+- con la sezione `hybrid:` illeggibile, verso fuori casa non parte **niente** (prima si bloccava solo la chat: bottoni socratici, nudge e mappa partivano in chiaro);
+- «🔄 Reset e usa Cloud» azzera come «🔄 Nuova», compresa la memoria dei dati tolti;
+- le esclusioni dei vault (`.obsidian/`, `templates/`, `.trash/`, `logseq/bak/`…) valgono anche nell'indicizzazione: **chi ha già indicizzato un vault deve re-indicizzarlo** per togliere quei file;
+- se il modello degli embedding non si carica, le KB non si usano e **non si svuotano**: l'app lo dice e la chat prosegue senza KB;
+- «📂 Carica» e «🗑️ Elimina» agiscono sulla conversazione scelta anche con due voci uguali nel menu;
+- «🗑️ Cancella storico» non dà più errore e si salva;
+- l'installer Windows funziona su un computer pulito (la cartella si crea prima dei download).
+
+Dettagli nel CHANGELOG `[1.16.1]`.
 
 ### 🛡️ Novità v1.16.0 — Ambiente ibrido
 
@@ -285,7 +298,7 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.16.0
+## 🏗️ Architettura v1.16.1
 
 ```
 datapizza-streamlit-interface/
@@ -360,6 +373,7 @@ datapizza-streamlit-interface/
     ├── chat.py               # Rendering chat
     ├── file_upload.py        # Widget upload file
     ├── privacy_warning.py    # Dialog privacy
+    ├── conversation_reset.py # v1.16.1: azzeramento unico («Nuova» e «Reset e usa Cloud»)
     ├── socratic/             # 🧠 Modulo socratico
     │   ├── prompts.py        # Template prompt
     │   ├── buttons.py        # Bottoni UI + registrazione esplorazioni

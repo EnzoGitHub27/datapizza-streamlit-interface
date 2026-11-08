@@ -69,7 +69,7 @@ from core.conversation import mark_send_failed, classify_send_error, SEND_EMPTY 
 from core.file_processors import get_attachment_names
 from core.url_validator import is_blocked, classify_url
 from core.egress import classify_destination, outside_label  # v1.16.0 P2
-from core.pii_guard import PIIGuardBlocked  # v1.16.0 P6
+from core.pii_guard import PIIGuardBlocked, hybrid_error_message  # v1.16.0 P6, v1.16.1
 from core.pii_memory import PIISessionMemory  # v1.16.0 giro 7b
 from config.hybrid_settings import load_hybrid_settings, HybridSettingsError  # v1.16.0 P5
 
@@ -128,6 +128,7 @@ def _on_pii_anonymized(n_removed: int) -> None:
 # ============================================================================
 
 from rag import KnowledgeBaseManager
+from rag.embeddings import embedding_unavailable  # v1.16.1
 
 # ============================================================================
 # EXPORT
@@ -171,6 +172,7 @@ from ui.file_upload import (
 )
 
 # 🆕 v1.5.0 - Privacy warning dialog
+from ui.conversation_reset import reset_conversation  # v1.16.1: una funzione sola
 from ui.privacy_warning import (
     check_privacy_risk,
     render_privacy_dialog,
@@ -335,33 +337,6 @@ def _save_current_conversation():
         pii_removed=st.session_state.get("pii_removed", 0),  # v1.16.0
     )
 
-def reset_conversation():
-    """Resetta la conversazione corrente."""
-    st.session_state["messages"] = []
-    st.session_state["conversation_id"] = generate_conversation_id()
-    st.session_state["conversation_created_at"] = datetime.now().isoformat()
-    st.session_state["total_tokens_estimate"] = 0
-    # v1.14.0 - Reset KB metadata
-    st.session_state["kb_metadata"] = dict(KB_METADATA_DEFAULT)
-    # v1.14.2 - Reset vault_used
-    st.session_state["vault_used"] = False
-    # v1.16.0 - Reset metadati del guard
-    st.session_state.pop("pii_guard", None)
-    st.session_state["pii_removed"] = 0
-    st.session_state["egress_views"] = {}  # P9: solo sessione
-    st.session_state.pop("_pii_memory", None)  # giro 7b: la memoria dei valori tolti si azzera
-    # 🆕 v1.5.0 - Pulisci anche file pending e flag privacy
-    clear_pending_files()
-    reset_privacy_flags()
-    # 🆕 v1.6.1 - Pulisci cache socratica
-    clear_socratic_cache()
-    # 🆕 v1.9.0 - Pulisci storico socratico
-    SocraticHistory.clear_history()
-    # 🆕 v1.10.0 - Reset mappa sessione
-    st.session_state["session_map_data"] = None
-    st.session_state["n_domande_sessione"] = 0
-    st.session_state["nudge_mostrato"] = False
-
 # ============================================================================
 # 🆕 v1.6.1 - SOCRATIC CLIENT HELPER
 # ============================================================================
@@ -384,6 +359,7 @@ def get_socratic_client(connection_type, provider, api_key, model, base_url, tem
             base_url,
             temperature,
             hybrid=HYBRID,  # v1.16.0 P6
+            hybrid_error=HYBRID_ERROR,  # v1.16.1: illeggibile → fuori casa non parte niente
             on_anonymized=_on_pii_anonymized,
             pii_memory=_pii_memory(),  # giro 7b
         )
@@ -502,11 +478,15 @@ if st.sidebar.button("🔄 Aggiorna KB Chat", key="reindex_chat_kb"):
     _reindex_result = reindex_all_chat_kb(progress_callback=_reindex_cb)
     _progress_bar.empty()
     _orphans = _reindex_result.get("orphans_removed", 0)
-    st.sidebar.success(
-        f"✅ Indicizzate {_reindex_result['chats_indexed']} chat, "
-        f"{_reindex_result['total_chunks']} chunk totali"
-        + (f" · 🧹 tolte {_orphans} chat non più incluse" if _orphans else "")
-    )
+    if _reindex_result.get("embedding_unavailable"):
+        # v1.16.1 — senza il modello la KB Chat non si tocca
+        st.sidebar.error(_reindex_result["embedding_unavailable"])
+    else:
+        st.sidebar.success(
+            f"✅ Indicizzate {_reindex_result['chats_indexed']} chat, "
+            f"{_reindex_result['total_chunks']} chunk totali"
+            + (f" · 🧹 tolte {_orphans} chat non più incluse" if _orphans else "")
+        )
 
 st.sidebar.caption("Indicizza tutte le chat flaggate e toglie quelle eliminate o non più incluse — fallo dopo aver salvato nuove chat")
 
@@ -664,7 +644,19 @@ if _use_gateway:
 # KNOWLEDGE BASE BANNER
 # ============================================================================
 
-if st.session_state.get("use_knowledge_base"):
+# 🧮 v1.16.1 — il modello degli embedding non si carica: le KB non si usano e
+# non si toccano, la chat prosegue senza (e lo dice)
+_embedding_error = (
+    embedding_unavailable()
+    if (st.session_state.get("use_knowledge_base") or st.session_state.get("use_chat_kb"))
+    else None
+)
+if _embedding_error:
+    st.warning(_embedding_error)
+
+if st.session_state.get("use_knowledge_base") and _embedding_error:
+    pass  # già detto sopra
+elif st.session_state.get("use_knowledge_base"):
     kb_manager: KnowledgeBaseManager = st.session_state.get("kb_manager")
     if kb_manager and kb_manager.is_indexed():
         stats = kb_manager.get_stats()
@@ -851,7 +843,7 @@ if submit and user_input.strip():
     elif HYBRID_ERROR and destination["outside"]:
         # v1.16.0 — configurazione ibrida illeggibile: non si sa se rizzo-pii
         # doveva essere acceso, quindi verso fuori casa non parte niente
-        _pre_block = f"🛡️ Configurazione ibrida non valida, messaggio non inviato: {HYBRID_ERROR}"
+        _pre_block = hybrid_error_message(HYBRID_ERROR)
 
     if _pre_block:
         st.session_state["_restore_input"] = user_input
@@ -942,6 +934,7 @@ if submit and user_input.strip():
                     base_url, 
                     temperature,
                     hybrid=HYBRID,  # v1.16.0 P6
+                    hybrid_error=HYBRID_ERROR,  # v1.16.1
                     on_anonymized=_on_pii_anonymized,
                     pii_memory=_pii_memory(),  # giro 7b
                 )

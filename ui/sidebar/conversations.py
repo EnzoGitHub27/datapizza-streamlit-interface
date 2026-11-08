@@ -62,14 +62,18 @@ def render_conversations_manager():
                              "reason": c.get("reason", ""), "icons": icons,
                              "kb_metadata": c.get("kb_metadata", {})})
 
+    # v1.16.1 — il valore della selezione è l'identificativo: due conversazioni
+    # con la stessa etichetta (data, modello, messaggi) restano distinte.
+    # Fino alla 1.16.0 si cercava per etichetta e vinceva sempre la prima.
+    labels_by_id = {c["id"]: c["label"] for c in conv_options}
     selected = st.sidebar.selectbox(
         "Carica",
-        [None] + [c["label"] for c in conv_options],
-        format_func=lambda x: "-- Seleziona --" if x is None else x,
+        [None] + [c["id"] for c in conv_options],
+        format_func=lambda x: "-- Seleziona --" if x is None else labels_by_id.get(x, x),
     )
 
     if selected:
-        sel_entry = next((c for c in conv_options if c["label"] == selected), None)
+        sel_entry = next((c for c in conv_options if c["id"] == selected), None)
 
         if sel_entry:
             # Show sensitivity detail when selected

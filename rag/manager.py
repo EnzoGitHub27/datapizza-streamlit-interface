@@ -78,6 +78,12 @@ class KnowledgeBaseManager:
         if not self.adapter:
             print("❌ Nessun adapter configurato")
             return False
+
+        # v1.16.1 — senza il modello degli embedding non si indicizza e la KB
+        # vecchia non si svuota
+        if not self.vector_store.ready():
+            print(f"⚠️ {self.vector_store.embedding_error}")
+            return False
         
         # 1. Carica documenti
         if progress_callback:
@@ -194,6 +200,7 @@ class KnowledgeBaseManager:
             "last_indexed": self.last_indexed,
             "persist_path": vs_stats.get("persist_path"),
             "embedding_model": vs_stats.get("embedding_model"),
+            "embedding_unavailable": vs_stats.get("embedding_unavailable"),  # v1.16.1
         }
     
     def is_indexed(self) -> bool:
