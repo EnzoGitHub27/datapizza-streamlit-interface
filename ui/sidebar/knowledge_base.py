@@ -32,7 +32,7 @@ from rag import (
 from config.constants import VAULT_SESSION_KEY, VAULT_LAST_SYNC_KEY, VAULT_FILE_COUNT_KEY
 from core.url_validator import is_blocked, classify_url
 from core.egress import classify_destination, outside_label  # v1.16.0 P2
-from rag.vault import detect_vault_type, scan_vault_files
+from rag.vault import detect_vault_type, scan_vault_files, exclusion_patterns, list_files
 from rag.embeddings import (
     get_seconds_per_file,
     get_seconds_per_wiki_page,
@@ -606,13 +606,9 @@ def _show_indexing_eta(source_type: str, config: dict):
         exclude_patterns = config.get("exclude_patterns", [])
         recursive = config.get("recursive", True)
 
-        files = []
-        glob_fn = Path(folder).rglob if recursive else Path(folder).glob
-        for ext in extensions:
-            for f in glob_fn(f"*{ext}"):
-                if exclude_patterns and any(p in str(f) for p in exclude_patterns):
-                    continue
-                files.append(f)
+        # v1.16.1 — la stessa lista che leggerà LocalFolderAdapter
+        files = list_files(folder, extensions, recursive=recursive,
+                           patterns=exclusion_patterns(folder, exclude_patterns))
 
         n_files = len(files)
         if n_files == 0:
