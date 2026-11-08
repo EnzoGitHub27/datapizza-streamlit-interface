@@ -6,12 +6,12 @@
 |---|---|
 | **Prodotto** | DeepAiUG Chat 🧠 |
 | **Versione documentata** | v1.16.0 |
-| **Data manuale** | 2026-11-06 |
+| **Data manuale** | 2026-11-08 |
 | **Repository** | https://github.com/EnzoGitHub27/datapizza-streamlit-interface |
 | **Licenza** | MIT |
 | **Autore progetto** | Vincenzo Iodice (EnzoGitHub27) — community DeepAiUG |
 
-> Questo manuale è stato generato analizzando il codice sorgente in sola lettura. Documenta esclusivamente le funzionalità effettivamente presenti nella versione 1.16.0; le funzionalità pianificate per v2.0.0 (Semantic Layer, Knowledge Graph, Docker, API REST, journaling riflessivo) **non** sono trattate perché non ancora implementate.
+> Questo manuale è stato scritto e rivisto contro il codice della versione 1.16.0, l'8 novembre 2026. Documenta esclusivamente le funzionalità effettivamente presenti nella versione 1.16.0; le funzionalità pianificate per v2.0.0 (Semantic Layer, Knowledge Graph, Docker, API REST, journaling riflessivo) **non** sono trattate perché non ancora implementate.
 
 ---
 
@@ -851,30 +851,32 @@ DeepAiUG applica quattro livelli di protezione quando entrano in gioco provider 
 
 Dalla v1.15.2 un **classificatore URL** (`core/url_validator.py`) verifica dove risolve **davvero** l'host di ogni connessione Local/Remote, indipendentemente dall'etichetta della modalità:
 
-- **Rete fidata** — loopback (`127.x`), rete privata (`10/8`, `172.16/12`, `192.168/16`) e range CGNAT/VPN mesh come Tailscale (`100.64.0.0/10`): banner verde "🔒 **Rete fidata** - i dati restano nella tua rete";
+- **Rete fidata** — loopback (`127.x`), rete privata (`10/8`, `172.16/12`, `192.168/16`, e gli altri range che Python considera privati) e range CGNAT/VPN mesh come Tailscale (`100.64.0.0/10`): banner verde "🔒 **Rete fidata** - i dati restano nella tua rete ({host})". ℹ️ Il nome viene risolto solo in IPv4: un indirizzo IPv6 come `[::1]` risulta «non valido»;
 - **Host esterno** — l'host risolve a un IP pubblico: banner giallo "⚠️ **Host esterno** - i dati escono dalla tua rete verso {host}";
-- **Bloccato** — range link-local `169.254.0.0/16` (endpoint metadati cloud, es. `169.254.169.254`): la connessione è **rifiutata** ovunque (chat, fetch modelli, adapter wiki) come protezione anti-SSRF;
+- **Bloccato** — range link-local `169.254.0.0/16` (endpoint metadati cloud, es. `169.254.169.254`): banner rosso «🔒 **Connessione bloccata** - endpoint metadati cloud»; la connessione è **rifiutata** ovunque (chat, fetch modelli, adapter wiki) come protezione anti-SSRF;
 - **URL non valido** — schema non http/https o host non risolvibile: banner informativo.
 
-I banner di connessione riflettono quindi la **destinazione reale** dell'URL, non l'etichetta della modalità: se in "Remote host" inserisci un indirizzo Internet, l'interfaccia te lo segnala.
+I banner di connessione riflettono quindi la **destinazione reale** dell'URL, non l'etichetta della modalità: se in "Remote host" inserisci un indirizzo Internet, l'interfaccia te lo segnala. Per i provider cloud il banner è «☁️ **Cloud** - Dati esterni (KB e Upload disabilitati)»; un provider «Custom» su loopback o LAN ha invece «🔒 **Rete fidata** - endpoint «Custom» nella tua rete ({host})». Dalla 1.16.0 la stessa classificazione decide anche i blocchi: «in casa» o «fuori casa» (Cap. 21.4).
 
 ## 20.1 Blocco: Knowledge Base + cloud
 
-Con la **Knowledge Base attiva** il passaggio a un provider cloud è **impedito**: "🔒 Cloud bloccato: Knowledge Base o KB Chat attiva. I tuoi dati locali rimangono privati!" e la connessione torna su Local. Dalla v1.15.2 il blocco copre anche il toggle **"📚 Usa KB Chat"** (`use_chat_kb`). Analogamente, su cloud l'upload di file è disabilitato. Il blocco vale per la modalità **«Cloud provider»**: un Remote host che punta a un indirizzo Internet riceve KB e allegati con il solo banner «Host esterno» (vedi 20.0). **Dalla 1.16.0** un Remote host su IP pubblico si comporta come il cloud: KB, KB Chat, allegati e immagini sono bloccati (Capitolo 21.4).
+Con la **Knowledge Base attiva** il passaggio a una destinazione «fuori casa» è **impedito**: «🔒 **Cloud provider bloccato**: Knowledge Base o KB Chat attiva. I tuoi dati locali rimangono privati!» (per un Remote host su Internet «🔒 **host esterno ({host}) bloccato**: …», per un indirizzo non risolvibile «🔒 **destinazione non verificabile ({host}) bloccato**: …»), con l'indicazione «Disattiva Knowledge Base e KB Chat, oppure usa una destinazione in casa (Ollama locale, LAN, Tailscale)», e la connessione torna su Local. Dalla v1.15.2 il blocco copre anche **"📚 Usa KB Chat"** (`use_chat_kb`). Analogamente, fuori casa l'upload di file è disabilitato.
+
+Fino alla 1.15.4 il blocco valeva solo per la modalità «Cloud provider» e un Remote host su Internet riceveva KB e allegati con il solo banner «Host esterno». **Dalla 1.16.0** conta la destinazione reale: un Remote host su IP pubblico si comporta come il cloud (KB, KB Chat, allegati e immagini bloccati), mentre un provider «Custom» su loopback o LAN conta come «in casa» (Capitolo 21.4).
 
 ## 20.2 Conferma esplicita: documenti in memoria
 
-Se hai caricato file in chat e poi passi al cloud, l'interfaccia si blocca sulla pagina **"🔐 Conferma Privacy Richiesta"**, che elenca i file coinvolti e offre tre uscite:
+Se hai caricato file in chat e poi passi a una destinazione fuori casa, l'interfaccia si blocca sulla pagina **"🔐 Conferma Privacy Richiesta"**, che elenca i file coinvolti e offre tre uscite:
 
 1. **🔄 Reset e usa Cloud** *(consigliato)* — cancella la cronologia e prosegue in sicurezza;
-2. **✅ Procedi con Cloud** — disponibile solo dopo aver spuntato "Confermo: i documenti non contenevano dati riservati";
-3. **↩️ Torna a Local/Remote**.
+2. **✅ Procedi con Cloud** (riquadro «Procedi comunque») — disponibile solo dopo aver spuntato "Confermo: i documenti non contenevano dati riservati". **Con rizzo-pii attivo nella configurazione** (Cap. 21) diventa **🛡️ Procedi con anonimizzazione**, con la spunta «Ho capito: parte il testo senza i dati personali riconosciuti»; la scelta dipende dalla configurazione, non dal fatto che rizzo-pii risponda in quel momento (se non risponde, l'invio si blocca: Cap. 21.4);
+3. **↩️ Torna a Local/Remote** — riporta sempre su «Local (Ollama)».
 
 Ogni nuovo documento caricato azzera un eventuale consenso precedente.
 
 ## 20.3 Protezione delle conversazioni salvate
 
-Le chat che contengono dati locali (allegati, KB, vault) sono marcate con 🔒 quando sei su cloud e **non possono essere caricate** mentre sei su cloud.
+Le chat che contengono dati locali (allegati, KB, vault) sono marcate con 🔒 quando sei fuori casa e **non possono essere caricate** finché resti fuori casa (Cap. 18.2).
 
 ⚠️ **Attenzione all'ordine:** se carichi una chat del genere mentre sei in Local/Remote, disattivi la KB e **poi** passi al cloud, non c'è nessun blocco: compare solo un avviso, e al primo messaggio **l'intera cronologia** (comprese le risposte ricavate da documenti locali) viene inviata al provider. La conferma esplicita del 20.2 scatta solo per i file caricati in questa sessione. Per restare privato, apri una **nuova conversazione** prima di passare al cloud.
 
@@ -885,17 +887,18 @@ Due dei tre limiti noti documentati per la v1.15.1 sono stati affrontati dall'au
 - ✅ **RISOLTO** — *"Il toggle 📚 Usa KB Chat non è coperto dal blocco cloud"*: dalla v1.15.2 il blocco cloud copre anche `use_chat_kb`. Con KB Chat attiva il passaggio al cloud è impedito, esattamente come per la KB documentale (vedi 20.1).
 - ✅ **MIGLIORATO** — *"Remote host è considerato fidato per definizione"*: ora il classificatore URL (vedi 20.0) verifica l'indirizzo a cui l'host risolve realmente e l'interfaccia ti avvisa con "⚠️ Host esterno" se la destinazione è fuori dalla tua rete; gli endpoint metadati cloud sono bloccati del tutto. Resta tua la decisione finale: l'avviso non impedisce di usare un host esterno.
 
-Limiti ancora validi in v1.15.4:
+Limiti ancora validi nella 1.16.0:
 
-- La Mappa Sessione e i bottoni socratici usano il modello corrente: se sei su cloud, anche quelle richieste vanno al provider cloud.
+- La Mappa Sessione e i bottoni socratici usano il modello corrente: se sei fuori casa, anche quelle richieste vanno al fornitore (con rizzo-pii acceso, a soli segnaposto: Cap. 21.4).
 - Una chat caricata e poi usata sul cloud manda tutta la cronologia (vedi 20.3).
-- Un Remote host su un indirizzo Internet non è bloccato: solo avvisato (vedi 20.0 e 20.1). Dalla 1.16.0 è bloccato come il cloud (Capitolo 21.4).
+
+Risolto nella 1.16.0: un Remote host su un indirizzo Internet non è più solo avvisato, è bloccato come il cloud (Capitolo 21.4).
 
 ---
 
 # Capitolo 21 — L'ambiente ibrido: rizzo-pii e Annona (v1.16.0)
 
-> Questo capitolo descrive una funzione della **1.16.0**, provata dal vivo con rizzo-pii vero e OpenAI. È **opzionale e spenta per default**: con la sezione `hybrid:` assente o spenta, DeepAiUG si comporta come la 1.15.4. Il dettaglio tecnico è in `docs/SPEC_v1.16.0_hybrid.md`.
+> Questo capitolo descrive una funzione della **1.16.0**, provata dal vivo con rizzo-pii vero e OpenAI. È **opzionale e spenta per default**: con la sezione `hybrid:` assente o spenta, DeepAiUG si comporta come la 1.15.4, salvo la regola della destinazione reale (21.4), che vale sempre. Il dettaglio tecnico è in `docs/SPEC_v1.16.0_hybrid.md`.
 
 L'idea: usare un modello cloud senza mandargli i dati personali. Prima che il testo esca di casa, un programma locale toglie nomi, codici fiscali, indirizzi e simili e li sostituisce con **segnaposto** (`[FULLNAME_1]`, `[CF_1]`…). Il cloud risponde usando i segnaposto e DeepAiUG rimette i valori veri **sul tuo computer**, prima di mostrarti la risposta.
 
@@ -904,7 +907,7 @@ L'idea: usare un modello cloud senza mandargli i dati personali. Prima che il te
 - **rizzo-pii** (licenza MIT, https://github.com/Rizzo-AI-Academy/rizzo-pii) — riconosce i dati personali nel testo italiano e li sostituisce con segnaposto. È il pezzo che serve: **l'ambiente ibrido funziona anche solo con rizzo-pii.** DeepAiUG lo chiama su `http://127.0.0.1:5005`.
 - **Annona** (licenza Apache-2.0, https://github.com/akaion-ai/annona) — un «kernel» che decide dove può andare ogni passo, secondo una policy, e tiene un **registro** a catena delle decisioni. È **facoltativo**. DeepAiUG lo chiama su `http://127.0.0.1:7070`.
 
-Entrambi sono **programmi separati**: DeepAiUG non li include, non li scarica e non li installa. Li chiama soltanto via HTTP, e solo su loopback (`127.0.0.1`): un indirizzo diverso viene rifiutato. Licenze e note sono nel file `NOTICE`.
+Entrambi sono **programmi separati**: DeepAiUG non li include, non li scarica e non li installa. Li chiama soltanto via HTTP, e solo su loopback (`127.0.0.1` o `localhost`): un indirizzo diverso viene rifiutato quando l'app prova a chiamarli (in chat la domanda resta «⚠️ **Non inviata** — PIINotLocal: …»; nella sezione Annona «configurazione non valida (AnnonaNotLocal)»). Licenze e note sono nel file `NOTICE`.
 
 > Vincenzo Iodice (Gilles) ha un ruolo non retribuito di Technical Advisor in Akaion, che sviluppa Annona. Annona è opzionale e spenta per default; l'ambiente ibrido funziona anche solo con rizzo-pii, che non ha legami con Akaion.
 
@@ -915,7 +918,9 @@ Si installano **seguendo i loro README**, non con script di DeepAiUG:
 - rizzo-pii: il README del suo repository (sopra). Attenzione: le build già pronte di rizzo-pii (AppImage, `.deb`, `.exe`, `.dmg`) e la sua immagine Docker sono rilasciate sotto **AGPL-3.0** (vedi il `NOTICE`); il codice sorgente è MIT.
 - Annona: il README del suo repository (sopra), compresa la scrittura della policy.
 
-Prima di accendere l'ambiente ibrido, verifica che il servizio risponda sul suo indirizzo (`/health`). Con rizzo-pii spento e l'ambiente ibrido acceso, verso il cloud **non parte niente** (21.4).
+Prima di accendere l'ambiente ibrido, verifica che il servizio risponda sul suo indirizzo (`/health`). Con `pii.enabled: true` e rizzo-pii spento, verso fuori casa **non parte niente** (21.4). Con la sola Annona accesa in modo `read` (e `pii.enabled: false`) il testo parte **in chiaro**, come senza ibrido.
+
+**Chi aggiorna da una versione precedente** non ha la sezione `hybrid:` nel suo `security_settings.yaml` (lo script di aggiornamento non lo tocca): va aggiunta a mano, come nel Capitolo 4.1, copiando il blocco del 21.3.
 
 ## 21.3 La sezione `hybrid:` di `security_settings.yaml`
 
@@ -925,18 +930,22 @@ hybrid:
     enabled: false                  # rizzo-pii prima del cloud
     url: "http://127.0.0.1:5005"    # solo loopback
     timeout_s: 30
-    exclude_tags: []                # tag lasciati in chiaro, es. ["AMOUNT"]; nessuno per default
+    exclude_tags: []                # tag lasciati in chiaro, es. ["AMOUNT", "DATE"]; nessuno per default
   annona:
     enabled: false
     url: "http://127.0.0.1:7070"    # solo loopback
     mode: "read"                    # read = sola lettura in sidebar; gateway = sperimentale (21.6)
   on_service_down:
     cloud: "block"                  # fisso: altri valori sono un errore
-    local: "proceed"
+    local: "proceed"                # accetta proceed|block, ma nella 1.16.0 non ha effetto
 ```
 
+È lo stesso blocco del `security_settings.yaml` del repository (lì con qualche commento in più): chi aggiorna può copiarlo da qui o da lì, in fondo al proprio file.
+
 - File o sezione assente → tutto spento.
-- Tipi sbagliati, YAML illeggibile o `on_service_down.cloud` diverso da `block` → **errore esplicito**, mai «spento» in silenzio: verso fuori casa non parte niente finché la configurazione non è corretta.
+- Tipi sbagliati, YAML illeggibile o `on_service_down.cloud` diverso da `block` → **errore esplicito**, mai «spento» in silenzio: il messaggio della chat verso fuori casa non parte («🛡️ Configurazione ibrida non valida, messaggio non inviato: …») finché la configurazione non è corretta. ⚠️ Nella 1.16.0 il blocco vale **solo per il messaggio della chat**: bottoni socratici, nudge e mappa, con la configurazione illeggibile, partono come senza ibrido (Appendice B).
+- L'indirizzo (`url`) non viene controllato quando si legge il file, ma quando l'app chiama il servizio (21.1).
+- `on_service_down.local: "block"` è accettato ma nella 1.16.0 non fa nulla: in casa si procede sempre.
 - **Dove si anonimizza non si configura**: sempre e solo **fuori casa** (21.4). Una chiave `apply_to` nel file viene ignorata.
 
 ## 21.4 «In casa» e «fuori casa»: la destinazione reale
@@ -947,7 +956,7 @@ Dalla 1.16.0 i blocchi e l'anonimizzazione guardano **dove va davvero il testo**
 |---|---|
 | `Cloud provider` OpenAI, Anthropic, Google | **fuori casa**, sempre |
 | Ollama locale, Remote host o cloud «Custom» su loopback, rete privata (LAN) o Tailscale (`100.64.0.0/10`) | **in casa** |
-| Remote host su un **IP pubblico**, indirizzo link-local, nome non risolvibile o URL rotto | **fuori casa** (nel dubbio, si blocca) |
+| Remote host, Ollama locale o «Custom» su un **IP pubblico**, indirizzo link-local, nome non risolvibile o URL rotto (anche vuoto) | **fuori casa** (nel dubbio, si blocca) |
 
 **Novità importante, anche con l'ambiente ibrido spento:** un Remote host su un IP pubblico **ora si comporta come il cloud**. Knowledge Base, KB Chat, allegati e immagini verso quell'host sono **bloccati** (prima c'era solo il banner «Host esterno», vedi 20.0 e 20.1). Dialogo privacy, icone 🔒, bordo rosso e titolo seguono la stessa regola.
 
@@ -957,49 +966,51 @@ Che cosa succede in ogni caso:
 |---|---|---|
 | ambiente ibrido spento | come la 1.15.4 | come la 1.15.4 (con la regola della destinazione reale qui sopra) |
 | rizzo-pii acceso e funzionante | il testo parte così com'è | parte **solo il testo con i segnaposto**; la risposta torna con i valori veri |
-| rizzo-pii spento, lento o in caricamento | si procede | **si blocca**: «rizzo-pii non risponde: il messaggio non è stato inviato al cloud». Il testo torna nella casella |
-| rizzo-pii in modalità definitiva (senza tabella) | si procede | si blocca, con l'indicazione per riattivare la tabella |
-| rizzo-pii risponde male | si procede | si blocca |
-| immagine allegata | si procede | **errore, sempre** (le immagini non vanno mai fuori casa) |
+| rizzo-pii spento, lento o in caricamento | si procede | **si blocca**: «🛡️ rizzo-pii non risponde: il messaggio non è stato inviato fuori dalla tua rete. Avvia rizzo-pii e riprova.» Il testo torna nella casella |
+| rizzo-pii in modalità definitiva (senza tabella) | si procede | se nel testo ci sono dati personali si blocca: «🛡️ rizzo-pii è in modalità definitiva (senza tabella): il messaggio non è stato inviato. Riattiva la tabella dei segnaposto nelle impostazioni di rizzo-pii.»; un testo senza dati personali parte |
+| rizzo-pii risponde male | si procede | si blocca: «🛡️ rizzo-pii ha risposto con un errore (…)» o «🛡️ Risposta di rizzo-pii non coerente: …» |
+| immagine allegata | si procede | **mai fuori casa**: l'upload è già disattivato («📎 Upload file disabilitato per privacy»); se un'immagine arrivasse comunque al guard, si blocca |
 | Knowledge Base, KB Chat, allegati | si procede | **restano bloccati** nella 1.16.0, anche con rizzo-pii |
 | Annona attivata in modo `read` (accesa o spenta) | si procede; se è giù la sidebar lo dice | si procede come nelle righe sopra (con i segnaposto se rizzo-pii è acceso): Annona non vede i messaggi, e la risposta porta «📒 non registrato in Annona» |
-| Annona spenta, modo `gateway` | client di sempre | **si blocca** |
-| Annona risponde `held` (gateway) | — | si blocca e si mostra il motivo di Annona |
+| Annona attivata in modo `gateway` ma giù o senza policy | client di sempre | **si blocca**: «🧭 Annona non risponde o non ha una policy: con il gateway acceso il messaggio non è stato inviato.» |
+| `annona.enabled: false` (qualunque `mode`) | client di sempre | il gateway non c'è: valgono le righe di rizzo-pii |
+| Annona risponde `held` (gateway) | — | si blocca: «🧭 Annona ha trattenuto il passo (held): {motivo}»; se il passo è annullato, «🧭 Il passo è stato annullato in Annona: nessuna risposta.» |
 | gateway acceso: bottoni socratici, nudge, mappa della sessione | client di sempre | con rizzo-pii acceso **passano da rizzo-pii**; con rizzo-pii spento **si bloccano**: «Con il gateway di Annona, questa funzione verso il cloud richiede rizzo-pii» |
-| errore del cloud (chiave sbagliata, rete, errore del fornitore) | — | l'errore **resta visibile in chat** accanto alla domanda, segnata «non inviata» o «rifiutata», anche ricaricando |
-| risposta interrotta a metà | — | la parte già arrivata **non si salva**; resta la domanda con l'errore |
+| errore del modello (chiave sbagliata, rete, errore del fornitore) | come fuori casa | l'errore **resta visibile in chat** accanto alla domanda, «⚠️ **Non inviata** — …» o «⛔ **Rifiutata** dal fornitore — …», anche ricaricando |
+| risposta interrotta a metà | come fuori casa | la parte già arrivata **non si salva**; resta la domanda, di solito segnata «rifiutata» |
 
-In tutti i blocchi: niente verso il fornitore, un messaggio chiaro, nessun testo dell'utente nei log.
+In tutti i blocchi: niente verso il fornitore, un messaggio chiaro, nessun testo dell'utente nei log. I blocchi del messaggio della chat compaiono in rosso sopra la casella (e spariscono alla prima interazione successiva, mentre il testo resta: Appendice B); quelli dei bottoni socratici sotto il bottone; quelli della mappa nella sidebar.
 
 ## 21.5 Che cosa vedi nella chat
 
-- **Il dialogo privacy**, con rizzo-pii attivo, offre **«🛡️ Procedi con anonimizzazione»** al posto di «Procedi comunque».
-- **Il badge** sotto la risposta: «🛡️ N dati tolti prima dell'invio». Il numero si salva con la conversazione e resta ricaricandola.
-- **Il riquadro «👁️ Cosa ha visto il modello»**: il testo com'è partito, con i segnaposto. Vale **solo nella sessione corrente**: non si salva, sparisce con «Nuova» e quando carichi una conversazione.
+- **Il dialogo privacy**, con rizzo-pii attivo nella configurazione, offre **«🛡️ Procedi con anonimizzazione»** al posto di «✅ Procedi con Cloud» (Cap. 20.2).
+- **Il badge** sotto la risposta: «🛡️ N dati tolti prima dell'invio» («1 dato tolto» al singolare; compare anche con 0). Il numero conta i segnaposto diversi in **tutto** il testo partito in quella chiamata (system prompt, cronologia, domanda), non solo nella nuova domanda. Si salva con la conversazione e resta ricaricandola. Con il gateway non c'è; i bottoni socratici non hanno né badge né riquadro.
+- **Il riquadro «👁️ Cosa ha visto il modello»**: il testo com'è partito, con i segnaposto (con il gateway, quello che Annona dice di aver mandato). Vale **solo nella sessione corrente**: non si salva, sparisce con «Nuova» e quando carichi una conversazione.
 - **Che cosa si salva**: la conversazione salvata contiene, come sempre, la tua domanda e la risposta **con i valori veri**, sul tuo computer; in più solo il numero dei dati tolti. La tabella segnaposto → valore **non si salva mai** (né nei log, né nella KB Chat, né nell'export): vive solo in memoria, per la sessione, e serve a togliere sempre con lo stesso segnaposto i valori già visti (21.7).
-- **La sezione «🧭 Annona»** della sidebar (se Annona è attivata): stato del servizio, ultime decisioni del registro (classe, esito, substrato, regola, motivo: mai il testo) e verifica della catena. Si aggiorna al massimo ogni 20 secondi o con «🔄 Aggiorna». Se Annona è giù la sezione lo dice e l'app procede.
+- **La sezione «🧭 Annona»** della sidebar (se Annona è attivata): un expander chiuso, «🧭 Annona — sola lettura» o «🧭 Annona — gateway (sperimentale)». Dentro: «🧭 Annona attiva — N regole, N substrati, N decisioni (N held)», le ultime 8 decisioni del registro (numero, classe, esito, → substrato, motivo: mai il testo) e la verifica della catena. Si aggiorna al massimo ogni 20 secondi o con «🔄 Aggiorna». Se Annona è giù la sezione lo dice: in modo `read` «L'app procede: gli invii non vengono registrati in Annona.»; in modo `gateway` «Con il gateway acceso, verso fuori casa non parte niente finché Annona non risponde.»
 
 ## 21.6 Il gateway di Annona (sperimentale)
 
-Con `annona.mode: "gateway"`, per le destinazioni **fuori casa** non è DeepAiUG a chiamare il modello: manda la domanda ad Annona, che decide, redige secondo la sua policy, chiama il modello e registra il passo. In pagina compare l'avviso **«SPERIMENTALE»** e la risposta porta «🧭 via Annona (sperimentale)».
+Con `annona.enabled: true` e `annona.mode: "gateway"`, per le destinazioni **fuori casa** non è DeepAiUG a chiamare il modello: manda la domanda ad Annona, che decide, redige secondo la sua policy, chiama il modello e registra il passo. In pagina compare l'avviso «🧭 **Gateway Annona — SPERIMENTALE.** Verso fuori casa decide, redige, chiama il modello e registra Annona. Si perde: …», durante la chiamata la bolla dice «🧭 Gateway Annona — sperimentale» e la risposta porta «🧭 via Annona (sperimentale) · classe · esito · substrato · registrato in Annona».
 
 Che cosa si perde:
 
 - **lo streaming**: la risposta arriva tutta insieme;
-- **la scelta del modello**: la fa la policy di Annona, non la sidebar (il modello salvato è `annona:<substrato>`);
-- **le chiavi**: quelle dei fornitori stanno nella policy di Annona, non in DeepAiUG.
+- **la scelta del modello**: la fa la policy di Annona, non la sidebar (il modello salvato è `annona:<substrato>`, o `annona:?` se Annona non lo dice; il provider «Annona gateway (sperimentale)»);
+- **le chiavi**: quelle dei fornitori stanno nella policy di Annona, non in DeepAiUG. ℹ️ Con «Cloud provider» la sidebar chiede comunque una chiave e un modello («❌ Inserisci API key!»), che il gateway non usa.
 
 Da sapere:
 
-- la domanda arriva ad Annona **in chiaro**, su loopback: la redazione la fa Annona secondo la sua policy, non rizzo-pii;
+- la domanda arriva ad Annona **in chiaro**, su loopback, insieme al system prompt e alla cronologia: la redazione la fa Annona secondo la sua policy, non rizzo-pii (timeout della chiamata: 180 s);
 - se Annona è giù, senza policy, in errore, o trattiene il passo (`held`), **non parte niente** e la domanda resta in chat segnata «non inviata»;
 - bottoni socratici, nudge e mappa della sessione **non passano da Annona**: con rizzo-pii acceso passano da rizzo-pii, con rizzo-pii spento si bloccano (21.4);
 - in casa il gateway non si usa: resta il client di sempre;
 - **Annona 0.1.3 offre sempre gli strumenti al modello** (per esempio `explorer`): `/api/kernel/ask` non ha un campo per toglierli, e anche il profilo `read-nothing` li nega senza toglierli. Un modello piccolo (nella prova `llama3.2:3b`) può tentare uno strumento invece di rispondere: Annona lo trattiene e il testo resta vuoto. La domanda resta in chat con l'avviso **«🧭 Senza risposta»**, che dice quale strumento il modello ha tentato (solo il nome, mai percorsi). Rimedi: un modello più capace nella policy di Annona, oppure la strada senza gateway (rizzo-pii con il client dell'Interface).
+- **Il registro di Annona 0.1.3 può contenere dati della domanda.** Quando il modello tenta uno strumento, Annona registra la chiamata trattenuta con i suoi argomenti: i **percorsi di file inventati dal modello** finiscono **in chiaro** nel registro, e il modello li costruisce spesso con parole della domanda (nomi, luoghi, aziende). DeepAiUG non li mostra (la sidebar dà solo il nome dello strumento), ma chi può leggere i file di Annona li vede. È lo stesso rimedio del punto sopra; vale anche il limite generale «Annona scrive il testo del passo in chiaro nel suo log» (21.7).
 
 ## 21.7 Limiti onesti
 
-- **Pseudonimizzato non è anonimo** (GDPR): la tabella dei valori veri esiste, sul tuo computer, **in memoria per tutta la sessione**: si azzera con «Nuova», quando carichi un'altra conversazione e quando chiudi la scheda. Non va mai su disco.
+- **Pseudonimizzato non è anonimo** (GDPR): la tabella dei valori veri esiste, sul tuo computer, **in memoria per tutta la sessione**: si azzera con «Nuova», quando carichi una conversazione e quando chiudi o ricarichi la scheda del browser. Non va mai su disco. ⚠️ «🔄 Reset e usa Cloud» del dialogo privacy (Cap. 20.2) **non** la azzera (Appendice B).
 - **Il contesto si perde**: il modello cloud vede `[FULLNAME_1]` e non sa se è un cliente o un fornitore. Dentro la sessione un valore già tolto riprende sempre lo stesso segnaposto, anche quando rizzo-pii non lo riconoscerebbe più (es. «**Paolo**» in grassetto nel testo del modello, rimandato da «Limiti»). Vale solo per le forme che rizzo-pii ha già tolto così come sono: un diminutivo o un nome storpiato che rizzo-pii non riconosce esce in chiaro.
 - **rizzo-pii lavora bene sul testo italiano, non su codice o testo tecnico**: lì toglie troppo, in modo prudente. Una domanda con codice incollato può tornare piena di segnaposto.
 - **Importi, date e URL** vengono tolti per default: in una domanda tecnica il modello perde informazioni utili. Chi vuole li lascia in chiaro con `exclude_tags` (es. `["AMOUNT", "DATE"]`).
@@ -1025,8 +1036,9 @@ Dalla prova dal vivo (06/11/2026, rizzo-pii vero e OpenAI):
 | Formati upload | pdf, txt, md, docx, png, jpg, jpeg, gif, webp | No |
 | Temperature | 0.7 (0.0–2.0) | Sì |
 | Max messaggi in contesto | 50 (10–100) | Sì |
-| Chunk size RAG | 1000 caratteri (200–3000) | Sì |
-| Chunk overlap RAG | 200 caratteri (0–500) | Sì |
+| Chunk size RAG | 1000 caratteri (200–3000, passi di 100) | Sì |
+| Chunk overlap RAG | 200 caratteri (0–500, passi di 50) | Sì |
+| Chunk KB Chat | 1000 / overlap 200 | No |
 | Documenti per query (top-k) | 5 (1–10) | Sì |
 | Modello embedding | `intfloat/multilingual-e5-small` (384 dim) | Solo via env `DEEPAIUG_EMBEDDING_MODEL` |
 | Boost rilevanza KB Chat | 1.0 / 1.15 / 1.30 | Indiretto (livello di rilevanza) |
@@ -1035,9 +1047,15 @@ Dalla prova dal vivo (06/11/2026, rizzo-pii vero e OpenAI):
 | Minimo domande per generare la mappa | 2 | No |
 | Conferma caricamento KB "pesante" | ≥ 50 file | No |
 | Batch indicizzazione ChromaDB | 500 chunk | No |
-| Timeout `ollama list` / `/api/tags` | 5 s / 10 s | No |
+| Timeout `ollama list` / `/api/tags` | 5 s / 10 s (il `connection_timeout` di `remote_servers.yaml` non ha effetto) | No |
 | Pausa tra richieste wiki | 0,5 s | Sì (YAML) |
+| Timeout / batch wiki | 30 s / 50 | Sì (YAML) |
+| Esplorazioni socratiche in sidebar | ultime 10 | No |
 | Porta web | 8501 (default Streamlit) | Sì (opzioni Streamlit) |
+| rizzo-pii: indirizzo / timeout | `http://127.0.0.1:5005` / 30 s | Sì (YAML `hybrid:`) |
+| Annona: indirizzo | `http://127.0.0.1:7070` | Sì (YAML `hybrid:`) |
+| Annona: timeout lettura / gateway | 3 s / 180 s | No |
+| Annona: aggiornamento sezione / decisioni mostrate | al massimo ogni 20 s / ultime 8 | No |
 
 # Appendice B — Risoluzione dei problemi
 
@@ -1046,12 +1064,28 @@ Dalla prova dal vivo (06/11/2026, rizzo-pii vero e OpenAI):
 | "❌ Seleziona un modello!" | Nessun modello rilevato/scelto | Premere 🔄 Aggiorna; verificare `ollama list`; installare un modello (`ollama pull llama3.2:3b`) |
 | Nessun modello locale trovato | Ollama spento | Avviare Ollama (`ollama serve`); il launcher lo fa automaticamente |
 | "⚠️ Nessun server configurato in remote_servers.yaml" | YAML mancante/vuoto | Il sistemista deve configurare `remote_servers.yaml` (Cap. 6.3) |
-| "🔒 Cloud bloccato con Knowledge Base o KB Chat attiva!" | Comportamento voluto | Disattivare la KB documentale e/o il toggle "Usa KB Chat", o restare su Local/Remote |
+| «🔒 **Cloud provider bloccato**: Knowledge Base o KB Chat attiva…» (o «🔒 host esterno (…) bloccato…») | Comportamento voluto: KB o KB Chat con una destinazione fuori casa | Disattivare la KB documentale e/o «📚 Usa KB Chat», o restare in casa (Local, Remote in LAN/Tailscale) |
 | "🔤 Embedding: ChromaDB default (MiniLM-L6, EN)" | `sentence-transformers` non installato o download fallito | Installare la dipendenza / verificare la connessione al primo avvio; qualità in italiano ridotta nel frattempo |
 | KB svuotata dopo aggiornamento a v1.15.x | Migrazione automatica per cambio modello embedding | Ri-indicizzare le sorgenti e premere 🔄 Aggiorna KB Chat |
 | "⚠️ Storage: Memoria (temporaneo)" | ChromaDB non installato | Installare `chromadb`; senza, l'indice si perde alla chiusura |
+| KB documentale e KB Chat svuotate senza aggiornamenti | Il modello e5 non si è caricato (rete, cache): il fallback cambia il tag e scatta la migrazione (Cap. 9.3) | Verificare la cache HuggingFace e la rete, poi re-indicizzare. **Possibile difetto**, da correggere |
+| Nella KB finiscono file di `.obsidian/`, `templates/`, `.trash/`, `logseq/bak/` | Le esclusioni dei vault valgono solo per il conteggio (Cap. 14.2) | Limite noto: spostare fuori dal vault i file da non indicizzare |
+| «0 documenti» nel banner KB dopo un riavvio, con i chunk giusti | Il numero di documenti è tenuto in memoria | Solo estetico: l'indice c'è; re-indicizzare per riavere il numero |
+| Chunk enormemente numerosi, indicizzazione lunghissima | Overlap uguale o maggiore della dimensione del chunk | Tenere l'overlap sotto la dimensione del chunk (Cap. 9.2) |
 | CPU al 100% durante l'indicizzazione | Normale: embedding in CPU | Attendere; non chiudere l'app |
-| Le immagini allegate vengono ignorate | Modello non-Vision (nome non riconosciuto) o connessione cloud | Usare un modello vision locale (llava, moondream) su Local/Remote: dalla v1.15.3 le immagini arrivano al modello |
+| Le immagini allegate vengono ignorate | Modello con un nome non riconosciuto come Vision (anche `llama3.2-vision`, `qwen2.5vl`, `gemma3`) o destinazione fuori casa | Usare un modello vision con nome riconosciuto (llava, moondream, granite3-vision…) in casa (Cap. 13.1) |
+| I file allegati prima ricompaiono nel messaggio dopo | Il riquadro allegati non si svuota da solo, né dopo l'invio né con «🔄 Nuova» | Togliere i file con la ✕ o ricaricare la pagina |
+| «⚠️ **Non inviata** — …» sotto una domanda | L'invio è fallito (chiave, rete, fornitore, pacchetto Anthropic/Google mancante) | Leggere il tipo d'errore; correggere e reinviare. La domanda segnata non viene rimandata al modello |
+| Il messaggio rosso del blocco («🛡️ rizzo-pii non risponde…», «❌ Inserisci API key!»…) sparisce appena tocchi la sidebar, mentre il testo resta nella casella | **Limite noto della 1.16.0**: l'avviso si mostra per un solo giro della pagina | Il testo non è partito: correggere la causa e premere di nuovo «🚀 Invia». La correzione è prevista in una 1.16.x |
+| «🛡️ rizzo-pii non risponde: il messaggio non è stato inviato fuori dalla tua rete…» | rizzo-pii spento, lento o in caricamento, con `pii.enabled: true` | Avviare rizzo-pii e verificare `/health` (Cap. 21.2); il testo è rimasto nella casella |
+| «🛡️ rizzo-pii è in modalità definitiva (senza tabella)…» | rizzo-pii configurato senza tabella dei segnaposto | Riattivare la tabella nelle impostazioni di rizzo-pii |
+| «🛡️ Configurazione ibrida non valida, messaggio non inviato: …» | Sezione `hybrid:` scritta male (tipi, rientri, `on_service_down.cloud`) | Correggere il blocco come nel Cap. 21.3. ⚠️ Finché è sbagliato, bottoni socratici e mappa partono come senza ibrido: **possibile difetto** |
+| «⚠️ **Non inviata** — PIINotLocal…» / «configurazione non valida (AnnonaNotLocal)» | `url` di rizzo-pii o Annona non di loopback | Usare `http://127.0.0.1:…` (Cap. 21.1) |
+| «🧭 Annona non risponde o non ha una policy…» / «🧭 Annona ha trattenuto il passo (held)…» | Gateway acceso e Annona giù, senza policy, o passo trattenuto | Avviare Annona, controllare la policy, o tornare a `mode: "read"` |
+| «🧭 **Senza risposta** — …» | Gateway: il modello ha tentato uno strumento e Annona l'ha fermato (Annona 0.1.3) | Modello più capace nella policy di Annona, o strada senza gateway (Cap. 21.6) |
+| Con l'ambiente ibrido acceso aggiornando dalla 1.15.x non succede niente | La sezione `hybrid:` non c'è: l'updater preserva `security_settings.yaml` | Aggiungerla a mano (Cap. 4.1, 21.3) |
+| Dopo «🔄 Reset e usa Cloud» il badge e il riquadro «👁️ Cosa ha visto il modello» mostrano ancora dati della chat precedente | Il reset del dialogo privacy non azzera la memoria dei dati tolti né lo stato della chat come «🔄 Nuova». **Possibile difetto** | Premere anche «🔄 Nuova» prima di continuare |
+| Errore di Streamlit dopo «🗑️ Cancella storico» | Difetto noto dello storico socratico (Cap. 16.3) | Ricaricare la pagina: lo storico è stato svuotato |
 | "❌ Pacchetto `mwclient` non installato" | Dipendenza wiki mancante | `pip install mwclient` (o `dokuwiki`) nel venv |
 | PDF non esportabile | `reportlab` mancante | `pip install reportlab` nel venv |
 | Verifica generale dell'installazione | — | Eseguire `installer/check_deepaiug.sh` |
@@ -1076,8 +1110,10 @@ Dalla prova dal vivo (06/11/2026, rizzo-pii vero e OpenAI):
 | **rizzo-pii** | Programma locale e separato che sostituisce i dati personali con segnaposto prima del cloud (v1.16.0, Capitolo 21) |
 | **Segnaposto** | Etichetta come `[FULLNAME_1]` al posto di un dato personale; il valore vero resta sul computer |
 | **Annona** | Kernel locale e separato, facoltativo, che decide dove può andare un passo e ne tiene il registro (v1.16.0, Capitolo 21) |
-| **In casa / fuori casa** | La destinazione reale del testo: loopback, LAN e Tailscale sono in casa; cloud e IP pubblici fuori casa (Capitolo 21.4) |
+| **In casa / fuori casa** | La destinazione reale del testo: loopback, LAN e Tailscale sono in casa; cloud, IP pubblici e indirizzi non verificabili fuori casa (Capitolo 21.4) |
+| **Gateway (Annona)** | Modo sperimentale in cui è Annona, non DeepAiUG, a chiamare il modello fuori casa (Capitolo 21.6) |
+| **Destinazione reale** | Dove risolve davvero l'indirizzo di una connessione, indipendentemente dall'etichetta (Capitolo 20.0) |
 
 ---
 
-*Manuale generato dall'analisi del codice sorgente DeepAiUG v1.15.2 — 2026-07-13; aggiornato alla v1.15.4 il 2026-11-06 dopo l'audit `docs/AUDIT_pre_v1.16.0.md`; aggiornato alla v1.16.0 (Capitolo 21, ambiente ibrido) il 2026-11-06.*
+*Manuale generato dall'analisi del codice sorgente DeepAiUG v1.15.2 — 2026-07-13; aggiornato alla v1.15.4 il 2026-11-06 dopo l'audit `docs/AUDIT_pre_v1.16.0.md`; aggiornato alla v1.16.0 (Capitolo 21, ambiente ibrido) il 2026-11-06; rivisto per intero contro il codice della v1.16.0 il 2026-11-08.*
