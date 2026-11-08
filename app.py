@@ -69,7 +69,7 @@ from core.conversation import mark_send_failed, classify_send_error, SEND_EMPTY 
 from core.file_processors import get_attachment_names
 from core.url_validator import is_blocked, classify_url
 from core.egress import classify_destination, outside_label  # v1.16.0 P2
-from core.pii_guard import PIIGuardBlocked  # v1.16.0 P6
+from core.pii_guard import PIIGuardBlocked, hybrid_error_message  # v1.16.0 P6, v1.16.1
 from core.pii_memory import PIISessionMemory  # v1.16.0 giro 7b
 from config.hybrid_settings import load_hybrid_settings, HybridSettingsError  # v1.16.0 P5
 
@@ -384,6 +384,7 @@ def get_socratic_client(connection_type, provider, api_key, model, base_url, tem
             base_url,
             temperature,
             hybrid=HYBRID,  # v1.16.0 P6
+            hybrid_error=HYBRID_ERROR,  # v1.16.1: illeggibile → fuori casa non parte niente
             on_anonymized=_on_pii_anonymized,
             pii_memory=_pii_memory(),  # giro 7b
         )
@@ -851,7 +852,7 @@ if submit and user_input.strip():
     elif HYBRID_ERROR and destination["outside"]:
         # v1.16.0 — configurazione ibrida illeggibile: non si sa se rizzo-pii
         # doveva essere acceso, quindi verso fuori casa non parte niente
-        _pre_block = f"🛡️ Configurazione ibrida non valida, messaggio non inviato: {HYBRID_ERROR}"
+        _pre_block = hybrid_error_message(HYBRID_ERROR)
 
     if _pre_block:
         st.session_state["_restore_input"] = user_input
@@ -942,6 +943,7 @@ if submit and user_input.strip():
                     base_url, 
                     temperature,
                     hybrid=HYBRID,  # v1.16.0 P6
+                    hybrid_error=HYBRID_ERROR,  # v1.16.1
                     on_anonymized=_on_pii_anonymized,
                     pii_memory=_pii_memory(),  # giro 7b
                 )
