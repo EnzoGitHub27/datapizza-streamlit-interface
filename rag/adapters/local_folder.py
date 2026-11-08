@@ -34,6 +34,9 @@ class LocalFolderAdapter(WikiAdapter):
         self.folder_path = config.get("folder_path", "") if config else ""
         self.extensions = config.get("extensions", [".md", ".txt", ".html"]) if config else [".md", ".txt", ".html"]
         self.recursive = config.get("recursive", True) if config else True
+        # v1.16.1 — le esclusioni dei vault (.obsidian/, templates/, .trash/,
+        # logseq/bak/...) valgono anche qui, non solo nel conteggio del pannello
+        self.exclude_patterns = list(config.get("exclude_patterns", []) or []) if config else []
     
     def connect(self) -> bool:
         """
@@ -64,16 +67,16 @@ class LocalFolderAdapter(WikiAdapter):
         
         folder = Path(self.folder_path)
         
-        # Trova tutti i file con estensioni supportate
-        if self.recursive:
-            files = []
-            for ext in self.extensions:
-                files.extend(folder.rglob(f"*{ext}"))
-        else:
-            files = []
-            for ext in self.extensions:
-                files.extend(folder.glob(f"*{ext}"))
-        
+        # Trova tutti i file con estensioni supportate, tolte le cartelle escluse
+        from rag.vault import exclusion_patterns, list_files
+
+        files = list_files(
+            self.folder_path,
+            self.extensions,
+            recursive=self.recursive,
+            patterns=exclusion_patterns(self.folder_path, self.exclude_patterns),
+        )
+
         for file_path in files:
             try:
                 doc = self._load_single_file(file_path)
@@ -219,4 +222,5 @@ class LocalFolderAdapter(WikiAdapter):
         stats["folder_path"] = self.folder_path
         stats["extensions"] = self.extensions
         stats["recursive"] = self.recursive
+        stats["exclude_patterns"] = self.exclude_patterns
         return stats
