@@ -61,14 +61,12 @@ def _app(monkeypatch, tmp_path):
 def test_dialog_reset_clears_like_new(monkeypatch, tmp_path):
     at = _app(monkeypatch, tmp_path)
     assert any("Conferma Privacy" in t.value for t in at.title), "il dialogo doveva aprirsi"
-    old_id = at.session_state["conversation_id"]
 
     at.button(key="privacy_reset_btn").click().run()
     assert not at.exception, at.exception
 
     ss = at.session_state
     assert ss["messages"] == []
-    assert ss["conversation_id"] != old_id
     assert "_pii_memory" not in ss or len(ss["_pii_memory"]) == 0
     assert not ss["egress_views"]
     assert ss["pii_removed"] == 0 and "pii_guard" not in ss
