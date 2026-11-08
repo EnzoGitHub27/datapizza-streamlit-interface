@@ -228,7 +228,7 @@ hybrid:
 | Situazione | Destinazione in casa | Destinazione fuori casa |
 |---|---|---|
 | ibrido spento (default) | come la 1.15.3 | come la 1.15.3 |
-| rizzo-pii spento, in timeout o modello in caricamento (`PIIServiceUnavailable`) | **si procede** (il testo non esce di casa) | **si blocca e si avvisa**: «rizzo-pii non risponde: il messaggio non è stato inviato al cloud». Il messaggio dell'utente resta nella casella |
+| rizzo-pii spento, in timeout o modello in caricamento (`PIIServiceUnavailable`) | **si procede** (il testo non esce di casa) | **si blocca e si avvisa**: «🛡️ rizzo-pii non risponde: il messaggio non è stato inviato fuori dalla tua rete. Avvia rizzo-pii e riprova.» (testo del codice; corretto nella SPEC l'08/11/2026). Il messaggio dell'utente resta nella casella |
 | rizzo-pii in modalità definitiva (`PIIMappingDisabled`) | si procede | si blocca e si avvisa, con l'indicazione per riattivare la tabella |
 | rizzo-pii risponde male (`PIIServiceError`) | si procede | si blocca |
 | Annona spento o senza policy (`AnnonaUnavailable`), modo `read` | si procede, la sidebar dice «Annona non risponde» | si procede come nelle righe di rizzo-pii qui sopra (con rizzo-pii spento, come la 1.15.4); la risposta dice che il passo **non è registrato** (decisione 6). *Nel codice dal giro 5: in modo `read` Annona non fa da cancello* |

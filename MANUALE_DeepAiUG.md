@@ -68,6 +68,8 @@ DeepAiUG è un'interfaccia web (basata su Streamlit) per dialogare con modelli l
 - **Mappa Sessione**: analisi su richiesta della "cornice implicita" costruita dalle domande della sessione.
 - **Persistenza e export**: salvataggio automatico delle conversazioni, esportazione in Markdown, JSON, TXT, PDF e ZIP batch.
 - **Branding personalizzabile** (titolo, icona, banner, tema "Matrix" con pioggia di caratteri).
+- **Vision locale**: immagini allegate ai modelli vision, solo verso destinazioni «in casa» (dalla 1.15.3).
+- **Ambiente ibrido** (dalla 1.16.0, opzionale e spento per default): rizzo-pii toglie i dati personali prima del cloud, Annona mostra le sue decisioni o fa da gateway sperimentale; e per tutti i blocchi conta la **destinazione reale** del testo (Capitolo 21).
 
 **Nota sui nomi:** la cartella/repository si chiama `datapizza-streamlit-interface` (usa il framework `datapizza-ai` per i client LLM), ma il prodotto si chiama **DeepAiUG** e l'installer lo colloca in `~/DeepAiUG`. La versione autorevole è quella dichiarata in `config/constants.py` (`VERSION = "1.16.0"`); dalla 1.16.0 anche `pyproject.toml` dice `1.16.0`, ma resta solo metadato del pacchetto Poetry.
 
@@ -892,7 +894,7 @@ Limiti ancora validi nella 1.16.0:
 - La Mappa Sessione e i bottoni socratici usano il modello corrente: se sei fuori casa, anche quelle richieste vanno al fornitore (con rizzo-pii acceso, a soli segnaposto: Cap. 21.4).
 - Una chat caricata e poi usata sul cloud manda tutta la cronologia (vedi 20.3).
 
-Risolto nella 1.16.0: un Remote host su un indirizzo Internet non è più solo avvisato, è bloccato come il cloud (Capitolo 21.4).
+Risolto nella 1.16.0: un Remote host su un indirizzo Internet non è più solo avvisato, si comporta come il cloud: la chat semplice funziona, KB, KB Chat, allegati e immagini sono bloccati (Capitolo 21.4).
 
 ---
 
