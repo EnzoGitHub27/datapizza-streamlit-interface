@@ -128,6 +128,7 @@ def _on_pii_anonymized(n_removed: int) -> None:
 # ============================================================================
 
 from rag import KnowledgeBaseManager
+from rag.embeddings import embedding_unavailable  # v1.16.1
 
 # ============================================================================
 # EXPORT
@@ -477,11 +478,15 @@ if st.sidebar.button("🔄 Aggiorna KB Chat", key="reindex_chat_kb"):
     _reindex_result = reindex_all_chat_kb(progress_callback=_reindex_cb)
     _progress_bar.empty()
     _orphans = _reindex_result.get("orphans_removed", 0)
-    st.sidebar.success(
-        f"✅ Indicizzate {_reindex_result['chats_indexed']} chat, "
-        f"{_reindex_result['total_chunks']} chunk totali"
-        + (f" · 🧹 tolte {_orphans} chat non più incluse" if _orphans else "")
-    )
+    if _reindex_result.get("embedding_unavailable"):
+        # v1.16.1 — senza il modello la KB Chat non si tocca
+        st.sidebar.error(_reindex_result["embedding_unavailable"])
+    else:
+        st.sidebar.success(
+            f"✅ Indicizzate {_reindex_result['chats_indexed']} chat, "
+            f"{_reindex_result['total_chunks']} chunk totali"
+            + (f" · 🧹 tolte {_orphans} chat non più incluse" if _orphans else "")
+        )
 
 st.sidebar.caption("Indicizza tutte le chat flaggate e toglie quelle eliminate o non più incluse — fallo dopo aver salvato nuove chat")
 
@@ -639,7 +644,19 @@ if _use_gateway:
 # KNOWLEDGE BASE BANNER
 # ============================================================================
 
-if st.session_state.get("use_knowledge_base"):
+# 🧮 v1.16.1 — il modello degli embedding non si carica: le KB non si usano e
+# non si toccano, la chat prosegue senza (e lo dice)
+_embedding_error = (
+    embedding_unavailable()
+    if (st.session_state.get("use_knowledge_base") or st.session_state.get("use_chat_kb"))
+    else None
+)
+if _embedding_error:
+    st.warning(_embedding_error)
+
+if st.session_state.get("use_knowledge_base") and _embedding_error:
+    pass  # già detto sopra
+elif st.session_state.get("use_knowledge_base"):
     kb_manager: KnowledgeBaseManager = st.session_state.get("kb_manager")
     if kb_manager and kb_manager.is_indexed():
         stats = kb_manager.get_stats()
