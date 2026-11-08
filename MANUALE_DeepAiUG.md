@@ -5,13 +5,13 @@
 | | |
 |---|---|
 | **Prodotto** | DeepAiUG Chat 🧠 |
-| **Versione documentata** | v1.16.0 |
+| **Versione documentata** | v1.16.1 |
 | **Data manuale** | 2026-11-08 |
 | **Repository** | https://github.com/EnzoGitHub27/datapizza-streamlit-interface |
 | **Licenza** | MIT |
 | **Autore progetto** | Vincenzo Iodice (EnzoGitHub27) — community DeepAiUG |
 
-> Questo manuale è stato scritto e rivisto contro il codice della versione 1.16.0, l'8 novembre 2026. Documenta esclusivamente le funzionalità effettivamente presenti nella versione 1.16.0; le funzionalità pianificate per v2.0.0 (Semantic Layer, Knowledge Graph, Docker, API REST, journaling riflessivo) **non** sono trattate perché non ancora implementate.
+> Questo manuale è stato scritto e rivisto contro il codice della versione 1.16.0, l'8 novembre 2026, e aggiornato lo stesso giorno per la 1.16.1 (le sette correzioni di sicurezza e dati: Cap. 9.3, 13, 14, 15, 16, 18, 20, 21 e Appendice B). Documenta esclusivamente le funzionalità effettivamente presenti nella versione 1.16.1; le funzionalità pianificate per v2.0.0 (Semantic Layer, Knowledge Graph, Docker, API REST, journaling riflessivo) **non** sono trattate perché non ancora implementate.
 
 ---
 
@@ -71,7 +71,7 @@ DeepAiUG è un'interfaccia web (basata su Streamlit) per dialogare con modelli l
 - **Vision locale**: immagini allegate ai modelli vision, solo verso destinazioni «in casa» (dalla 1.15.3).
 - **Ambiente ibrido** (dalla 1.16.0, opzionale e spento per default): rizzo-pii toglie i dati personali prima del cloud, Annona mostra le sue decisioni o fa da gateway sperimentale; e per tutti i blocchi conta la **destinazione reale** del testo (Capitolo 21).
 
-**Nota sui nomi:** la cartella/repository si chiama `datapizza-streamlit-interface` (usa il framework `datapizza-ai` per i client LLM), ma il prodotto si chiama **DeepAiUG** e l'installer lo colloca in `~/DeepAiUG`. La versione autorevole è quella dichiarata in `config/constants.py` (`VERSION = "1.16.0"`); dalla 1.16.0 anche `pyproject.toml` dice `1.16.0`, ma resta solo metadato del pacchetto Poetry.
+**Nota sui nomi:** la cartella/repository si chiama `datapizza-streamlit-interface` (usa il framework `datapizza-ai` per i client LLM), ma il prodotto si chiama **DeepAiUG** e l'installer lo colloca in `~/DeepAiUG`. La versione autorevole è quella dichiarata in `config/constants.py` (`VERSION = "1.16.1"`); dalla 1.16.0 anche `pyproject.toml` dice la stessa versione (`1.16.1`), ma resta solo metadato del pacchetto Poetry.
 
 ---
 
@@ -170,7 +170,8 @@ Stessa logica in 12 passi, con queste differenze:
 
 - Tasto destro su `INSTALLA_DeepAiUG.bat` → **«Esegui come amministratore»**: lo script verifica i permessi (`net session`) e si ferma se mancano.
 - Installa in `%USERPROFILE%\DeepAiUG`, con log in `%USERPROFILE%\DeepAiUG_install_log.txt`.
-- Se mancano, scarica **Python 3.12.10** (python.org) e **Ollama** (`OllamaSetup.exe`).
+- Se mancano, scarica **Python 3.12.10** (python.org) e **Ollama** (`OllamaSetup.exe`). Un Python già nel PATH si usa solo se è almeno la 3.10 (l'alias del Microsoft Store viene scartato); Ollama si cerca in `%LOCALAPPDATA%\Programs\Ollama`, dove lo mette `OllamaSetup.exe`, e nella cartella delle versioni vecchie `%LOCALAPPDATA%\Ollama`.
+- Dalla 1.16.1 la cartella di installazione si crea **prima** dei download: nella 1.16.0, su un computer senza Python o senza Ollama, il download falliva perché la cartella non c'era ancora.
 - Crea il launcher `%USERPROFILE%\DeepAiUG\DeepAiUG.bat` e l'**icona DeepAiUG sul Desktop** (`DeepAiUG.lnk`) per l'avvio.
 - Aggiornamento: `installer/AGGIORNA_DeepAiUG.bat`; diagnostica: `installer/CHECK_DeepAiUG.bat` (vedi anche `installer/INIZIA-QUI.txt`).
 
@@ -455,8 +456,8 @@ L'orchestrazione è in `rag/manager.py` (`KnowledgeBaseManager`). Ogni indicizza
 
 - Modello di default: **`intfloat/multilingual-e5-small`** (384 dimensioni, multilingua, ~118 MB, CPU-friendly), via `sentence-transformers`, vettori normalizzati, con prefissi e5 (`passage:` per i documenti, `query:` per le query). Le collection usano la distanza di default di ChromaDB (L2): con vettori normalizzati l'ordine dei risultati è lo stesso del coseno.
 - Override con `DEEPAIUG_EMBEDDING_MODEL`; alternative note: `intfloat/multilingual-e5-base` (768 dim), `intfloat/multilingual-e5-large` (1024 dim), `paraphrase-multilingual-MiniLM-L12-v2` (384 dim).
-- **Fallback**: se `sentence-transformers` non è disponibile, il sistema non si blocca: ChromaDB usa la propria embedding function di default (`all-MiniLM-L6-v2`, orientata all'inglese, qualità inferiore sull'italiano). La UI lo segnala ("🔤 Embedding: ChromaDB default (MiniLM-L6, EN)").
-- **Migrazione automatica**: ogni collection (KB documentale e KB Chat) memorizza il tag del modello di embedding; se al riavvio il tag non coincide (o è assente, caso pre-1.15.0), la collection viene svuotata e va ri-indicizzata manualmente. ⚠️ Se il modello e5 non si carica (anche per un problema passeggero), il tag diventa quello del fallback (`chromadb_default`) e lo svuotamento scatta lo stesso: vedi Appendice B.
+- **Se il modello non si carica** (dalla 1.16.1: `sentence-transformers` mancante, rete, cache rotta, memoria…) **le KB non si usano e non si toccano**: niente passaggio automatico a un altro embedding. Nell'area principale, con la KB o la KB Chat accese, compare «🧮 Il modello degli embedding `…` non si carica (…). Knowledge Base e KB Chat non si usano e non si toccano: la chat prosegue senza. Si riprova da sola fra un minuto, oppure riavvia l'app.»; l'indicizzazione e «🔄 Aggiorna KB Chat» rispondono con lo stesso messaggio e non fanno niente. Eliminare una conversazione toglie comunque i suoi pezzi dalla KB Chat (non serve il modello). Fino alla 1.16.0 si passava all'embedding di default di ChromaDB (`all-MiniLM-L6-v2`), con il tag `chromadb_default`.
+- **Migrazione automatica**: ogni collection (KB documentale e KB Chat) memorizza il tag del modello di embedding; se al riavvio il tag non coincide (o è assente, caso pre-1.15.0), la collection viene svuotata e va ri-indicizzata manualmente. Dalla 1.16.1 il tag è sempre quello del modello **configurato**: lo svuotamento scatta solo se cambi tu il modello (`DEEPAIUG_EMBEDDING_MODEL`), non più per un errore di caricamento. Una collection rimasta con il tag `chromadb_default` della 1.16.0 viene svuotata alla prima apertura con il modello e5: va re-indicizzata (i suoi vettori erano di un altro modello).
 - **Rete** (dalla 1.16.0): il modello si scarica da `huggingface.co` solo al primo uso, con una riga nel terminale («🌐 … primo uso, lo scarico da huggingface.co»); se è già nella cache sul disco si carica senza nessuna richiesta di rete. Con la cache incompleta lo riscarica, e lo dice.
 - Gli embedding **non usano Ollama**: girano nel processo Streamlit, di solito in CPU (CPU al 100% durante l'indicizzazione è normale); la GPU solo se torch la supporta (vedi §2.4).
 
@@ -509,8 +510,8 @@ L'app è pensata per **uso mono-utente locale**. Non ha login: "utente" è chiun
 All'apertura del browser (di norma `http://localhost:8501`) trovi:
 
 - **Tema "Matrix"**: sfondo verde scurissimo, testo verde-teal, titoli con effetto glitch e, se abilitata, la "pioggia" di caratteri in sottofondo (personalizzabile o disattivabile dal sistemista via `branding.yaml`).
-- **Titolo dinamico** che indica il backend attivo: `🧠 DeepAiUG Chat → Ollama 1.16.0` (locale), `→ Remote` o `→ {provider}` (cloud). Dalla 1.16.0, se il testo va «fuori casa» il titolo aggiunge « ☁️»: `→ OpenAI ☁️`, `→ Remote esterno ☁️` per un Remote host su Internet, `→ Ollama ☁️` per un Base URL locale che punta fuori.
-- **Banner novità** («✨ **Novità 1.16.0**: …») con le note della versione; con la Knowledge Base attiva al suo posto c'è il banner della KB (Cap. 14.1).
+- **Titolo dinamico** che indica il backend attivo: `🧠 DeepAiUG Chat → Ollama 1.16.1` (locale), `→ Remote` o `→ {provider}` (cloud). Dalla 1.16.0, se il testo va «fuori casa» il titolo aggiunge « ☁️»: `→ OpenAI ☁️`, `→ Remote esterno ☁️` per un Remote host su Internet, `→ Ollama ☁️` per un Base URL locale che punta fuori.
+- **Banner novità** («✨ **Novità 1.16.1**: …») con le note della versione; con la Knowledge Base attiva al suo posto c'è il banner della KB (Cap. 14.1).
 - **Indicatore di connessione** — dalla v1.15.2 per Local/Remote riflette la **destinazione reale** dell'URL (Cap. 20.0), non l'etichetta della modalità:
   - `🔒 Rete fidata - i dati restano nella tua rete ({host})` (verde: loopback, LAN, Tailscale)
   - `⚠️ Host esterno - i dati escono dalla tua rete verso {host}` (giallo: IP pubblico)
@@ -607,7 +608,7 @@ Ogni file allegato appare in un'**anteprima** sotto l'intestazione «**📎 N fi
 ## 13.2 Inviare e ricevere
 
 - Scrivi nel campo (placeholder "Scrivi il tuo messaggio...", oppure "Chiedi qualcosa sui tuoi documenti..." se la KB è attiva) e premi **🚀 Invia**.
-- Prima dell'invio l'app verifica: modello selezionato («❌ Seleziona un modello!»), chiave API per il cloud («❌ Inserisci API key!»), blocco KB fuori casa («🔒 Cloud provider bloccato con Knowledge Base o KB Chat attiva!», oppure «🔒 host esterno ({host}) bloccato…»), URL bloccato («🔒 Connessione bloccata per sicurezza: …»), configurazione ibrida («🛡️ Configurazione ibrida non valida, messaggio non inviato: …»). Il messaggio d'errore compare in rosso sopra la casella.
+- Prima dell'invio l'app verifica: modello selezionato («❌ Seleziona un modello!»), chiave API per il cloud («❌ Inserisci API key!»), blocco KB fuori casa («🔒 Cloud provider bloccato con Knowledge Base o KB Chat attiva!», oppure «🔒 host esterno ({host}) bloccato…»), URL bloccato («🔒 Connessione bloccata per sicurezza: …»), configurazione ibrida («🛡️ Configurazione ibrida non valida, messaggio non inviato: …», solo verso fuori casa; dalla 1.16.1 blocca anche bottoni socratici, nudge e mappa, Cap. 21.3). Il messaggio d'errore compare in rosso sopra la casella.
 - **Dalla 1.16.0 il testo resta nella casella** dopo un blocco (questi, e quelli di rizzo-pii, Cap. 21.4), anche se poi tocchi la sidebar, finché non invii di nuovo o non la svuoti tu. Dopo un invio partito la casella si svuota; durante lo streaming la domanda resta nella casella finché la risposta non è finita. ⚠️ Il messaggio rosso invece sparisce alla prima interazione successiva (limite noto, Appendice B).
 - **Se l'invio fallisce** dopo la partenza (chiave sbagliata, rete, errore del fornitore, pacchetto mancante), la domanda resta in chat con «⚠️ **Non inviata** — {tipo}: {errore}» o, se il fornitore aveva cominciato a rispondere, «⛔ **Rifiutata** dal fornitore — …». Vale per ogni destinazione; la domanda si salva così segnata e non viene rimandata al modello nei turni successivi.
 - Le risposte con **blocchi di codice** si possono copiare con l'icona in alto a destra del blocco.
@@ -615,7 +616,7 @@ Ogni file allegato appare in un'**anteprima** sotto l'intestazione «**📎 N fi
 > ✅ **Novità v1.15.4**: i blocchi di codice restano interi anche dopo la fine dello streaming e nelle conversazioni ricaricate. Prima, un blocco con righe vuote (quasi tutto il codice Python) veniva spezzato e, copiandolo, negli appunti comparivano scritte «[object Object]».
 
 - Se la Knowledge Base è attiva vedrai gli spinner "🔍 Ricerca documenti rilevanti..." e/o "📚 Ricerca nella KB Chat...", con il conteggio dei documenti trovati («📎 Trovati N documenti KB», «📚 Trovati N risultati dalla KB Chat»); le **fonti** usate compaiono sotto la risposta nell'expander **"📎 Fonti (N)"**.
-- Il bottone **🔄 Nuova** azzera e apre una conversazione nuova (messaggi, contatori, storico socratico, mappa sessione, metadati KB della chat, e dalla 1.16.0 la memoria dei dati tolti e il riquadro «👁️ Cosa ha visto il modello»). Non spegne la Knowledge Base.
+- Il bottone **🔄 Nuova** azzera e apre una conversazione nuova (messaggi, contatori, storico socratico, mappa sessione, metadati KB della chat, e dalla 1.16.0 la memoria dei dati tolti e il riquadro «👁️ Cosa ha visto il modello»). Non spegne la Knowledge Base. Dalla 1.16.1 «🔄 Reset e usa Cloud» del dialogo privacy fa lo stesso identico azzeramento (Cap. 20.2).
 - ⚠️ **Limite noto:** il riquadro degli allegati **non si svuota** da solo, né dopo l'invio né con «🔄 Nuova». Prima del messaggio successivo togli a mano i file dal riquadro (la ✕ accanto a ciascuno) o ricarica la pagina, altrimenti potrebbero essere allegati di nuovo.
 
 ---
@@ -657,7 +658,9 @@ Il menu dipende da `mode` in `wiki_sources.yaml` (Cap. 6.5):
 | Vault LogSeq | `.md` | i file `.org` vengono contati ma **non** letti |
 | Export Notion | `.md` | riconosciuto dai file `_index*.csv` |
 
-⚠️ **Le cartelle da ignorare dei vault** (`.obsidian`, `templates`, `.trash`, `.archive` per Obsidian; `logseq/bak`, `logseq/version-files` per LogSeq) nella 1.16.0 valgono solo per il **conteggio** dei file, non per l'indicizzazione: i file `.md` che contengono finiscono anch'essi nella KB (limite noto, Appendice B).
+**Le cartelle da ignorare dei vault** (`.obsidian`, `templates`, `.trash`, `.archive` per Obsidian; `logseq/bak`, `logseq/version-files` per LogSeq) dalla 1.16.1 valgono anche per l'**indicizzazione**, non solo per il conteggio, e da qualunque strada si indicizzi il vault (menu dei vault, «Percorso cartella», ricarica di una conversazione). Il nome si confronta con le cartelle **dentro** il vault: `templates` toglie `vault/templates/` e `vault/progetti/templates/`, non un vault che sta a sua volta in una cartella chiamata `templates`, né `miei_templates/`.
+
+⚠️ **Se avevi già indicizzato un vault con la 1.16.0 o prima**, l'indice contiene ancora i file di quelle cartelle: **re-indicizzalo** (🔄 Indicizza Vault …) per toglierli. Ogni indicizzazione ricostruisce l'indice da zero (14.3).
 
 Nel campo **"Percorso cartella"** della Cartella Locale il tipo viene **riconosciuto automaticamente** («🟣 **Vault Obsidian rilevato**», con «N file compatibili trovati»). Nel pannello di un vault scelto dal menu compare «N file trovati (.md, .canvas)»: lì il tipo non viene verificato, si usa quello scelto.
 
@@ -668,7 +671,7 @@ Nel campo **"Percorso cartella"** della Cartella Locale il tipo viene **riconosc
 1. Configura la sorgente (percorso o URL).
 2. (Facoltativo) Regola i **⚙️ Parametri Chunking**: dimensione chunk 200–3000 caratteri (default 1000, passi di 100), overlap 0–500 (default 200, passi di 50). Tieni l'overlap sotto la dimensione del chunk (Cap. 9.2).
 3. Premi il bottone di indicizzazione: **🔄 Indicizza Documenti** (cartella), **🔄 Indicizza Vault Obsidian** / **🔄 Indicizza Vault LogSeq** / **🔄 Indicizza Export Notion**, **🔄 Sincronizza Wiki** / **🔄 Sincronizza DokuWiki** (modalità custom) o **🔄 Sincronizza** (sorgenti del YAML).
-4. Subito dopo il clic compare il **banner di stima** (numero di file/pagine e tempo previsto in base al modello di embedding, con «💡 CPU al 100% durante l'embedding — è normale, non chiudere l'app»; per una wiki senza limite di pagine «⚠️ **Numero pagine non limitato** — durata variabile»), poi la barra di avanzamento («🔄 Avvio sincronizzazione...») fino a "✅ Indicizzazione completata!" (o «❌ Errore indicizzazione»).
+4. Subito dopo il clic compare il **banner di stima** (numero di file/pagine e tempo previsto in base al modello di embedding, con «💡 CPU al 100% durante l'embedding — è normale, non chiudere l'app»; per una wiki senza limite di pagine «⚠️ **Numero pagine non limitato** — durata variabile»), poi la barra di avanzamento («🔄 Avvio sincronizzazione...») fino a "✅ Indicizzazione completata!" (o «❌ Errore indicizzazione»; se il modello degli embedding non si carica, il messaggio «🧮 … non si carica …» seguito da «Indicizzazione non fatta.», e l'indice di prima resta com'è: Cap. 9.3).
 
 Ogni indicizzazione ricostruisce da zero l'intera Knowledge Base: indicizzare una sorgente nuova **sostituisce** quella precedente (una sola sorgente attiva alla volta). Per le wiki già configurate viene mostrata la data dell'ultimo sync e il numero di pagine; dopo una cartella o un vault compare il riquadro «🟣 **Vault Obsidian attivo**» (o «📁 Cartella attivo») con l'ultima sync e il numero di file.
 
@@ -699,7 +702,7 @@ Rilevanza, Tipo e Note restano disattivati finché non spunti la checkbox. Se la
 
 ## 15.2 Indicizzare — `🔄 Aggiorna KB Chat`
 
-L'indicizzazione **non è automatica**: dopo aver flaggato le chat premi **"🔄 Aggiorna KB Chat"**. Al termine: «✅ Indicizzate N chat, M chunk totali» e, se ce n'erano, « · 🧹 tolte N chat non più incluse»: dalla 1.15.4 il bottone toglie anche le chat eliminate o non più flaggate. Sotto, la riga «📊 N chat · M chunk indicizzati».
+L'indicizzazione **non è automatica**: dopo aver flaggato le chat premi **"🔄 Aggiorna KB Chat"**. Al termine: «✅ Indicizzate N chat, M chunk totali» e, se ce n'erano, « · 🧹 tolte N chat non più incluse»: dalla 1.15.4 il bottone toglie anche le chat eliminate o non più flaggate. Sotto, la riga «📊 N chat · M chunk indicizzati». Se il modello degli embedding non si carica, il bottone mostra in rosso «🧮 Il modello degli embedding … non si carica …» e non tocca la KB Chat (Cap. 9.3).
 
 ## 15.3 Gestire la KB — expander `📚 Gestione Knowledge Base`
 
@@ -759,7 +762,7 @@ Dettagli utili:
 
 Ogni uso di un bottone viene registrato (tipo, orario, domanda, i primi 200 caratteri della risposta analizzata, risultato) e salvato con la conversazione. Nella sidebar trovi: il **totale** («Totale: N esplorazioni»), il conteggio per tipo (🔄 🤔 ⚠️ 🎭 🪞), l'expander «📜 Ultime N esplorazioni» (fino a 10, voci «{emoji} HH:MM - {domanda}») consultabili una per una, e la cancellazione protetta (checkbox "Conferma cancellazione" + "🗑️ Cancella storico"). Senza esplorazioni: «Nessuna esplorazione ancora.». In modalità 🚀 Veloce la sezione è nascosta.
 
-⚠️ **Limiti noti** (Appendice B): premendo «🗑️ Cancella storico» lo storico si svuota ma può comparire un errore di Streamlit; e la cancellazione non viene salvata da sola: lo storico può ricomparire ricaricando la chat prima di un nuovo messaggio.
+Premendo «🗑️ Cancella storico» lo storico si svuota, la casella «Conferma cancellazione» si toglie e la conversazione si salva subito senza storico (anche con Auto-save spento, come dopo un'esplorazione). Nella 1.16.0 compariva un errore di Streamlit e la cancellazione non si salvava; corretto nella 1.16.1.
 
 ---
 
@@ -810,6 +813,8 @@ Il menu **"Carica"** elenca le conversazioni salvate, dalla più recente, come `
 | 📁 🟣 🟤 ⬛ | Usava cartella locale / vault Obsidian / LogSeq / Notion |
 | 📎 | Contiene allegati |
 | 🔒 | Sei fuori casa e la chat contiene dati locali (wiki, cartella, allegati): caricamento protetto. Compare dopo 🧠 |
+
+Due conversazioni possono avere la stessa voce nel menu (stessa data, stesso modello, stesso numero di messaggi): dalla 1.16.1 il menu le tiene distinte e **📂 Carica** e **🗑️ Elimina** agiscono su quella scelta. Nella 1.16.0 vinceva sempre la prima delle due, anche per l'eliminazione.
 
 Selezionata la conversazione, premi **📂 Carica**:
 - se sei **fuori casa** (cloud, o dalla 1.16.0 un Remote host su Internet) e la chat contiene dati locali, il caricamento è **bloccato** per privacy («… Questa conversazione contiene dati locali (…). Non può essere caricata con un provider cloud…»); vale anche per una chat con fonti dalla KB Chat, che però non ha l'icona 🔒;
@@ -870,7 +875,7 @@ Fino alla 1.15.4 il blocco valeva solo per la modalità «Cloud provider» e un 
 
 Se hai caricato file in chat e poi passi a una destinazione fuori casa, l'interfaccia si blocca sulla pagina **"🔐 Conferma Privacy Richiesta"**, che elenca i file coinvolti e offre tre uscite:
 
-1. **🔄 Reset e usa Cloud** *(consigliato)* — cancella la cronologia e prosegue in sicurezza;
+1. **🔄 Reset e usa Cloud** *(consigliato)* — cancella la cronologia e prosegue in sicurezza. Dalla 1.16.1 azzera come **🔄 Nuova** (è la stessa funzione): messaggi, contatori e stima dei token, memoria dei dati tolti, riquadri «👁️ Cosa ha visto il modello», badge, cache e storico socratici, mappa sessione, metadati KB della chat e flag privacy. Nella 1.16.0 azzerava solo messaggi e flag, e la chat nuova poteva mostrare il riquadro della vecchia;
 2. **✅ Procedi con Cloud** (riquadro «Procedi comunque») — disponibile solo dopo aver spuntato "Confermo: i documenti non contenevano dati riservati". **Con rizzo-pii attivo nella configurazione** (Cap. 21) diventa **🛡️ Procedi con anonimizzazione**, con la spunta «Ho capito: parte il testo senza i dati personali riconosciuti»; la scelta dipende dalla configurazione, non dal fatto che rizzo-pii risponda in quel momento (se non risponde, l'invio si blocca: Cap. 21.4);
 3. **↩️ Torna a Local/Remote** — riporta sempre su «Local (Ollama)».
 
@@ -945,7 +950,7 @@ hybrid:
 È lo stesso blocco del `security_settings.yaml` del repository (lì con qualche commento in più): chi aggiorna può copiarlo da qui o da lì, in fondo al proprio file.
 
 - File o sezione assente → tutto spento.
-- Tipi sbagliati, YAML illeggibile o `on_service_down.cloud` diverso da `block` → **errore esplicito**, mai «spento» in silenzio: il messaggio della chat verso fuori casa non parte («🛡️ Configurazione ibrida non valida, messaggio non inviato: …») finché la configurazione non è corretta. ⚠️ Nella 1.16.0 il blocco vale **solo per il messaggio della chat**: bottoni socratici, nudge e mappa, con la configurazione illeggibile, partono come senza ibrido (Appendice B).
+- Tipi sbagliati, YAML illeggibile o `on_service_down.cloud` diverso da `block` → **errore esplicito**, mai «spento» in silenzio: il messaggio della chat verso fuori casa non parte («🛡️ Configurazione ibrida non valida, messaggio non inviato: …») finché la configurazione non è corretta. Dalla 1.16.1 il blocco vale per **ogni** chiamata verso fuori casa, con lo stesso messaggio: chat, bottoni socratici, nudge, generazione e rigenerazione della mappa. In casa (Ollama locale, LAN, Tailscale) tutto funziona come prima. Nella 1.16.0 si bloccava solo il messaggio della chat e le altre vie partivano in chiaro.
 - L'indirizzo (`url`) non viene controllato quando si legge il file, ma quando l'app chiama il servizio (21.1).
 - `on_service_down.local: "block"` è accettato ma nella 1.16.0 non fa nulla: in casa si procede sempre.
 - **Dove si anonimizza non si configura**: sempre e solo **fuori casa** (21.4). Una chiave `apply_to` nel file viene ignorata.
@@ -1012,7 +1017,7 @@ Da sapere:
 
 ## 21.7 Limiti onesti
 
-- **Pseudonimizzato non è anonimo** (GDPR): la tabella dei valori veri esiste, sul tuo computer, **in memoria per tutta la sessione**: si azzera con «Nuova», quando carichi una conversazione e quando chiudi o ricarichi la scheda del browser. Non va mai su disco. ⚠️ «🔄 Reset e usa Cloud» del dialogo privacy (Cap. 20.2) **non** la azzera (Appendice B).
+- **Pseudonimizzato non è anonimo** (GDPR): la tabella dei valori veri esiste, sul tuo computer, **in memoria per tutta la sessione**: si azzera con «Nuova», quando carichi una conversazione e quando chiudi o ricarichi la scheda del browser. Non va mai su disco. Dalla 1.16.1 la azzera anche «🔄 Reset e usa Cloud» del dialogo privacy (Cap. 20.2).
 - **Il contesto si perde**: il modello cloud vede `[FULLNAME_1]` e non sa se è un cliente o un fornitore. Dentro la sessione un valore già tolto riprende sempre lo stesso segnaposto, anche quando rizzo-pii non lo riconoscerebbe più (es. «**Paolo**» in grassetto nel testo del modello, rimandato da «Limiti»). Vale solo per le forme che rizzo-pii ha già tolto così come sono: un diminutivo o un nome storpiato che rizzo-pii non riconosce esce in chiaro.
 - **rizzo-pii lavora bene sul testo italiano, non su codice o testo tecnico**: lì toglie troppo, in modo prudente. Una domanda con codice incollato può tornare piena di segnaposto.
 - **Importi, date e URL** vengono tolti per default: in una domanda tecnica il modello perde informazioni utili. Chi vuole li lascia in chiaro con `exclude_tags` (es. `["AMOUNT", "DATE"]`).
@@ -1067,11 +1072,12 @@ Dalla prova dal vivo (06/11/2026, rizzo-pii vero e OpenAI):
 | Nessun modello locale trovato | Ollama spento | Avviare Ollama (`ollama serve`); il launcher lo fa automaticamente |
 | "⚠️ Nessun server configurato in remote_servers.yaml" | YAML mancante/vuoto | Il sistemista deve configurare `remote_servers.yaml` (Cap. 6.3) |
 | «🔒 **Cloud provider bloccato**: Knowledge Base o KB Chat attiva…» (o «🔒 host esterno (…) bloccato…») | Comportamento voluto: KB o KB Chat con una destinazione fuori casa | Disattivare la KB documentale e/o «📚 Usa KB Chat», o restare in casa (Local, Remote in LAN/Tailscale) |
-| "🔤 Embedding: ChromaDB default (MiniLM-L6, EN)" | `sentence-transformers` non installato o download fallito | Installare la dipendenza / verificare la connessione al primo avvio; qualità in italiano ridotta nel frattempo |
+| «🧮 Il modello degli embedding `…` non si carica (…)» | `sentence-transformers` mancante, download o cache del modello rotti, rete al primo uso, memoria | Leggere il motivo fra parentesi (e il terminale); installare la dipendenza o ripristinare la cache HuggingFace. Le KB non si toccano: tornato il modello (dopo un minuto, o al riavvio) funzionano come prima |
+| "🔤 Embedding: ChromaDB default (MiniLM-L6, EN)" | Indice creato dalla 1.16.0 o prima mentre il modello e5 non si caricava | Re-indicizzare: con il modello e5 di nuovo a posto quella collection viene svuotata alla prima apertura (Cap. 9.3) |
 | KB svuotata dopo aggiornamento a v1.15.x | Migrazione automatica per cambio modello embedding | Ri-indicizzare le sorgenti e premere 🔄 Aggiorna KB Chat |
 | "⚠️ Storage: Memoria (temporaneo)" | ChromaDB non installato | Installare `chromadb`; senza, l'indice si perde alla chiusura |
-| KB documentale e KB Chat svuotate senza aggiornamenti | Il modello e5 non si è caricato (rete, cache): il fallback cambia il tag e scatta la migrazione (Cap. 9.3) | Verificare la cache HuggingFace e la rete, poi re-indicizzare. **Possibile difetto**, da correggere |
-| Nella KB finiscono file di `.obsidian/`, `templates/`, `.trash/`, `logseq/bak/` | Le esclusioni dei vault valgono solo per il conteggio (Cap. 14.2) | Limite noto: spostare fuori dal vault i file da non indicizzare |
+| KB documentale e KB Chat svuotate senza aggiornamenti | Nella 1.16.0: il modello e5 non si era caricato e il fallback cambiava il tag (corretto nella 1.16.1, Cap. 9.3) | Re-indicizzare le sorgenti e premere 🔄 Aggiorna KB Chat |
+| Nella KB ci sono file di `.obsidian/`, `templates/`, `.trash/`, `logseq/bak/` | Indice creato con la 1.16.0 o prima, quando le esclusioni valevano solo per il conteggio | Re-indicizzare il vault (Cap. 14.2) |
 | «0 documenti» nel banner KB dopo un riavvio, con i chunk giusti | Il numero di documenti è tenuto in memoria | Solo estetico: l'indice c'è; re-indicizzare per riavere il numero |
 | Chunk enormemente numerosi, indicizzazione lunghissima | Overlap uguale o maggiore della dimensione del chunk | Tenere l'overlap sotto la dimensione del chunk (Cap. 9.2) |
 | CPU al 100% durante l'indicizzazione | Normale: embedding in CPU | Attendere; non chiudere l'app |
@@ -1081,13 +1087,12 @@ Dalla prova dal vivo (06/11/2026, rizzo-pii vero e OpenAI):
 | Il messaggio rosso del blocco («🛡️ rizzo-pii non risponde…», «❌ Inserisci API key!»…) sparisce appena tocchi la sidebar, mentre il testo resta nella casella | **Limite noto della 1.16.0**: l'avviso si mostra per un solo giro della pagina | Il testo non è partito: correggere la causa e premere di nuovo «🚀 Invia». La correzione è prevista in una 1.16.x |
 | «🛡️ rizzo-pii non risponde: il messaggio non è stato inviato fuori dalla tua rete…» | rizzo-pii spento, lento o in caricamento, con `pii.enabled: true` | Avviare rizzo-pii e verificare `/health` (Cap. 21.2); il testo è rimasto nella casella |
 | «🛡️ rizzo-pii è in modalità definitiva (senza tabella)…» | rizzo-pii configurato senza tabella dei segnaposto | Riattivare la tabella nelle impostazioni di rizzo-pii |
-| «🛡️ Configurazione ibrida non valida, messaggio non inviato: …» | Sezione `hybrid:` scritta male (tipi, rientri, `on_service_down.cloud`) | Correggere il blocco come nel Cap. 21.3. ⚠️ Finché è sbagliato, bottoni socratici e mappa partono come senza ibrido: **possibile difetto** |
+| «🛡️ Configurazione ibrida non valida, messaggio non inviato: …» | Sezione `hybrid:` scritta male (tipi, rientri, `on_service_down.cloud`) | Correggere il blocco come nel Cap. 21.3. Finché è sbagliato, verso fuori casa non parte niente (chat, bottoni socratici, nudge, mappa); in casa si lavora come sempre |
 | «⚠️ **Non inviata** — PIINotLocal…» / «configurazione non valida (AnnonaNotLocal)» | `url` di rizzo-pii o Annona non di loopback | Usare `http://127.0.0.1:…` (Cap. 21.1) |
 | «🧭 Annona non risponde o non ha una policy…» / «🧭 Annona ha trattenuto il passo (held)…» | Gateway acceso e Annona giù, senza policy, o passo trattenuto | Avviare Annona, controllare la policy, o tornare a `mode: "read"` |
 | «🧭 **Senza risposta** — …» | Gateway: il modello ha tentato uno strumento e Annona l'ha fermato (Annona 0.1.3) | Modello più capace nella policy di Annona, o strada senza gateway (Cap. 21.6) |
 | Con l'ambiente ibrido acceso aggiornando dalla 1.15.x non succede niente | La sezione `hybrid:` non c'è: l'updater preserva `security_settings.yaml` | Aggiungerla a mano (Cap. 4.1, 21.3) |
-| Dopo «🔄 Reset e usa Cloud» il badge e il riquadro «👁️ Cosa ha visto il modello» mostrano ancora dati della chat precedente | Il reset del dialogo privacy non azzera la memoria dei dati tolti né lo stato della chat come «🔄 Nuova». **Possibile difetto** | Premere anche «🔄 Nuova» prima di continuare |
-| Errore di Streamlit dopo «🗑️ Cancella storico» | Difetto noto dello storico socratico (Cap. 16.3) | Ricaricare la pagina: lo storico è stato svuotato |
+| Su Windows l'installer si ferma al download di Python o di Ollama | Nella 1.16.0 la cartella `%USERPROFILE%\DeepAiUG` si creava dopo quei download (corretto nella 1.16.1, Cap. 3.3) | Usare l'installer della 1.16.1, o creare a mano la cartella e rilanciarlo |
 | "❌ Pacchetto `mwclient` non installato" | Dipendenza wiki mancante | `pip install mwclient` (o `dokuwiki`) nel venv |
 | PDF non esportabile | `reportlab` mancante | `pip install reportlab` nel venv |
 | Verifica generale dell'installazione | — | Eseguire `installer/check_deepaiug.sh` |

@@ -221,23 +221,14 @@ def handle_privacy_action(action: str):
         action: "reset" | "proceed" | "back"
     """
     if action == "reset":
-        # Reset completo della chat
-        from core import generate_conversation_id
-        from datetime import datetime
-        
-        st.session_state["messages"] = []
-        st.session_state["conversation_id"] = generate_conversation_id()
-        st.session_state["conversation_created_at"] = datetime.now().isoformat()
-        st.session_state["total_tokens_estimate"] = 0
-        
-        # Reset flags privacy
-        st.session_state["documents_uploaded_this_session"] = False
-        st.session_state["uploaded_files_history"] = []
-        st.session_state["privacy_acknowledged_for_cloud"] = False
-        
-        # Mantieni la connessione selezionata (cloud o host esterno): la
-        # selectbox della sidebar la riscrive comunque a ogni giro
-        
+        # v1.16.1 — lo stesso azzeramento di «🔄 Nuova»: memoria dei dati tolti,
+        # riquadri «Cosa ha visto il modello», cache e storico socratici, mappa,
+        # contatori e flag privacy. La connessione scelta resta (la selectbox
+        # della sidebar la riscrive comunque a ogni giro).
+        from ui.conversation_reset import reset_conversation
+
+        reset_conversation()
+
         st.success("✅ Chat resettata! Ora puoi usare il modello esterno in sicurezza.")
         st.rerun()
     

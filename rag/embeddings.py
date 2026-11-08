@@ -12,6 +12,7 @@
 # ============================================================================
 
 import os
+import time
 import warnings
 from typing import List, Optional, Tuple
 
@@ -178,40 +179,64 @@ class _EmbeddingsHelper:
 
 _helper_singleton: Optional[_EmbeddingsHelper] = None
 _helper_init_failed: bool = False
+_helper_error: Optional[str] = None   # v1.16.1 — perché non si carica, per l'utente
+_helper_retry_at: float = 0.0         # v1.16.1 — quando si può riprovare
+
+# v1.16.1 — un problema passeggero (rete, disco) non deve durare fino al
+# riavvio: dopo questo tempo si riprova a caricare il modello. Non a ogni
+# giro di Streamlit, perché un tentativo fallito può essere lento.
+RETRY_SECONDS = 60.0
 
 
 def get_embeddings_helper() -> Optional[_EmbeddingsHelper]:
     """
     Restituisce il singleton di _EmbeddingsHelper. Lazy: il modello viene
-    caricato solo alla prima chiamata. Se sentence-transformers non è
-    installato (o il download del modello fallisce), restituisce None e
-    il chiamante può fare fallback al default ChromaDB.
+    caricato solo alla prima chiamata.
+
+    v1.16.1 — se il modello configurato non si carica (sentence-transformers
+    mancante, download o cache rotti, memoria...) restituisce None e
+    embedding_unavailable() dice perché. Non si passa MAI a un altro
+    embedding: le KB non si usano e non si toccano finché il modello non torna
+    (si riprova dopo RETRY_SECONDS).
     """
-    global _helper_singleton, _helper_init_failed
+    global _helper_singleton, _helper_init_failed, _helper_error, _helper_retry_at
 
     if _helper_singleton is not None:
         return _helper_singleton
-    if _helper_init_failed:
+    if _helper_init_failed and time.monotonic() < _helper_retry_at:
         return None
 
     try:
         _helper_singleton = _EmbeddingsHelper(EMBEDDING_MODEL_NAME)
+        _helper_init_failed = False
+        _helper_error = None
         return _helper_singleton
     except ImportError:
-        print(
-            "⚠️ sentence-transformers non installato. "
-            "Fallback a embedding default ChromaDB (qualità ridotta su IT). "
-            "Installa con: pip install sentence-transformers"
-        )
-        _helper_init_failed = True
+        _helper_error = "sentence-transformers non è installato (pip install -r requirements.txt)"
+    except Exception as e:  # noqa: BLE001 - qualunque errore: il modello non c'è
+        _helper_error = f"{type(e).__name__}: {e}"
+    print(
+        f"⚠️ Il modello degli embedding {EMBEDDING_MODEL_NAME} non si carica ({_helper_error}). "
+        f"Knowledge Base e KB Chat non si usano e non si toccano finché non torna."
+    )
+    _helper_init_failed = True
+    _helper_retry_at = time.monotonic() + RETRY_SECONDS
+    return None
+
+
+def embedding_unavailable() -> Optional[str]:
+    """
+    v1.16.1 — None se il modello degli embedding è pronto; altrimenti il
+    messaggio per l'utente. Prova a caricare il modello se non è ancora caricato.
+    """
+    if get_embeddings_helper() is not None:
         return None
-    except Exception as e:
-        print(
-            f"⚠️ Errore caricamento modello embedding {EMBEDDING_MODEL_NAME}: {e}. "
-            f"Fallback a embedding default ChromaDB."
-        )
-        _helper_init_failed = True
-        return None
+    return (
+        f"🧮 Il modello degli embedding `{EMBEDDING_MODEL_NAME}` non si carica "
+        f"({_helper_error or 'errore sconosciuto'}). Knowledge Base e KB Chat non si "
+        f"usano e non si toccano: la chat prosegue senza. Si riprova da sola fra "
+        f"un minuto, oppure riavvia l'app."
+    )
 
 
 # ============================================================================
@@ -257,26 +282,27 @@ _embedding_function_singleton = None
 def get_embedding_function():
     """
     Singleton dell'EmbeddingFunction passata a ChromaDB nella creazione delle
-    collection. Restituisce None se sentence-transformers non disponibile —
-    in quel caso il chiamante deve creare la collection senza
-    embedding_function (ChromaDB userà il suo default).
+    collection. Restituisce None se il modello non si carica: in quel caso
+    (v1.16.1) il chiamante NON deve creare o aprire collection con un altro
+    embedding (vedi embedding_unavailable).
     """
     global _embedding_function_singleton
     if _embedding_function_singleton is None:
+        # v1.16.1 — None non si tiene: quando il modello torna, la funzione c'è
         _embedding_function_singleton = _build_chroma_embedding_function()
     return _embedding_function_singleton
 
 
 def get_active_model_tag() -> str:
     """
-    Restituisce il tag identificativo del modello effettivamente attivo,
-    da salvare nei metadata della collection ChromaDB per le migrazioni.
-    Se il modello custom non si carica, ritorna 'chromadb_default' per
-    distinguerlo da una collection costruita col modello multilingua.
+    Restituisce il tag del modello configurato, salvato nei metadata della
+    collection ChromaDB per le migrazioni.
+
+    v1.16.1 — è sempre quello configurato (DEEPAIUG_EMBEDDING_MODEL o e5-small).
+    Fino alla 1.16.0, se il modello non si caricava, il tag diventava
+    «chromadb_default» e le collection venivano cancellate come se il modello
+    fosse cambiato (e di nuovo al suo ritorno).
     """
-    helper = get_embeddings_helper()
-    if helper is None:
-        return "chromadb_default"
     return EMBEDDING_MODEL_TAG
 
 
