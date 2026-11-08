@@ -88,6 +88,33 @@ class GatewayBlockedClient:
         raise GatewaySideCallBlocked(GATEWAY_NEEDS_PII)
 
 
+def hybrid_error_message(error: str) -> str:
+    """v1.16.1 — il messaggio del blocco con la configurazione ibrida illeggibile,
+    lo stesso per la chat e per le chiamate laterali."""
+    return f"🛡️ Configurazione ibrida non valida, messaggio non inviato: {error}"
+
+
+class HybridConfigBlockedClient:
+    """v1.16.1 — al posto del client vero quando la sezione hybrid: di
+    security_settings.yaml non si legge e la destinazione è fuori casa.
+    L'app non sa se rizzo-pii doveva essere acceso: non parte niente, da
+    nessuna via (chat, bottoni socratici, nudge, mappa)."""
+
+    pii_guard = False
+    hybrid_blocked = True
+    last_removed = 0
+    last_egress = ""
+
+    def __init__(self, error: str) -> None:
+        self._message = hybrid_error_message(error)
+
+    def invoke(self, *args: Any, **kwargs: Any) -> Any:
+        raise PIIGuardBlocked(self._message)
+
+    def stream_invoke(self, *args: Any, **kwargs: Any) -> Iterator[Any]:
+        raise PIIGuardBlocked(self._message)
+
+
 @dataclass
 class GuardedResponse:
     """Risposta di invoke: .text con i valori veri, già sul computer.

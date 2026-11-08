@@ -103,6 +103,7 @@ def create_client(
     hybrid: Any = None,
     on_anonymized: Any = None,
     pii_memory: Any = None,
+    hybrid_error: Any = None,
 ) -> Any:
     """
     Il punto unico verso i modelli (SPEC §3).
@@ -119,7 +120,18 @@ def create_client(
         hybrid: HybridSettings (config.hybrid_settings), opzionale
         on_anonymized: callback(n_dati_tolti), opzionale
         pii_memory: PIISessionMemory della sessione (giro 7b), opzionale
+        hybrid_error: il messaggio d'errore se la sezione hybrid: non si legge
+            (v1.16.1). Con la destinazione fuori casa: HybridConfigBlockedClient,
+            che non manda niente; in casa il client di sempre.
     """
+    if hybrid_error:
+        from core.egress import classify_destination
+
+        if classify_destination(connection_type, provider, base_url)["outside"]:
+            from core.pii_guard import HybridConfigBlockedClient
+
+            return HybridConfigBlockedClient(str(hybrid_error))
+
     if hybrid is not None:
         from core.egress import classify_destination
 
