@@ -7,8 +7,8 @@
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
 [![Version](https://img.shields.io/badge/version-1.16.0-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.16.0)
-[![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
+[![Python](https://img.shields.io/badge/python-3.10+-green.svg)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/streamlit-1.53-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -45,7 +45,7 @@ Dalla 1.16.0 c'è un **ambiente ibrido**, **opzionale e spento per default**: pr
 
 ## ✨ Features
 
-- 🤖 **Multi-provider**: Ollama (locale), Remote host, Cloud (OpenAI, Anthropic, Google)
+- 🤖 **Multi-provider**: Ollama (locale), Remote host, Cloud (OpenAI; Anthropic e Google con pacchetti aggiuntivi; endpoint «Custom» compatibile OpenAI)
 - 🧠 **Approccio Socratico** - Bottoni per esplorare prospettive alternative!
 - 🌊 **Streaming Responses** - Risposte token-by-token in tempo reale!
 - 💬 **Conversazioni multi-turno** con memoria del contesto
@@ -56,9 +56,11 @@ Dalla 1.16.0 c'è un **ambiente ibrido**, **opzionale e spento per default**: pr
 - 📚 **Chat KB** - Chat salvate come Knowledge Base epistemica con rilevanza e tipo
 - 🌐 **Multi-Wiki** - MediaWiki + DokuWiki support
 - 📎 **File Upload in Chat** - Allega PDF, DOCX, TXT, immagini
-- 👁️ **Vision local-only** - Immagini inviate ai modelli vision (LLaVA, Moondream) — mai su cloud! ⭐ NEW
+- 👁️ **Vision local-only** - Immagini inviate ai modelli vision (LLaVA, Moondream) — mai al cloud né a un host su Internet
+- 📊 **Mappa Sessione** - La cornice implicita delle tue domande, solo su richiesta
+- 🛡️ **Ambiente ibrido (opzionale, spento per default)** - rizzo-pii prima del cloud, Annona in sidebar e come gateway sperimentale
 - 🔐 **Privacy-First Protection** - Sistema completo protezione dati sensibili
-- 🎨 **UI moderna** con temi chiaro/scuro
+- 🎨 **Tema «Matrix»** personalizzabile (titolo, icona, banner, pioggia di caratteri in `branding.yaml`)
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
@@ -70,7 +72,7 @@ rizzo-pii prima del cloud (solo segnaposto al fornitore, valori veri ripristinat
 ### 👁️ Novità v1.15.3 — Vision local-only
 
 - **Vision collegata davvero**: le immagini allegate in chat vengono ora inviate ai modelli vision (LLaVA, Moondream) tramite `MediaBlock` di Datapizza — colma il TODO rimasto aperto nelle versioni precedenti
-- **Solo in locale**: funziona con provider Local (Ollama) e Remote host; verso il cloud l'upload immagini resta bloccato, coerente con l'approccio privacy-first
+- **Solo in locale**: funziona con provider Local (Ollama) e Remote host in LAN o Tailscale (dalla 1.16.0 un Remote host su IP pubblico è bloccato come il cloud); verso il cloud l'upload immagini resta bloccato, coerente con l'approccio privacy-first
 - **Immagini effimere**: mai salvate in conversazioni, Knowledge Base o vault — in cronologia restano solo i nomi dei file
 - **Regressione zero**: il ramo testuale della chat è invariato, con fallback automatico in caso di errore
 
@@ -113,7 +115,7 @@ rizzo-pii prima del cloud (solo segnaposto al fornitore, valori veri ripristinat
 - **Scroll automatico**: la chat segue la risposta durante lo streaming — nessun salto manuale
 - **Cursore `▌`**: visibile durante tutto lo streaming, rimosso a completamento
 - **UX familiare**: esperienza analoga a Claude.ai e ChatGPT, riduce la curva di apprendimento
-- ⚠️ *Questa è l'ultima release del ciclo v1.x — il progetto entra in maintenance mode. Tutta l'energia creativa va su v2.0.*
+- *Allora era annunciata come l'ultima release del ciclo v1.x; poi sono arrivate la 1.14.4, le 1.15.x e la 1.16.0.*
 
 ### 🧠 Novità v1.14.2 — Vault Used Flag + Icona nel Selettore
 
@@ -232,7 +234,7 @@ Ispirato al "capitale semantico" (Floridi/Quartarone).
 |---------|----------|
 | 🪞 Rifletti | Meta-riflessione sulla domanda stessa |
 
-**⚠️ Limiti** ⭐ NEW
+**⚠️ Limiti**
 - Identifica quando la risposta NON funziona
 - Casi limite ed eccezioni
 - Previene applicazioni errate
@@ -256,7 +258,7 @@ Le risposte dell'AI ora appaiono **token-by-token in tempo reale**, come in Chat
 **Provider supportati:**
 - ✅ **Ollama locale**: Streaming perfetto
 - ✅ **Remote host**: Streaming perfetto
-- ⚠️ **Cloud (OpenAI, etc)**: In arrivo
+- ✅ **Cloud (OpenAI, Anthropic, Google, Custom)**: Streaming (oggi per tutti i provider; l'unica eccezione è il gateway di Annona, sperimentale, che consegna la risposta tutta insieme)
 
 **Footer aggiornato:** 🤖 DeepAiUG by Gilles
 
@@ -270,20 +272,20 @@ Allega file direttamente nella chat, come in ChatGPT/Claude.ai!
 | Tipo | Formati | Note |
 |------|---------|------|
 | 📄 **Documenti** | PDF, TXT, MD, DOCX | Testo estratto e aggiunto al contesto |
-| 🖼️ **Immagini** | PNG, JPG, GIF, WEBP | Richiede modello Vision (LLaVA, Granite3.2-Vision) |
+| 🖼️ **Immagini** | PNG, JPG, JPEG, GIF, WEBP | Richiede modello Vision (LLaVA, Granite3-Vision, Moondream…) |
 
 ### 🔐 Privacy-First Protection
 Sistema completo per proteggere i tuoi documenti sensibili:
 
 | Protezione | Descrizione |
 |------------|-------------|
-| 🔒 **Upload bloccato su Cloud** | I file possono essere caricati solo con Ollama locale o Remote host |
+| 🔒 **Upload bloccato fuori casa** | I file possono essere caricati solo verso destinazioni «in casa»: Ollama locale, Remote host in LAN o Tailscale (dalla 1.16.0 conta la destinazione reale: un Remote host su IP pubblico è bloccato come il cloud) |
 | ⚠️ **Privacy Dialog** | Warning automatico quando passi da Local→Cloud con documenti in memoria |
 | 📢 **Banner promemoria** | Ricorda che la sessione contiene dati estratti da documenti |
 
 ---
 
-## 🏗️ Architettura v1.15.2
+## 🏗️ Architettura v1.16.0
 
 ```
 datapizza-streamlit-interface/
@@ -294,26 +296,42 @@ datapizza-streamlit-interface/
 ├── cloud_models.yaml         # Config modelli cloud
 ├── security_settings.yaml    # Impostazioni sicurezza
 ├── branding.yaml             # Personalizzazione titolo/icona/banner
+├── requirements.txt          # Dipendenze pinnate (==)
+├── requirements-dev.txt      # pytest, per i test
+├── MANUALE_DeepAiUG.md       # Manuale completo (installazione, uso, limiti)
+├── NOTICE / LICENSE          # Licenze (MIT; note su rizzo-pii e Annona)
+├── installer/                # Installer e updater Linux/Mac/Windows, diagnostica
+├── secrets/                  # Chiavi API salvate dalla UI (esclusa da git)
 │
 ├── config/                   # 📁 Configurazione
-│   ├── constants.py          # Costanti, WIKI_TYPES, VISION_MODELS
+│   ├── constants.py          # Costanti, WIKI_TYPES, VISION_MODEL_PATTERNS
 │   ├── settings.py           # Loader settings, API keys
-│   └── branding.py           # load_branding() + 6 costanti
+│   ├── branding.py           # load_branding() + 6 costanti
+│   └── hybrid_settings.py    # v1.16.0: lettore della sezione hybrid:
 │
 ├── core/                     # 📁 Logica core
 │   ├── llm_client.py         # Factory client LLM
 │   ├── conversation.py       # Gestione messaggi
 │   ├── persistence.py        # Salvataggio/caricamento (+ kb_metadata v1.14.0)
 │   ├── kb_chat_indexer.py    # ⭐ NEW v1.14.0: indicizzazione chat-KB ChromaDB
-│   └── file_processors.py    # Estrazione testo da file
+│   ├── file_processors.py    # Estrazione testo da file
+│   ├── url_validator.py      # v1.15.2: classificatore URL (anti-SSRF)
+│   ├── egress.py             # v1.16.0: destinazione reale (in casa / fuori casa)
+│   ├── pii_client.py         # v1.16.0: client di rizzo-pii
+│   ├── pii_guard.py          # v1.16.0: GuardedClient (segnaposto prima del cloud)
+│   ├── pii_memory.py         # v1.16.0: valori già tolti, in memoria per la sessione
+│   ├── annona_client.py      # v1.16.0: client di Annona
+│   └── annona_bridge.py      # v1.16.0: letture e gateway di Annona
 │
 ├── rag/                      # 📁 Sistema RAG
 │   ├── models.py             # Document, Chunk
 │   ├── chunker.py            # TextChunker intelligente
 │   ├── vector_store.py       # ChromaDB + fallback
 │   ├── manager.py            # KnowledgeBaseManager
+│   ├── embeddings.py         # v1.15.0: embedding multilingua e5, scelta del device
 │   ├── vault.py              # F3: detect, scan, parse canvas, update incrementale
 │   └── adapters/             # Sorgenti dati
+│       ├── base.py           # Classe base degli adapter
 │       ├── local_folder.py   # File locali
 │       ├── mediawiki.py      # API MediaWiki
 │       └── dokuwiki.py       # DokuWiki
@@ -326,11 +344,15 @@ datapizza-streamlit-interface/
 ├── export/                   # 📁 Sistema export
 │   └── exporters.py          # MD, JSON, TXT, PDF, ZIP
 │
-├── tests/                    # 📁 Test suite
-│   └── test_kb_chat_indexer.py  # ⭐ NEW v1.14.0: 23 test indicizzazione KB
+├── tests/                    # 📁 Test suite (pytest, servizi simulati)
+│   ├── conftest.py, fakes_http.py
+│   └── test_*.py             # 22 file: KB Chat, persistenza, egress, rizzo-pii, Annona, chat…
 │
 ├── docs/                     # 📁 Documentazione
-│   └── manuale_utente_kb_chat.md  # ⭐ NEW v1.14.0: guida utente KB Chat
+│   ├── SPEC_v1.16.0_hybrid.md     # SPEC dell'ambiente ibrido
+│   ├── AUDIT_pre_v1.16.0.md       # Audit prima della 1.16.0
+│   ├── adr/                       # Decisioni (ADR-0001 Vision local-only)
+│   └── manuale_utente_kb_chat.md  # Guida utente KB Chat (v1.14.0)
 │
 └── ui/                       # 📁 Interfaccia utente
     ├── styles.py             # CSS
@@ -350,6 +372,7 @@ datapizza-streamlit-interface/
         ├── conversations.py
         ├── export_ui.py
         ├── session_map_widget.py  # Widget mappa sessione (F2)
+        ├── annona_panel.py        # v1.16.0: sezione «🧭 Annona»
         └── kb_panel.py            # ⭐ NEW v1.14.0: pannello gestione KB Chat
 ```
 
@@ -360,7 +383,7 @@ datapizza-streamlit-interface/
 ### Prerequisiti
 
 ```bash
-# Python 3.9+
+# Python 3.10+ (gli installer usano 3.12)
 python --version
 
 # Ollama (per modelli locali)
@@ -416,26 +439,25 @@ llmfit --memory=8G --cli
 
 ## 🔧 Installazione avanzata (sviluppatori)
 
-### Metodo 1: Script Automatico (da repo clonata)
+### Metodo 1: Installer (da repo clonata)
 
-#### Linux/Mac
+Gli script `install.sh` e `install.bat` nella root rimandano soltanto agli installer veri, che stanno in `installer/`.
+
+#### Linux / Mac
 ```bash
 git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
-cd datapizza-streamlit-interface
-chmod +x install.sh
-./install.sh
+cd datapizza-streamlit-interface/installer
+bash installa_deepaiug_linux.sh   # su Mac: bash installa_deepaiug_mac.sh
 ```
 
 #### Windows
-```bash
-git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
-cd datapizza-streamlit-interface
-install.bat
-```
+Tasto destro su `installer\INSTALLA_DeepAiUG.bat` → «Esegui come amministratore».
+
+Gli installer mettono l'app in `~/DeepAiUG` (scaricando lo ZIP del ramo `main`), creano il venv, installano Ollama se manca e propongono un modello in base alla RAM. Dettagli nel Capitolo 3 di [MANUALE_DeepAiUG.md](MANUALE_DeepAiUG.md).
 
 ---
 
-### Metodo 2: Installazione Manuale Passo-Passo
+### Metodo 2: Installazione manuale (come fanno gli installer)
 
 #### 1. Clona il repository
 ```bash
@@ -443,7 +465,7 @@ git clone https://github.com/EnzoGitHub27/datapizza-streamlit-interface.git
 cd datapizza-streamlit-interface
 ```
 
-#### 2. Crea un ambiente virtuale
+#### 2. Crea un ambiente virtuale (Python 3.10 o più recente)
 ```bash
 python3 -m venv venv
 source venv/bin/activate  # Linux/Mac
@@ -452,37 +474,26 @@ venv\Scripts\activate  # Windows
 ```
 
 #### 3. Installa le dipendenze nell'ordine corretto
-
 ```bash
-# 3.1 - Dipendenze base
-pip install streamlit python-dotenv reportlab pyyaml
-
-# 3.2 - Datapizza AI core (PRIMA dei client!)
+# 3.1 - Datapizza AI (PRIMA di requirements.txt: i client ne dipendono)
 pip install datapizza-ai
 
-# 3.3 - Client provider (DOPO datapizza-ai)
-pip install datapizza-ai-clients-openai-like  # Per Ollama
-pip install datapizza-ai-clients-openai       # Per OpenAI
-pip install datapizza-ai-clients-anthropic    # Per Anthropic
-pip install datapizza-ai-clients-google       # Per Google
+# 3.2 - Tutto il resto, con le versioni fissate
+pip install -r requirements.txt --prefer-binary
+
+# 3.3 - Facoltativo: solo se usi Anthropic o Google (non sono in requirements.txt)
+pip install datapizza-ai-clients-anthropic datapizza-ai-clients-google
 ```
 
-#### 4. Dipendenze aggiuntive
+`sentence-transformers` porta con sé `torch` (centinaia di MB): l'installazione può durare diversi minuti.
+
+#### 4. Per i test (sviluppatori)
 ```bash
-pip install chromadb beautifulsoup4 PyPDF2    # RAG
-pip install mwclient dokuwiki                  # Wiki
-pip install python-docx Pillow                 # File Upload
+pip install -r requirements-dev.txt
+python -m pytest
 ```
 
----
-
-### Metodo 3: Poetry
-
-```bash
-poetry env use python3.12
-poetry install
-poetry shell
-```
+> **Poetry non è un percorso supportato**: `pyproject.toml` non elenca tutte le dipendenze (mancano chromadb, sentence-transformers, pypdf, mwclient, dokuwiki, reportlab, python-docx, Pillow). Usa `requirements.txt`.
 
 ---
 
@@ -529,10 +540,10 @@ Puoi inserire le API keys direttamente dall'interfaccia Streamlit!
 
 ### Privacy Mode 🔒
 
-Quando la Knowledge Base è attiva:
-- ☁️ **Cloud provider BLOCCATO** automaticamente
-- 💻 Solo **Ollama locale** o **Remote host** permessi
-- 🔒 I tuoi documenti **non escono mai** dal tuo computer
+Quando la Knowledge Base (o la KB Chat) è attiva:
+- ☁️ **Le destinazioni «fuori casa» sono BLOCCATE**: i provider cloud e, dalla 1.16.0, un Remote host su IP pubblico
+- 💻 Restano permessi **Ollama locale** e i **Remote host in LAN o Tailscale**
+- 🔒 I tuoi documenti **non escono dalla tua rete** (con un Remote host in LAN escono dal computer, ma restano in casa)
 
 ---
 
@@ -550,39 +561,15 @@ ollama pull qwen2.5-coder
 # Modelli multimodali (per immagini)
 ollama pull llava
 ollama pull granite3.2-vision
-
-# Modello per embeddings (RAG)
-ollama pull nomic-embed-text
 ```
+
+Gli embedding della Knowledge Base **non usano Ollama**: li calcola `sentence-transformers` con `intfloat/multilingual-e5-small` (~118 MB, scaricato da HuggingFace al primo uso).
 
 ---
 
 ## 📋 Dipendenze
 
-```txt
-# Core
-streamlit>=1.28.0
-datapizza-ai
-datapizza-ai-clients-openai-like
-python-dotenv>=1.0.0
-pyyaml>=6.0
-
-# RAG
-chromadb>=0.4.0
-beautifulsoup4>=4.12.0
-PyPDF2>=3.0.0
-
-# Wiki Adapters
-mwclient>=0.10.0
-dokuwiki>=0.1.0
-
-# File Upload
-python-docx>=0.8.0
-Pillow>=10.0.0
-
-# Export
-reportlab>=4.0.0
-```
+L'elenco esatto, con le versioni fissate (`==`), è in [requirements.txt](requirements.txt): Streamlit 1.53.1, `datapizza-ai` e `datapizza-ai-clients-openai-like`, ChromaDB, `sentence-transformers`, `pypdf`, `mwclient`, `dokuwiki`, `python-docx`, Pillow, `reportlab`. Anthropic e Google richiedono in più `datapizza-ai-clients-anthropic` e `datapizza-ai-clients-google`.
 
 ---
 
@@ -598,7 +585,7 @@ Vedi [ROADMAP.md](ROADMAP.md) per il piano completo.
 | v1.15.2 | 🔒 Security Audit — SSRF, cloud-block esteso a KB Chat, banner onesti, hardening | ✅ |
 | v1.15.1 | 🩹 Fix installer/updater "bloccato" durante pip install (output visibile a schermo) | ✅ |
 | v1.15.0 | 🌍 Embedding multilingua e5-small per RAG (qualità retrieval IT) | ✅ |
-| v1.14.4 | 🩹 Fix visibilità Knowledge Base sidebar + icone installer Linux/Win/Mac | ✅ |
+| v1.14.4 | 🩹 Fix visibilità Knowledge Base sidebar + icone installer Linux/Win/Mac (SPEC in `docs/`) | ✅ |
 | v1.14.3 | 🌊 Scroll fix + Typing indicator animato | ✅ |
 | v1.14.2 | 🧠 vault_used flag + icona nel selettore conversazioni | ✅ |
 | v1.14.1 | 🔧 UX fix KB Chat (ordine, caption, bulk-flag, warning) | ✅ |
