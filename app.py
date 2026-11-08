@@ -171,6 +171,7 @@ from ui.file_upload import (
 )
 
 # 🆕 v1.5.0 - Privacy warning dialog
+from ui.conversation_reset import reset_conversation  # v1.16.1: una funzione sola
 from ui.privacy_warning import (
     check_privacy_risk,
     render_privacy_dialog,
@@ -334,33 +335,6 @@ def _save_current_conversation():
         pii_guard=st.session_state.get("pii_guard"),  # v1.16.0
         pii_removed=st.session_state.get("pii_removed", 0),  # v1.16.0
     )
-
-def reset_conversation():
-    """Resetta la conversazione corrente."""
-    st.session_state["messages"] = []
-    st.session_state["conversation_id"] = generate_conversation_id()
-    st.session_state["conversation_created_at"] = datetime.now().isoformat()
-    st.session_state["total_tokens_estimate"] = 0
-    # v1.14.0 - Reset KB metadata
-    st.session_state["kb_metadata"] = dict(KB_METADATA_DEFAULT)
-    # v1.14.2 - Reset vault_used
-    st.session_state["vault_used"] = False
-    # v1.16.0 - Reset metadati del guard
-    st.session_state.pop("pii_guard", None)
-    st.session_state["pii_removed"] = 0
-    st.session_state["egress_views"] = {}  # P9: solo sessione
-    st.session_state.pop("_pii_memory", None)  # giro 7b: la memoria dei valori tolti si azzera
-    # 🆕 v1.5.0 - Pulisci anche file pending e flag privacy
-    clear_pending_files()
-    reset_privacy_flags()
-    # 🆕 v1.6.1 - Pulisci cache socratica
-    clear_socratic_cache()
-    # 🆕 v1.9.0 - Pulisci storico socratico
-    SocraticHistory.clear_history()
-    # 🆕 v1.10.0 - Reset mappa sessione
-    st.session_state["session_map_data"] = None
-    st.session_state["n_domande_sessione"] = 0
-    st.session_state["nudge_mostrato"] = False
 
 # ============================================================================
 # 🆕 v1.6.1 - SOCRATIC CLIENT HELPER
