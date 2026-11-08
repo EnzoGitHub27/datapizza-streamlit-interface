@@ -83,20 +83,22 @@ def render_socratic_history_sidebar(socratic_mode: str = "standard") -> None:
 
     # Checkbox conferma + bottone
     confirm_key = "confirm_clear_socratic_history"
-    if confirm_key not in st.session_state:
-        st.session_state[confirm_key] = False
+    confirm = st.sidebar.checkbox("Conferma cancellazione", key=confirm_key)
 
-    confirm = st.sidebar.checkbox(
-        "Conferma cancellazione",
-        key=confirm_key,
-        value=st.session_state[confirm_key]
-    )
-
-    if st.sidebar.button(
+    # v1.16.1 — la cancellazione sta nel callback del bottone: gira prima che
+    # i widget si ridisegnino, quindi può rimettere a False la casella (dopo,
+    # Streamlit dà StreamlitAPIException), e chiede il salvataggio su disco
+    st.sidebar.button(
         "🗑️ Cancella storico",
         disabled=not confirm,
-        help="Seleziona 'Conferma cancellazione' prima di procedere"
-    ):
-        SocraticHistory.clear_history()
-        st.session_state[confirm_key] = False
-        st.rerun()
+        help="Seleziona 'Conferma cancellazione' prima di procedere",
+        on_click=_clear_history,
+        args=(confirm_key,),
+    )
+
+
+def _clear_history(confirm_key: str) -> None:
+    """Svuota lo storico, toglie la conferma e fa salvare la conversazione."""
+    SocraticHistory.clear_history()
+    st.session_state[confirm_key] = False
+    st.session_state["_socratic_save_needed"] = True
