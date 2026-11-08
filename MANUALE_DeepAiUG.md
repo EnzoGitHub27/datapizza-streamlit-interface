@@ -88,7 +88,7 @@ DeepAiUG è un'interfaccia web (basata su Streamlit) per dialogare con modelli l
 ## 2.2 Python
 
 - **Requisito operativo verificato dagli script**: Python **≥ 3.10**.
-- Gli installer, quando Python manca, installano **Python 3.12** (su macOS scaricano `python-3.12.10-macos11.pkg`).
+- Quando Python manca: su **Windows** l'installer scarica Python 3.12.10; su **macOS** usa Homebrew (`python@3.12`) o scarica `python-3.12.10-macos11.pkg`; su **Linux** installa il `python3` della distribuzione (apt/dnf/pacman), qualunque versione sia. Su Windows un Python già presente nel PATH viene usato senza controllarne la versione.
 - **Poetry non è un percorso supportato**: `pyproject.toml` (che richiede `python >= 3.12, < 3.14`) non elenca tutte le dipendenze (mancano tra gli altri chromadb, sentence-transformers, pypdf, mwclient, dokuwiki, reportlab, python-docx, Pillow) e ha pin diversi da `requirements.txt`. Usare `requirements.txt`, come fanno gli installer.
 
 ## 2.3 Dipendenze principali (`requirements.txt`)
@@ -98,7 +98,7 @@ Dalla v1.15.2 il `requirements.txt` **pinna tutte le dipendenze** (`==`) per bui
 | Area | Pacchetti (pin v1.15.2) |
 |---|---|
 | Core | `streamlit==1.53.1`, `python-dotenv==1.2.2`, `pyyaml==6.0.3` |
-| Framework LLM | `datapizza-ai==0.0.9` (da installare **prima**, con `datapizza-ai-core`, `datapizza-ai-embedders-openai`, `datapizza-ai-vectorstores-qdrant`, `datapizza-ai-clients-openai`), poi `datapizza-ai-clients-openai-like==0.0.11` |
+| Framework LLM | `datapizza-ai==0.0.9` (con `datapizza-ai-core`, `datapizza-ai-embedders-openai`, `datapizza-ai-vectorstores-qdrant`, `datapizza-ai-clients-openai`) e `datapizza-ai-clients-openai-like==0.0.11`. Gli installer fanno prima `pip install datapizza-ai` **senza versione** (gli updater con `--upgrade`), poi `requirements.txt` riporta i pin |
 | RAG | `chromadb==1.4.1`, `sentence-transformers==5.4.1`, `beautifulsoup4==4.15.0`, `pypdf==6.14.2` |
 | Wiki | `mwclient==0.11.0`, `dokuwiki==1.3.3` |
 | Export | `reportlab==4.4.9` |
@@ -108,7 +108,7 @@ Dalla v1.15.2 il `requirements.txt` **pinna tutte le dipendenze** (`==`) per bui
 
 ⚠️ **Ordine di installazione critico**: `datapizza-ai` va installato **prima** di `requirements.txt`, perché `datapizza-ai-clients-openai-like` ne dipende. Gli installer ufficiali rispettano già quest'ordine.
 
-⚠️ **Spazio disco**: `sentence-transformers` trascina `torch` come dipendenza (≈ 888 MB su Linux, ≈ 250 MB su Mac). Al primo utilizzo del RAG viene inoltre scaricato da HuggingFace il modello di embedding `intfloat/multilingual-e5-small` (≈ 118 MB, cache in `~/.cache/huggingface/hub/`).
+⚠️ **Spazio disco**: `sentence-transformers` trascina `torch` come dipendenza (≈ 888 MB su Linux, ≈ 250 MB su Mac). Al primo utilizzo del RAG viene inoltre scaricato da HuggingFace il modello di embedding `intfloat/multilingual-e5-small` (≈ 118 MB, cache in `~/.cache/huggingface/hub/`); dalla 1.16.0, se è già sul disco, si carica senza nessuna richiesta di rete (Cap. 9.3).
 
 ## 2.4 Ollama e hardware
 
@@ -127,7 +127,7 @@ Dalla v1.15.2 il `requirements.txt` **pinna tutte le dipendenze** (`==`) per bui
 
 # Capitolo 3 — Installazione
 
-Gli script si trovano nella cartella `installer/`. Il file `install.sh` nella root è solo un rimando informativo.
+Gli script si trovano nella cartella `installer/`. I file `install.sh` e `install.bat` nella root sono solo un rimando informativo.
 
 **Percorsi e costanti comuni a tutti gli script:**
 
@@ -169,7 +169,7 @@ Stessa logica in 12 passi, con queste differenze:
 - Tasto destro su `INSTALLA_DeepAiUG.bat` → **«Esegui come amministratore»**: lo script verifica i permessi (`net session`) e si ferma se mancano.
 - Installa in `%USERPROFILE%\DeepAiUG`, con log in `%USERPROFILE%\DeepAiUG_install_log.txt`.
 - Se mancano, scarica **Python 3.12.10** (python.org) e **Ollama** (`OllamaSetup.exe`).
-- Crea l'**icona DeepAiUG sul Desktop** per l'avvio.
+- Crea il launcher `%USERPROFILE%\DeepAiUG\DeepAiUG.bat` e l'**icona DeepAiUG sul Desktop** (`DeepAiUG.lnk`) per l'avvio.
 - Aggiornamento: `installer/AGGIORNA_DeepAiUG.bat`; diagnostica: `installer/CHECK_DeepAiUG.bat` (vedi anche `installer/INIZIA-QUI.txt`).
 
 ## 3.4 Cosa fare dopo l'installazione
@@ -182,18 +182,25 @@ Stessa logica in 12 passi, con queste differenze:
 
 # Capitolo 4 — Aggiornamento e diagnostica
 
-## 4.1 Aggiornamento — `aggiorna_deepaiug_linux.sh` / `aggiorna_deepaiug_mac.sh`
+## 4.1 Aggiornamento — `aggiorna_deepaiug_linux.sh` / `aggiorna_deepaiug_mac.sh` / `AGGIORNA_DeepAiUG.bat`
 
-Gli script di aggiornamento (log in `~/DeepAiUG_update_log.txt`):
+Gli script di aggiornamento (log in `~/DeepAiUG_update_log.txt`; gli script Linux e Mac sono uguali salvo i testi; quello Windows va lanciato come amministratore):
 
 1. Verificano la presenza di `~/DeepAiUG` e del virtualenv.
 2. Leggono la versione installata da `config/constants.py`.
-3. **Eseguono un backup di `conversations/`** in `~/DeepAiUG_backup_conversations`.
+3. **Eseguono un backup di `conversations/`** in `~/DeepAiUG_backup_conversations` (Windows: `%USERPROFILE%\DeepAiUG_backup_conversations`). È una cartella unica, senza data: a ogni aggiornamento i file con lo stesso nome vengono sovrascritti.
 4. Scaricano ed estraggono il nuovo ZIP da GitHub.
-5. **Aggiornano solo il codice**: `app.py`, `requirements.txt`, `pyproject.toml` e le cartelle `config/`, `core/`, `ui/`, `rag/`, `export/`, `installer/`, `.streamlit/`.
-6. **Preservano** (non toccano mai): `conversations/`, `secrets/`, `.env`, `branding.yaml`, `cloud_models.yaml`, `remote_servers.yaml`, `security_settings.yaml`, `wiki_sources.yaml`. Le personalizzazioni sopravvivono quindi agli aggiornamenti.
+5. **Aggiornano solo il codice**: `app.py`, `requirements.txt`, `pyproject.toml` e le cartelle `config/`, `core/`, `ui/`, `rag/`, `export/`, `installer/`, `.streamlit/`. Copiano soltanto: i file tolti a monte restano sul disco. **Non** copiano documentazione e test: `docs/` (compresa `docs/SPEC_v1.16.0_hybrid.md`), `tests/`, `examples/`, `README.md`, `MANUALE_DeepAiUG.md`, `CHANGELOG.md`, `NOTICE`, `LICENSE`, `requirements-dev.txt`. Per leggerli, usa il repository su GitHub.
+6. **Preservano** (non toccano mai): `conversations/`, `secrets/`, `.env`, `branding.yaml`, `cloud_models.yaml`, `remote_servers.yaml`, `security_settings.yaml`, `wiki_sources.yaml`. ⚠️ `.streamlit/` invece **viene sovrascritta**: un tema personalizzato o una sezione `[server]` aggiunta a `.streamlit/config.toml` si perdono a ogni aggiornamento (meglio passare le opzioni server sulla riga di comando, Cap. 5.2).
 7. Aggiornano `datapizza-ai` e le dipendenze (`pip install -r requirements.txt --upgrade --prefer-binary`, output visibile).
 8. Mostrano un riepilogo con vecchia e nuova versione.
+
+⚠️ **Aggiornando alla 1.16.0 da una versione precedente: la sezione `hybrid:` non c'è.** Poiché `security_settings.yaml` viene preservato, chi aggiorna tiene il proprio file, senza la sezione dell'ambiente ibrido. È giusto così: senza sezione l'ibrido resta **spento** e l'app si comporta come la 1.15.4 (salvo la regola della destinazione reale, Cap. 21.4). Per accenderlo:
+
+1. apri `~/DeepAiUG/security_settings.yaml` con un editor di testo;
+2. aggiungi in fondo il blocco `hybrid:` del Capitolo 21.3 (lo stesso del file `security_settings.yaml` nel repository su GitHub), rispettando i rientri di due spazi;
+3. installa e avvia rizzo-pii (ed eventualmente Annona) come nel Capitolo 21.2, poi metti `enabled: true` dove serve;
+4. riavvia DeepAiUG. Se il blocco è scritto male, l'app non lo ignora: blocca gli invii verso fuori casa con «🛡️ Configurazione ibrida non valida, messaggio non inviato: …» finché non lo correggi.
 
 ⚠️ **Dopo l'aggiornamento a v1.15.0 o successive** da una versione precedente: il modello di embedding è cambiato, quindi le collection ChromaDB esistenti vengono automaticamente svuotate al primo avvio (migration check). Gli utenti devono **ri-indicizzare** le proprie sorgenti (cartelle/wiki/vault) e premere "🔄 Aggiorna KB Chat". Il primo utilizzo scarica il nuovo modello (~118 MB).
 
@@ -227,7 +234,7 @@ I launcher creati dall'installer fanno esattamente questo, avviando prima Ollama
 
 # Capitolo 6 — File di configurazione
 
-Tutti i file YAML risiedono nella **root del progetto** (con percorso alternativo `config/<nome>.yaml`); sono letti con `yaml.safe_load`. Se un file manca o è malformato si usano i default senza errori. Nessuno di questi file viene sovrascritto dagli script di aggiornamento.
+Tutti i file YAML risiedono nella **root del progetto** (per tutti tranne `branding.yaml` è accettato anche `config/<nome>.yaml`); sono letti con `yaml.safe_load`. Se un file manca o è malformato si usano i default, con un avviso nel terminale (es. «⚠️ Errore lettura security settings: …»). **Eccezione:** la sezione `hybrid:` di `security_settings.yaml` non ricade mai in silenzio sui default: un errore blocca gli invii verso fuori casa (Cap. 21.3). Nessuno di questi file viene sovrascritto dagli script di aggiornamento.
 
 ## 6.1 `branding.yaml` — personalizzazione dell'aspetto
 
@@ -254,26 +261,38 @@ settings:
 providers:
   openai:
     name: "OpenAI"
+    icon: "🟢"
     base_url: "https://api.openai.com/v1"
     models:
       - {id: "gpt-4o", name: "GPT-4o"}
-      - {id: "gpt-4o-mini", name: "GPT-4o mini"}
+      - {id: "gpt-4o-mini", name: "GPT-4o Mini"}
       - {id: "o3-mini", name: "o3-mini"}
     default_model: "gpt-4o-mini"
   anthropic:
     name: "Anthropic (Claude)"
+    icon: "🟣"
     base_url: "https://api.anthropic.com/v1"
     models: [...]             # claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001
     default_model: "claude-sonnet-4-5-20250929"
   google:
     name: "Google Gemini"
+    icon: "🔵"
     base_url: "https://generativelanguage.googleapis.com/v1beta/openai"
     models: [...]             # gemini-2.0-flash, gemini-2.5-pro-preview-06-05
     default_model: "gemini-2.0-flash"
-  custom: {}                  # base_url e modelli liberi
+  custom:
+    name: "Custom"
+    icon: "⚙️"
+    base_url: ""              # da scrivere qui: la UI non ha un campo Base URL
+    models: []
+    default_model: ""
 ```
 
-⚠️ Per **Custom** la UI non ha un campo Base URL: vale il `base_url` scritto qui dal sistemista (nel file fornito è vuoto). L'utente sceglie solo il modello.
+Regole da sapere:
+
+- **Il client si sceglie dal `name`**: solo `"OpenAI"`, `"Anthropic (Claude)"` e `"Google Gemini"`, scritti esattamente così, usano i client nativi, e per loro il `base_url` del file **non conta**. Un provider rinominato o aggiunto (es. `mistral`) passa dal client compatibile OpenAI con il `base_url` scritto qui.
+- **La chiave di un provider aggiunto** si legge da `<ID>_API_KEY` (id in maiuscolo: `mistral` → `MISTRAL_API_KEY`) o da `secrets/<id>_key.txt`.
+- ⚠️ Per **Custom** la UI non ha un campo Base URL: vale il `base_url` scritto qui dal sistemista. **Nel file fornito è vuoto**, e un URL vuoto conta come destinazione non verificabile, cioè «fuori casa»: finché il sistemista non lo compila, Custom non è utilizzabile.
 
 Se il file manca, la UI usa i provider hardcoded in `config/constants.py` (OpenAI → `gpt-4o-mini`, Anthropic → `claude-sonnet-4-20250514`, Google → `gemini-1.5-pro`, Custom).
 
@@ -284,15 +303,18 @@ mode: "custom_allowed"        # "fixed" | "selectable" | "custom_allowed"
 default_server: "proxmox_p6000"
 servers:
   proxmox_p6000:
-    name: "Proxmox P6000"
-    icon: "🖥️"
+    name: "Proxmox P6000 24GB"
+    icon: "🚀"                # default nel codice: 🖥️
     host: "192.168.1.10"      # default: localhost
     port: 11434               # default: 11434
     description: "..."
   dopey:
+    name: "Dopey 8GB"
+    icon: "🤖"
     host: "192.168.1.151"
+    port: 11434
 settings:
-  connection_timeout: 10      # secondi
+  connection_timeout: 10      # letto ma senza effetto: il timeout è fisso a 10 s
   show_refresh_button: true   # mostra "🔄 Aggiorna modelli"
 ```
 
@@ -305,44 +327,50 @@ Significato di `mode`:
 
 ```yaml
 cloud_api_keys:
-  show_saved_keys: false      # default SICURO: chiavi salvate mascherate in UI
+  show_saved_keys: false      # default SICURO: chiavi salvate nascoste in UI
   hidden_message: "✅ Key salvata (nascosta per sicurezza)"
   visible_message: "✅ Key salvata (visibile)"
+hybrid:                       # v1.16.0, tutto spento: vedi il Capitolo 21.3
+  ...
 # remote_servers:             # placeholder NON implementato
 #   require_authentication: ...
 #   log_connections: ...
 ```
 
-L'unica impostazione attiva nella 1.15.4 è `show_saved_keys`. La sezione `remote_servers` è un segnaposto commentato senza effetto. Dalla 1.16.0 il file ha anche la sezione `hybrid:`, spenta per default: vedi il Capitolo 21.3.
+`show_saved_keys` decide se la chiave salvata compare nella UI (in un campo password, mascherata ma rivelabile con l'occhio) o resta nascosta. La sezione `hybrid:` (dalla 1.16.0, spenta per default) è descritta nel Capitolo 21.3; chi aggiorna da una versione precedente non ce l'ha (Cap. 4.1). La sezione `remote_servers` è un segnaposto commentato senza effetto.
 
 ## 6.5 `wiki_sources.yaml` — sorgenti wiki e documentali
 
 Definisce le sorgenti della Knowledge Base offerte all'utente. Struttura di primo livello:
 
 ```yaml
-mode: "selectable"            # come remote_servers: fixed | selectable | custom
+mode: "selectable"            # fixed | selectable | custom (Cap. 14.2); senza chiave: selectable; senza file: custom
 default_source: "wikipedia_it"
 sources:                      # (retrocompatibile con la vecchia chiave "wikis")
   <id>:
     name: "..."
-    type: mediawiki | dokuwiki | local_folder
-    url / path: ...
+    icon: "🌐"
+    description: "..."
+    type: mediawiki | dokuwiki | local
+    url: ...                  # wiki; per type: local la chiave è folder_path
     api_path: "/w/api.php"    # MediaWiki
     namespaces: [0]
     max_pages: 30
     timeout: 30
     exclude_categories: [...] # o exclude_namespaces per DokuWiki
-    username: "${WIKI_USER}"  # credenziali via variabili d'ambiente ${VAR}
+    requires_auth: false
+    password: "${DOKUWIKI_PASS}"  # credenziali via variabili d'ambiente ${VAR}
 global_settings:
-  cache_dir: "wiki_cache"
-  cache_ttl_hours: 24
+  cache_dir: "wiki_cache"     # relativo alla cartella da cui si avvia l'app
+  cache_ttl_hours: 24         # letto ma senza effetto
   request_delay: 0.5          # pausa tra richieste HTTP (rispetto dei server)
   batch_size: 50
   strip_wiki_markup: true
-  include_metadata: true
+  include_metadata: true      # letto ma senza effetto
+  user_agent: "DatapizzaBot/1.4.1 (...)"
 ```
 
-Il file di esempio contiene 9 sorgenti: 2 MediaWiki interne/di test, 2 DokuWiki, 1 cartella locale, e 4 wiki pubbliche di prova (Wikipedia IT/EN, Wikivoyage IT, Wikibooks IT). Le credenziali (`username`, `password`, `api_key`, `token`) possono essere espresse come `${NOME_VARIABILE}` e vengono espanse dalle variabili d'ambiente.
+Il file di esempio contiene 9 sorgenti: 2 MediaWiki interne/di test, 2 DokuWiki, 1 cartella locale, e 4 wiki pubbliche di prova (Wikipedia IT/EN, Wikivoyage IT, Wikibooks IT). Le credenziali (`username`, `password`, `api_key`, `token`) possono essere espresse come `${NOME_VARIABILE}` e vengono espanse dalle variabili d'ambiente; il valore deve essere **tutto** `${…}` (niente testo prima o dopo).
 
 ## 6.6 Variabili d'ambiente riconosciute
 
@@ -352,10 +380,12 @@ Il file di esempio contiene 9 sorgenti: 2 MediaWiki interne/di test, 2 DokuWiki,
 | `ANTHROPIC_API_KEY` | Chiave Anthropic |
 | `GOOGLE_API_KEY` | Chiave Google Gemini |
 | `CUSTOM_API_KEY` | Chiave per provider custom |
+| `<ID>_API_KEY` | Chiave di un provider aggiunto in `cloud_models.yaml` (es. `MISTRAL_API_KEY`) |
 | `DEEPAIUG_EMBEDDING_MODEL` | Override del modello di embedding RAG (es. `intfloat/multilingual-e5-base`) |
+| `DEEPAIUG_EMBEDDINGS_DEVICE` | `cpu` o `cuda`: forza il device degli embedding (Cap. 2.4) |
 | `${VAR}` nei YAML wiki | Credenziali wiki espanse a runtime |
 
-È supportato un file **`.env`** nella root (caricato con `python-dotenv`).
+È supportato un file **`.env`** nella root (caricato con `python-dotenv`), ma viene letto **solo quando la sidebar cerca una chiave cloud**: vale per le chiavi API. Le variabili `DEEPAIUG_*` e le `${VAR}` delle wiki vanno impostate nell'ambiente prima di avviare l'app (per esempio nel launcher), non in `.env`.
 
 ---
 
@@ -367,10 +397,13 @@ Le chiavi dei provider cloud **non** stanno in `cloud_models.yaml`. Sono lette i
 2. **File secrets**: `secrets/<provider>_key.txt` (es. `secrets/openai_key.txt`, `secrets/anthropic_key.txt`).
 3. **Interfaccia web**: l'utente inserisce la chiave nella sidebar; il bottone "💾 Salva" la scrive in `secrets/<provider>_key.txt` (la cartella viene creata al bisogno).
 
+⚠️ Se la variabile d'ambiente è impostata, vince sempre: una chiave salvata dalla UI viene scritta nel file ma **non usata**, anche se la UI conferma il salvataggio. E la UI mostra «✅ Key salvata (…)» anche quando la chiave viene dall'ambiente.
+
 **Precauzioni per l'amministratore:**
 
 - `secrets/` è esclusa da git (`.gitignore`), ma i file sono salvati **in chiaro**. Dalla v1.15.2 le chiavi salvate dalla UI hanno permessi **0600** (solo il proprietario); controllare i permessi solo dei file creati a mano (`chmod 600 secrets/*.txt`) e preferire variabili d'ambiente o `.env` con permessi ristretti.
-- La visualizzazione in chiaro delle chiavi salvate nella UI è disattivata di default (`show_saved_keys: false` in `security_settings.yaml`); lasciarla così salvo necessità.
+- La cartella `secrets/` viene creata con i permessi di default del sistema: restringila a mano (`chmod 700 secrets`) su macchine condivise.
+- La visualizzazione delle chiavi salvate nella UI è disattivata di default (`show_saved_keys: false` in `security_settings.yaml`); lasciarla così salvo necessità.
 - Non lasciare copie di backup dei file chiave in cartelle sincronizzate o mondo-leggibili.
 
 ---
@@ -385,12 +418,17 @@ Tutti i percorsi sono relativi alla cartella di installazione (`~/DeepAiUG` con 
 | `knowledge_base/vectorstore/` | Vector store ChromaDB della KB documentale (wiki/cartelle/vault) — `chroma.sqlite3` + cartelle UUID | Collection: `wiki_knowledge_base` |
 | `knowledge_base/chat_kb_vectorstore/` | Vector store ChromaDB della KB Chat | Collection: `deepaiug_chat_kb` |
 | `knowledge_base/chat_kb_meta.json` | Metadati indicizzazione KB Chat (`last_indexed`, `chats_indexed`, `total_chunks`) | |
-| `wiki_cache/` | File `sync_<id>.json` / `sync_doku_<id>.json`: **solo statistiche** dell'ultimo sync wiki (pagine totali/caricate, URL, timestamp) — non contengono le pagine | |
+| `wiki_cache/` | File `sync_<hash dell'URL>.json` / `sync_doku_<hash>.json`: **solo statistiche** dell'ultimo sync wiki (pagine totali/caricate, URL, timestamp) — non contengono le pagine | |
 | `secrets/` | Chiavi API in file di testo | In chiaro — vedi Cap. 7 |
 | `.env` | Variabili d'ambiente opzionali | |
 | `~/.cache/huggingface/hub/` | Cache del modello di embedding scaricato | Fuori dal progetto |
+| `~/DeepAiUG_install_log.txt`, `~/DeepAiUG_update_log.txt` | Log di installazione e aggiornamento | Fuori dal progetto |
+| `~/DeepAiUG_backup_conversations/` | Backup delle conversazioni fatto dall'updater | Fuori dal progetto, sovrascritto a ogni aggiornamento |
+| Launcher | `avvia_deepaiug.sh` + `~/.local/share/applications/deepaiug.desktop` (Linux), `DeepAiUG.command`/`DeepAiUG.app` (Mac), `DeepAiUG.bat` + `DeepAiUG.lnk` sul Desktop (Windows) | Creati dall'installer |
 
-**Contenuto di un file conversazione**: messaggi completi, statistiche (token stimati), impostazioni della Knowledge Base usata, storico delle esplorazioni socratiche, metadati KB (`kb_metadata`: `includi_in_kb`, `rilevanza`, `tipo`, `note`) e il flag `vault_used` (true se la chat è stata condotta con un vault attivo).
+**Contenuto di un file conversazione**: `conversation_id`, `created_at`, `last_updated`, `model` e `provider` (dell'ultima risposta; `models_used` se hanno risposto più modelli), i messaggi completi, `stats` (`total_messages`, `tokens_estimate`), le impostazioni della Knowledge Base usata (`knowledge_base`), lo storico delle esplorazioni socratiche, i metadati KB (`kb_metadata`: `includi_in_kb`, `rilevanza`, `tipo`, `note`) e il flag `vault_used` (true se la chat è stata condotta con un vault attivo). Dalla 1.16.0, se è stato usato rizzo-pii, anche `pii_guard` e, nei messaggi, `pii_removed`: **solo il numero** dei dati tolti, mai i valori.
+
+**L'ambiente ibrido non crea file**: la tabella segnaposto → valore vive solo in memoria (Cap. 21.5); il registro di Annona è del servizio Annona, che DeepAiUG legge via HTTP. Su disco restano solo la sezione `hybrid:` di `security_settings.yaml` e i conteggi nel JSON.
 
 ---
 
