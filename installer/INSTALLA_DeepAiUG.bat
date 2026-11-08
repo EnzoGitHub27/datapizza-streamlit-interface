@@ -140,6 +140,22 @@ echo   STEP 3 - Python 3.12
 echo  ------------------------------------------------------------
 echo.
 
+:: v1.16.1 - la cartella di destinazione si crea PRIMA dei download:
+:: gli installer di Python e Ollama e lo ZIP si scaricano dentro !DEST!.
+:: Fino alla 1.16.0 si creava allo STEP 5 e su una macchina pulita il
+:: download di Python o di Ollama falliva.
+if not exist "!DEST!" (
+    mkdir "!DEST!" >> "!LOG!" 2>&1
+    if not exist "!DEST!" (
+        echo   [ERRORE] Impossibile creare la cartella: !DEST!
+        echo [SETUP] ERRORE creazione cartella: !DEST! >> "!LOG!"
+        pause
+        exit /b 1
+    )
+    echo   [OK] Cartella creata: !DEST!
+    echo [SETUP] Cartella creata: !DEST! >> "!LOG!"
+)
+
 set "PYTHON_FOUND=0"
 set "PYTHON_CMD="
 
@@ -152,15 +168,22 @@ if exist "!PYTHON_EXE!" (
 )
 
 :: Prova PATH
+:: v1.16.1 - ogni python del PATH si prova davvero: l'alias del Microsoft
+:: Store (WindowsApps\python.exe) non e' Python, e serve almeno la 3.10.
 if !PYTHON_FOUND! equ 0 (
     where python >nul 2>&1
     if !errorlevel! equ 0 (
         for /f "tokens=*" %%P in ('where python') do (
             if !PYTHON_FOUND! equ 0 (
-                set "PYTHON_CMD=%%P"
-                set "PYTHON_FOUND=1"
-                echo   [OK] Python trovato nel PATH: %%P
-                echo [PYTHON] Trovato nel PATH: %%P >> "!LOG!"
+                "%%P" -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)" >nul 2>&1
+                if !errorlevel! equ 0 (
+                    set "PYTHON_CMD=%%P"
+                    set "PYTHON_FOUND=1"
+                    echo   [OK] Python trovato nel PATH: %%P
+                    echo [PYTHON] Trovato nel PATH: %%P >> "!LOG!"
+                ) else (
+                    echo [PYTHON] Scartato, non e' Python 3.10 o successivo: %%P >> "!LOG!"
+                )
             )
         )
     )
@@ -188,6 +211,14 @@ if !PYTHON_FOUND! equ 0 (
     )
 
     set "PYTHON_CMD=!PYTHON_EXE!"
+    if not exist "!PYTHON_EXE!" (
+        echo   [ERRORE] Python installato ma non trovato in: !PYTHON_EXE!
+        echo [PYTHON] ERRORE: !PYTHON_EXE! assente dopo l'installazione >> "!LOG!"
+        echo   Riavvia il computer e lancia di nuovo l'installer.
+        echo.
+        pause
+        exit /b 1
+    )
     echo   [OK] Python 3.12 installato correttamente.
     echo [PYTHON] Installazione completata >> "!LOG!"
     del "!DEST!\python_installer.exe" >nul 2>&1
@@ -203,7 +234,14 @@ echo  ------------------------------------------------------------
 echo.
 
 set "OLLAMA_FOUND=0"
-if exist "%LOCALAPPDATA%\Ollama\ollama.exe" (
+:: v1.16.1 - OllamaSetup installa in %LOCALAPPDATA%\Programs\Ollama: si cerca
+:: li' (la stessa cartella aggiunta al PATH sotto) e, per le versioni
+:: vecchie, in %LOCALAPPDATA%\Ollama
+if exist "%LOCALAPPDATA%\Programs\Ollama\ollama.exe" (
+    set "OLLAMA_FOUND=1"
+    echo   [OK] Ollama trovato in: %LOCALAPPDATA%\Programs\Ollama\
+    echo [OLLAMA] Trovato in %LOCALAPPDATA%\Programs\Ollama\ >> "!LOG!"
+) else if exist "%LOCALAPPDATA%\Ollama\ollama.exe" (
     set "OLLAMA_FOUND=1"
     echo   [OK] Ollama trovato in: %LOCALAPPDATA%\Ollama\
     echo [OLLAMA] Trovato in %LOCALAPPDATA%\Ollama\ >> "!LOG!"
@@ -240,7 +278,7 @@ if !OLLAMA_FOUND! equ 0 (
     del "!DEST!\OllamaSetup.exe" >nul 2>&1
 )
 :: Aggiorna PATH nella sessione corrente per trovare ollama subito
-set "PATH=!PATH!;%LOCALAPPDATA%\Programs\Ollama"
+set "PATH=!PATH!;%LOCALAPPDATA%\Programs\Ollama;%LOCALAPPDATA%\Ollama"
 echo.
 
 :: ============================================================
@@ -250,12 +288,6 @@ echo  ------------------------------------------------------------
 echo   STEP 5 - Download DeepAiUG
 echo  ------------------------------------------------------------
 echo.
-
-if not exist "!DEST!" (
-    mkdir "!DEST!" >> "!LOG!" 2>&1
-    echo   [OK] Cartella creata: !DEST!
-    echo [DOWNLOAD] Cartella creata: !DEST! >> "!LOG!"
-)
 
 echo   Download repository da GitHub...
 echo [DOWNLOAD] Avvio download ZIP da GitHub >> "!LOG!"
