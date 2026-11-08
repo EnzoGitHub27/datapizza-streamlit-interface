@@ -694,7 +694,12 @@ def _sync_source(source_type: str, config: dict):
         progress_bar.progress(1.0, text="✅ Indicizzazione completata!")
     else:
         progress_bar.empty()
-        _container.error("❌ Errore indicizzazione")
+        _emb_err = getattr(kb_manager.vector_store, "embedding_error", None)
+        if _emb_err:
+            # v1.16.1 — senza il modello non si indicizza: la KB vecchia resta com'è
+            _container.error(f"{_emb_err}  \nIndicizzazione non fatta.")
+        else:
+            _container.error("❌ Errore indicizzazione")
 
 
 def _show_last_sync_info(source_type: str, config: dict):

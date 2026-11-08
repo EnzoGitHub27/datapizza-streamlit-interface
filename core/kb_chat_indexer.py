@@ -25,6 +25,7 @@ from rag.embeddings import (
     get_embedding_function,
     get_embeddings_helper,
     get_active_model_tag,
+    embedding_unavailable,
 )
 
 CHAT_KB_META_FILE = KNOWLEDGE_BASE_DIR / "chat_kb_meta.json"
@@ -40,7 +41,7 @@ TURN_SEPARATOR = "\n\n---\n\n"
 RILEVANZA_BOOST = {1: 1.0, 2: 1.15, 3: 1.30}
 
 
-def _get_chroma_collection():
+def _get_chroma_collection(need_embeddings: bool = True):
     """
     Ottiene la collection ChromaDB per le chat-KB.
     Usa lo stesso pattern di SimpleVectorStore: PersistentClient + get_or_create.
@@ -48,11 +49,25 @@ def _get_chroma_collection():
     v1.15.0 — passa embedding_function multilingua e gestisce migrazione
     automatica se cambia il modello di embedding (re-indicizzazione richiesta).
 
+    v1.16.1 — se il modello configurato non si carica, (None, None): la KB
+    Chat non si usa e non si tocca. Con need_embeddings=False (togliere i
+    pezzi di una chat eliminata, contare) si apre la collection esistente
+    senza modello e senza migrazione: non si crea né si cancella niente.
+
     Returns:
         Tupla (client, collection) o (None, None) se ChromaDB non disponibile.
     """
     try:
         import chromadb
+
+        if embedding_unavailable():
+            if need_embeddings or not Path(CHAT_KB_PERSIST_PATH).is_dir():
+                return None, None
+            client = chromadb.PersistentClient(path=CHAT_KB_PERSIST_PATH)
+            try:
+                return client, client.get_collection(name=CHAT_KB_COLLECTION)
+            except Exception:
+                return None, None
 
         Path(CHAT_KB_PERSIST_PATH).mkdir(parents=True, exist_ok=True)
         client = chromadb.PersistentClient(path=CHAT_KB_PERSIST_PATH)
@@ -261,7 +276,7 @@ def remove_chat_from_kb(chat_id: str) -> bool:
     Returns:
         True se rimosso con successo (o nulla da rimuovere).
     """
-    _, collection = _get_chroma_collection()
+    _, collection = _get_chroma_collection(need_embeddings=False)
     if collection is None:
         return False
     return _remove_by_chat_id(collection, chat_id)
@@ -293,7 +308,7 @@ def delete_conversation_and_kb(chat_id: str) -> Dict[str, Any]:
     """
     removed = 0
     kb_ok = True
-    _, collection = _get_chroma_collection()
+    _, collection = _get_chroma_collection(need_embeddings=False)
     if collection is not None:
         try:
             existing = collection.get(where={"chat_id": chat_id})
@@ -340,7 +355,7 @@ def get_kb_chat_stats() -> Dict[str, Any]:
     Returns:
         Dict con total_chunks, total_chats, using_chromadb.
     """
-    _, collection = _get_chroma_collection()
+    _, collection = _get_chroma_collection(need_embeddings=False)
     if collection is None:
         return {"total_chunks": 0, "total_chats": 0, "using_chromadb": False}
 
@@ -358,6 +373,7 @@ def get_kb_chat_stats() -> Dict[str, Any]:
             "total_chunks": total_chunks,
             "total_chats": len(chat_ids),
             "using_chromadb": True,
+            "embedding_unavailable": embedding_unavailable(),  # v1.16.1
         }
     except Exception as exc:
         print(f"⚠️ Errore stats chat-KB: {exc}")
@@ -368,7 +384,7 @@ def get_chunks_per_chat() -> Dict[str, int]:
     """
     Ritorna un dizionario {chat_id: n_chunks} per tutte le chat indicizzate.
     """
-    _, collection = _get_chroma_collection()
+    _, collection = _get_chroma_collection(need_embeddings=False)
     if collection is None:
         return {}
     try:
@@ -486,6 +502,13 @@ def reindex_all_chat_kb(progress_callback=None) -> Dict[str, int]:
     Returns:
         Dict con chats_indexed, total_chunks e orphans_removed (v1.15.4).
     """
+    # v1.16.1 — senza il modello degli embedding non si indicizza e non si
+    # toglie niente: la KB Chat resta com'è
+    _unavailable = embedding_unavailable()
+    if _unavailable:
+        return {"chats_indexed": 0, "total_chunks": 0, "orphans_removed": 0,
+                "embedding_unavailable": _unavailable}
+
     # v1.15.4 — prima via le chat orfane (eliminate o non più flaggate)
     orphans = remove_orphan_chats_from_kb()
 
