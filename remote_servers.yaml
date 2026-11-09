@@ -30,6 +30,13 @@ servers:
     port: 11434
     description: "Jetson Nano 8GB — modelli leggeri e veloci"
 
+  dgx_msi:
+    name: "DGX-msi"
+    icon: "🧠"
+    host: "192.168.1.227"
+    port: 11434
+    description: "MSI EdgeXpert (DGX Spark) — GB10 Grace Blackwell, 128 GB di memoria unificata"
+
   # ── Esempi di configurazione ──────────────────────────────────────────────
   #
   # esempio_server:
