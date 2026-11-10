@@ -126,7 +126,10 @@ def render_chat_message(
             if send_status == "rifiutata":
                 st.error(f"⛔ **Rifiutata** dal fornitore — {detail}")
             elif send_status == "senza_risposta":  # giro 7b: gateway di Annona senza testo
-                st.warning(f"🧭 **Senza risposta** — {detail}")
+                if detail.startswith("EmptyModelAnswer"):  # v1.16.2: il modello, senza testo
+                    st.warning(f"🧠 **Senza risposta** — {detail.split(': ', 1)[-1]}")
+                else:
+                    st.warning(f"🧭 **Senza risposta** — {detail}")
             else:
                 st.warning(f"⚠️ **Non inviata** — {detail}")
 
