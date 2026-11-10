@@ -64,6 +64,7 @@ from core import (
     delete_conversation,  # v1.16.0
 )
 from core.conversation import mark_send_failed, classify_send_error, SEND_EMPTY  # v1.16.0
+from core.llm_client import reasoning_effort_for, EmptyModelAnswer  # v1.16.2
 
 # 🆕 v1.5.0 - File processors
 from core.file_processors import get_attachment_names
@@ -341,6 +342,11 @@ def _save_current_conversation():
 # 🆕 v1.6.1 - SOCRATIC CLIENT HELPER
 # ============================================================================
 
+def _reasoning_effort(connection_type):
+    """🧠 v1.16.2 — reasoning_effort per Local e Remote host, None per il cloud."""
+    return reasoning_effort_for(connection_type, st.session_state.get("reasoning_level"))
+
+
 def get_socratic_client(connection_type, provider, api_key, model, base_url, temperature):
     """
     Crea un client LLM per i bottoni socratici.
@@ -362,6 +368,7 @@ def get_socratic_client(connection_type, provider, api_key, model, base_url, tem
             hybrid_error=HYBRID_ERROR,  # v1.16.1: illeggibile → fuori casa non parte niente
             on_anonymized=_on_pii_anonymized,
             pii_memory=_pii_memory(),  # giro 7b
+            reasoning_effort=_reasoning_effort(connection_type),  # v1.16.2
         )
     except Exception:
         return None
@@ -937,6 +944,7 @@ if submit and user_input.strip():
                     hybrid_error=HYBRID_ERROR,  # v1.16.1
                     on_anonymized=_on_pii_anonymized,
                     pii_memory=_pii_memory(),  # giro 7b
+                    reasoning_effort=_reasoning_effort(connection_type),  # v1.16.2
                 )
             
             # Prepare prompt
@@ -1028,6 +1036,13 @@ Cita sempre le fonti quando usi informazioni dai documenti.
                                 # v1.14.3 — Cursore ▌ durante lo streaming
                                 placeholder.markdown(response_text + "▌")
 
+                    # 🧠 v1.16.2 — risposta vuota (es. ragionamento fino al limite
+                    # dei token): la chat non resta muta, la domanda porta il motivo
+                    if not response_text.strip():
+                        typing_placeholder.empty()
+                        placeholder.empty()
+                        raise EmptyModelAnswer()
+
                     # Risposta finale senza cursore
                     placeholder.markdown(response_text)
                     # v1.14.3 — Scroll finale a fondo pagina
@@ -1107,7 +1122,8 @@ Cita sempre le fonti quando usi informazioni dai documenti.
             msgs = st.session_state.get("messages", [])
             if (_sent_index is not None and _sent_index == len(msgs) - 1
                     and msgs[_sent_index].get("role") == "user"):
-                _status = (SEND_EMPTY if isinstance(e, annona_bridge.AnnonaGatewayEmpty)  # giro 7b
+                _status = (SEND_EMPTY if isinstance(e, (annona_bridge.AnnonaGatewayEmpty,  # giro 7b
+                                                        EmptyModelAnswer))  # v1.16.2
                            else classify_send_error(e, _stream_started))
                 mark_send_failed(msgs[_sent_index], _status, e)
                 if st.session_state.get("auto_save_enabled", True):

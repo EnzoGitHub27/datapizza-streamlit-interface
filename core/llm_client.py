@@ -3,7 +3,7 @@
 # ============================================================================
 
 import subprocess
-from typing import List, Any
+from typing import List, Any, Optional
 
 import requests
 
@@ -92,6 +92,72 @@ def get_remote_ollama_models(base_url: str) -> List[str]:
         return []
 
 
+# 🧠 v1.16.2 — il ragionamento del modello (solo in casa: Local e Remote host).
+# L'Ollama della DGX accetta solo `reasoning_effort` su /v1/chat/completions
+# (misure dell'Hub, 10/11/2026); con "none" nessun errore anche sui modelli
+# che non ragionano. Ai fornitori cloud e a «Custom» non si manda niente in più.
+REASONING_LEVELS = {
+    "Spento": "none",
+    "Basso": "low",
+    "Medio": "medium",
+    "Alto": "high",
+}
+DEFAULT_REASONING_LEVEL = "Spento"
+
+EMPTY_ANSWER_MESSAGE = (
+    "il modello ha ragionato senza arrivare a una risposta: riprova con il "
+    "ragionamento spento o una domanda più semplice"
+)
+
+
+class EmptyModelAnswer(Exception):
+    """Il modello ha risposto, ma senza testo (v1.16.2).
+
+    Caso tipico: Qwen con il ragionamento acceso arriva al limite dei token
+    mentre ragiona, e la risposta resta vuota."""
+
+    def __init__(self, message: str = EMPTY_ANSWER_MESSAGE):
+        super().__init__(message)
+
+
+def reasoning_effort_for(connection_type: str, level: Optional[str]) -> Optional[str]:
+    """Il valore di `reasoning_effort` da mandare, o None se non va mandato.
+
+    Solo per Local (Ollama) e Remote host; per il cloud (OpenAI, Anthropic,
+    Gemini, Custom) sempre None. Un livello sconosciuto vale «Spento»."""
+    if connection_type == "Cloud provider":
+        return None
+    return REASONING_LEVELS.get(level or DEFAULT_REASONING_LEVEL, REASONING_LEVELS[DEFAULT_REASONING_LEVEL])
+
+
+class ReasoningOpenAILikeClient(OpenAILikeClient):
+    """OpenAILikeClient che aggiunge `reasoning_effort` a ogni chiamata (v1.16.2).
+
+    Il client di Datapizza inoltra i **kwargs di invoke / stream_invoke fino a
+    chat.completions.create; qui si mette il valore scelto, a meno che chi
+    chiama non ne passi già uno."""
+
+    def __init__(self, *args: Any, reasoning_effort: str, **kwargs: Any):
+        super().__init__(*args, **kwargs)
+        self.reasoning_effort = reasoning_effort
+
+    def _with_effort(self, kwargs: dict) -> dict:
+        kwargs.setdefault("reasoning_effort", self.reasoning_effort)
+        return kwargs
+
+    def invoke(self, *args: Any, **kwargs: Any) -> Any:
+        return super().invoke(*args, **self._with_effort(kwargs))
+
+    def stream_invoke(self, *args: Any, **kwargs: Any) -> Any:
+        return super().stream_invoke(*args, **self._with_effort(kwargs))
+
+    async def a_invoke(self, *args: Any, **kwargs: Any) -> Any:
+        return await super().a_invoke(*args, **self._with_effort(kwargs))
+
+    def a_stream_invoke(self, *args: Any, **kwargs: Any) -> Any:
+        return super().a_stream_invoke(*args, **self._with_effort(kwargs))
+
+
 def create_client(
     connection_type: str,
     provider: str,
@@ -104,6 +170,7 @@ def create_client(
     on_anonymized: Any = None,
     pii_memory: Any = None,
     hybrid_error: Any = None,
+    reasoning_effort: Optional[str] = None,
 ) -> Any:
     """
     Il punto unico verso i modelli (SPEC §3).
@@ -123,6 +190,9 @@ def create_client(
         hybrid_error: il messaggio d'errore se la sezione hybrid: non si legge
             (v1.16.1). Con la destinazione fuori casa: HybridConfigBlockedClient,
             che non manda niente; in casa il client di sempre.
+        reasoning_effort: "none" | "low" | "medium" | "high" (v1.16.2), opzionale;
+            vale solo per Local (Ollama) e Remote host, anche dietro GuardedClient.
+            Per il cloud si ignora: nessun parametro in più.
     """
     if hybrid_error:
         from core.egress import classify_destination
@@ -155,6 +225,7 @@ def create_client(
                 return _create_raw_client(
                     connection_type, provider, api_key, model,
                     clean_system_prompt, base_url, temperature,
+                    reasoning_effort=reasoning_effort,
                 )
 
             return GuardedClient(
@@ -167,18 +238,20 @@ def create_client(
             )
 
     return _create_raw_client(
-        connection_type, provider, api_key, model, system_prompt, base_url, temperature
+        connection_type, provider, api_key, model, system_prompt, base_url, temperature,
+        reasoning_effort=reasoning_effort,
     )
 
 
 def _create_raw_client(
-    connection_type: str, 
-    provider: str, 
-    api_key: str, 
-    model: str, 
-    system_prompt: str, 
-    base_url: str, 
-    temperature: float
+    connection_type: str,
+    provider: str,
+    api_key: str,
+    model: str,
+    system_prompt: str,
+    base_url: str,
+    temperature: float,
+    reasoning_effort: Optional[str] = None,
 ) -> Any:
     """
     Crea client LLM in base alla configurazione.
@@ -244,8 +317,18 @@ def _create_raw_client(
         blocked, reason = is_blocked(base_url)
         if blocked:
             raise BlockedURLError(f"🔒 Connessione bloccata per sicurezza: {reason}")
+        if reasoning_effort:
+            # 🧠 v1.16.2 — in casa: reasoning_effort in ogni chiamata
+            return ReasoningOpenAILikeClient(
+                api_key=api_key or "ollama",
+                model=model,
+                system_prompt=system_prompt,
+                base_url=base_url,
+                temperature=temperature,
+                reasoning_effort=reasoning_effort,
+            )
         return OpenAILikeClient(
-            api_key=api_key or "ollama", 
+            api_key=api_key or "ollama",
             model=model, 
             system_prompt=system_prompt, 
             base_url=base_url, 

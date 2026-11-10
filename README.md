@@ -6,7 +6,7 @@
 > *"Non semplifica il pensare, ma lo allena."*
 > — Carmelo Quartarone, Innovation Senior Developer @ Cloudia Research
 
-[![Version](https://img.shields.io/badge/version-1.16.1-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.16.1)
+[![Version](https://img.shields.io/badge/version-1.16.2-blue.svg)](https://github.com/EnzoGitHub27/datapizza-streamlit-interface/releases/tag/v1.16.2)
 [![Python](https://img.shields.io/badge/python-3.10+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.53-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
@@ -64,6 +64,18 @@ Dalla 1.16.0 c'è un **ambiente ibrido**, **opzionale e spento per default**: pr
 - ♻️ **Architettura modulare** - Codice organizzato in packages
 
 ---
+
+### 🧠 Novità v1.16.2 — Il ragionamento del modello
+
+Nei **⚙️ Parametri** c'è l'interruttore **«🧠 Ragionamento del modello»**: Spento (predefinito), Basso, Medio, Alto. Spento: risposte veloci, adatto a domande sui documenti. Acceso: il modello ragiona prima di rispondere, è più lento ma sbaglia meno sui calcoli. Vale per **Ollama locale e Remote host** (si manda `reasoning_effort` in ogni chiamata, anche con rizzo-pii); al cloud non si manda niente in più. Se il modello ragiona senza arrivare a una risposta, la domanda resta in chat con «🧠 Senza risposta» e il consiglio di riprovare.
+
+| Modello (provati sull'Ollama della DGX) | Spento / acceso | Basso, Medio, Alto |
+|---|---|---|
+| `gpt-oss:120b` | sì | sì |
+| `qwen3.6:35b-a3b` | sì | no: solo acceso o spento |
+| Gemma 4 | sì | no: solo acceso o spento |
+
+Dettagli nel CHANGELOG `[1.16.2]` e nel manuale (Cap. 12.4).
 
 ### 🛠️ Novità v1.16.1 — Correzioni di sicurezza e dati
 
@@ -298,7 +310,7 @@ Sistema completo per proteggere i tuoi documenti sensibili:
 
 ---
 
-## 🏗️ Architettura v1.16.1
+## 🏗️ Architettura v1.16.2
 
 ```
 datapizza-streamlit-interface/
