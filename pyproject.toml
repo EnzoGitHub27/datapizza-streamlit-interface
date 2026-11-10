@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "datapizza-streamlit-interface"
-version = "1.16.1"
+version = "1.16.2"
 description = ""
 authors = ["Vincenzo Iodice (Gilles) - DeepAiUG"]
 readme = "README.md"

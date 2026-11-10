@@ -5,13 +5,13 @@
 | | |
 |---|---|
 | **Prodotto** | DeepAiUG Chat 🧠 |
-| **Versione documentata** | v1.16.1 |
-| **Data manuale** | 2026-11-08 |
+| **Versione documentata** | v1.16.2 |
+| **Data manuale** | 2026-11-10 |
 | **Repository** | https://github.com/EnzoGitHub27/datapizza-streamlit-interface |
 | **Licenza** | MIT |
 | **Autore progetto** | Vincenzo Iodice (EnzoGitHub27) — community DeepAiUG |
 
-> Questo manuale è stato scritto e rivisto contro il codice della versione 1.16.0, l'8 novembre 2026, e aggiornato lo stesso giorno per la 1.16.1 (le sette correzioni di sicurezza e dati: Cap. 9.3, 13, 14, 15, 16, 18, 20, 21 e Appendice B). Documenta esclusivamente le funzionalità effettivamente presenti nella versione 1.16.1; le funzionalità pianificate per v2.0.0 (Semantic Layer, Knowledge Graph, Docker, API REST, journaling riflessivo) **non** sono trattate perché non ancora implementate.
+> Questo manuale è stato scritto e rivisto contro il codice della versione 1.16.0, l'8 novembre 2026, aggiornato lo stesso giorno per la 1.16.1 (le sette correzioni di sicurezza e dati: Cap. 9.3, 13, 14, 15, 16, 18, 20, 21 e Appendice B) e il 10 novembre 2026 per la 1.16.2 (il ragionamento del modello: Cap. 12.2, 12.4, 13.2, Appendice A e B). Documenta esclusivamente le funzionalità effettivamente presenti nella versione 1.16.2; le funzionalità pianificate per v2.0.0 (Semantic Layer, Knowledge Graph, Docker, API REST, journaling riflessivo) **non** sono trattate perché non ancora implementate.
 
 ---
 
@@ -71,7 +71,7 @@ DeepAiUG è un'interfaccia web (basata su Streamlit) per dialogare con modelli l
 - **Vision locale**: immagini allegate ai modelli vision, solo verso destinazioni «in casa» (dalla 1.15.3).
 - **Ambiente ibrido** (dalla 1.16.0, opzionale e spento per default): rizzo-pii toglie i dati personali prima del cloud, Annona mostra le sue decisioni o fa da gateway sperimentale; e per tutti i blocchi conta la **destinazione reale** del testo (Capitolo 21).
 
-**Nota sui nomi:** la cartella/repository si chiama `datapizza-streamlit-interface` (usa il framework `datapizza-ai` per i client LLM), ma il prodotto si chiama **DeepAiUG** e l'installer lo colloca in `~/DeepAiUG`. La versione autorevole è quella dichiarata in `config/constants.py` (`VERSION = "1.16.1"`); dalla 1.16.0 anche `pyproject.toml` dice la stessa versione (`1.16.1`), ma resta solo metadato del pacchetto Poetry.
+**Nota sui nomi:** la cartella/repository si chiama `datapizza-streamlit-interface` (usa il framework `datapizza-ai` per i client LLM), ma il prodotto si chiama **DeepAiUG** e l'installer lo colloca in `~/DeepAiUG`. La versione autorevole è quella dichiarata in `config/constants.py` (`VERSION = "1.16.2"`); dalla 1.16.0 anche `pyproject.toml` dice la stessa versione (`1.16.2`), ma resta solo metadato del pacchetto Poetry.
 
 ---
 
@@ -510,8 +510,8 @@ L'app è pensata per **uso mono-utente locale**. Non ha login: "utente" è chiun
 All'apertura del browser (di norma `http://localhost:8501`) trovi:
 
 - **Tema "Matrix"**: sfondo verde scurissimo, testo verde-teal, titoli con effetto glitch e, se abilitata, la "pioggia" di caratteri in sottofondo (personalizzabile o disattivabile dal sistemista via `branding.yaml`).
-- **Titolo dinamico** che indica il backend attivo: `🧠 DeepAiUG Chat → Ollama 1.16.1` (locale), `→ Remote` o `→ {provider}` (cloud). Dalla 1.16.0, se il testo va «fuori casa» il titolo aggiunge « ☁️»: `→ OpenAI ☁️`, `→ Remote esterno ☁️` per un Remote host su Internet, `→ Ollama ☁️` per un Base URL locale che punta fuori.
-- **Banner novità** («✨ **Novità 1.16.1**: …») con le note della versione; con la Knowledge Base attiva al suo posto c'è il banner della KB (Cap. 14.1).
+- **Titolo dinamico** che indica il backend attivo: `🧠 DeepAiUG Chat → Ollama 1.16.2` (locale), `→ Remote` o `→ {provider}` (cloud). Dalla 1.16.0, se il testo va «fuori casa» il titolo aggiunge « ☁️»: `→ OpenAI ☁️`, `→ Remote esterno ☁️` per un Remote host su Internet, `→ Ollama ☁️` per un Base URL locale che punta fuori.
+- **Banner novità** («✨ **Novità 1.16.2**: …») con le note della versione; con la Knowledge Base attiva al suo posto c'è il banner della KB (Cap. 14.1).
 - **Indicatore di connessione** — dalla v1.15.2 per Local/Remote riflette la **destinazione reale** dell'URL (Cap. 20.0), non l'etichetta della modalità:
   - `🔒 Rete fidata - i dati restano nella tua rete ({host})` (verde: loopback, LAN, Tailscale)
   - `⚠️ Host esterno - i dati escono dalla tua rete verso {host}` (giallo: IP pubblico)
@@ -557,6 +557,7 @@ Per usare un server Ollama nella tua rete locale (es. una macchina con GPU).
 - **API Key (opzionale)** se il server la richiede.
 - **🔄 Aggiorna modelli** interroga il server e popola l'elenco **Modello**. Se l'elenco è vuoto, o il bottone è disattivato dal sistemista, **Modello** è un campo di testo (default `llama3.2`). ℹ️ Cambiando server, l'elenco resta quello del server precedente finché non premi di nuovo il bottone.
 - ⚠️ Dalla 1.16.0 un Remote host che risolve a un **IP pubblico** si comporta come il cloud (Cap. 21.4).
+- 🧠 Con un modello che **ragiona prima di rispondere** (Qwen 3.6, Gemma 4, gpt-oss…) la risposta può tardare decine di secondi: dalla 1.16.2 l'interruttore «🧠 Ragionamento del modello» nei Parametri (Cap. 12.4) lo spegne. Vale per il Remote host come per Ollama locale.
 
 ## 12.3 Cloud provider — `### ☁️ Cloud`
 
@@ -577,8 +578,32 @@ Per usare OpenAI, Anthropic (Claude), Google Gemini o un endpoint custom.
 | System Prompt | testo libero | "Sei un assistente utile. Rispondi in modo chiaro e preciso." | Istruzioni permanenti date al modello. Con rizzo-pii attivo, verso fuori casa gli si aggiunge (senza che compaia nel campo) una riga che chiede al modello di usare i segnaposto così come sono (Cap. 21.7) |
 | Temperature | 0.0 – 2.0 (step 0.1) | 0.7 | Creatività: bassa = risposte prevedibili, alta = più varie |
 | Max messaggi | 10 – 100 (step 10) | 50 | Quanti messaggi recenti restano nel contesto. Vale solo **senza** contesto KB: quando la Knowledge Base o la KB Chat trovano risultati, la domanda viene inviata con il solo contesto dei documenti, senza la cronologia |
+| 🧠 Ragionamento del modello | Spento, Basso, Medio, Alto | Spento | Se il modello ragiona prima di rispondere (dalla 1.16.2). Solo per Local (Ollama) e Remote host |
 
 Non ci sono altri parametri (per esempio niente «max token»). I bottoni socratici e la Mappa Sessione non usano il tuo System Prompt ma un prompt fisso.
+
+### 🧠 Ragionamento del modello (dalla 1.16.2)
+
+Alcuni modelli **ragionano prima di rispondere**: scrivono fra sé i passaggi e poi danno la risposta. Sbagliano meno sui calcoli, ma sono più lenti. L'interruttore lo decide; il testo d'aiuto (?) dice:
+
+> «Spento: risposte veloci, adatto a domande sui documenti. Acceso: il modello ragiona prima di rispondere, è più lento ma sbaglia meno sui calcoli. Molti modelli (Qwen, Gemma) distinguono solo acceso e spento; i livelli contano per i modelli che li supportano, come gpt-oss.»
+
+- **Spento** (predefinito), **Basso**, **Medio**, **Alto**. L'app aggiunge alla richiesta `reasoning_effort` = `none`, `low`, `medium`, `high`, in **tutte** le chiamate al modello: la chat, i bottoni socratici, il nudge e la Mappa Sessione, anche con rizzo-pii acceso.
+- Vale solo per **Local (Ollama)** e **Remote host**. Con **Cloud provider** (anche «Custom») l'interruttore non si mostra e al fornitore non si manda niente in più; al suo posto la riga «🧠 Ragionamento del modello: vale solo per Local (Ollama) e Remote host. Ai fornitori cloud non si manda niente in più.»
+- La scelta resta finché la sessione è aperta, anche se passi al cloud e torni. Ricaricando la pagina torna Spento.
+- Su un modello che non ragiona (per esempio `llama3.2`) «Spento» non cambia niente e non dà errori.
+- Se con il ragionamento acceso il modello non arriva a una risposta, la domanda resta in chat con «🧠 **Senza risposta**» (Cap. 13.2).
+
+I modelli provati sull'Ollama della DGX (10 novembre 2026):
+
+| Modello | Spento / acceso | Basso, Medio, Alto |
+|---|---|---|
+| `gpt-oss:120b` | sì | **sì**: più alto il livello, più lungo il ragionamento |
+| `qwen3.6:35b-a3b` | sì | no: Basso, Medio e Alto valgono tutti «acceso» |
+| Gemma 4 | sì | no: Basso, Medio e Alto valgono tutti «acceso» |
+| `llama3.2` (non ragiona) | nessun effetto, nessun errore | — |
+
+Un esempio: con `qwen3.6:35b-a3b` sulla DGX, la domanda «Un treno parte alle 9:40 e arriva alle 13:15. Quanto dura il viaggio?» ha avuto la stessa risposta giusta in circa 1 secondo con il ragionamento spento e in circa 6 con Alto. Su un calcolo più difficile Qwen acceso può ragionare fino al limite dei token senza rispondere.
 
 ---
 
@@ -611,6 +636,7 @@ Ogni file allegato appare in un'**anteprima** sotto l'intestazione «**📎 N fi
 - Prima dell'invio l'app verifica: modello selezionato («❌ Seleziona un modello!»), chiave API per il cloud («❌ Inserisci API key!»), blocco KB fuori casa («🔒 Cloud provider bloccato con Knowledge Base o KB Chat attiva!», oppure «🔒 host esterno ({host}) bloccato…»), URL bloccato («🔒 Connessione bloccata per sicurezza: …»), configurazione ibrida («🛡️ Configurazione ibrida non valida, messaggio non inviato: …», solo verso fuori casa; dalla 1.16.1 blocca anche bottoni socratici, nudge e mappa, Cap. 21.3). Il messaggio d'errore compare in rosso sopra la casella.
 - **Dalla 1.16.0 il testo resta nella casella** dopo un blocco (questi, e quelli di rizzo-pii, Cap. 21.4), anche se poi tocchi la sidebar, finché non invii di nuovo o non la svuoti tu. Dopo un invio partito la casella si svuota; durante lo streaming la domanda resta nella casella finché la risposta non è finita. ⚠️ Il messaggio rosso invece sparisce alla prima interazione successiva (limite noto, Appendice B).
 - **Se l'invio fallisce** dopo la partenza (chiave sbagliata, rete, errore del fornitore, pacchetto mancante), la domanda resta in chat con «⚠️ **Non inviata** — {tipo}: {errore}» o, se il fornitore aveva cominciato a rispondere, «⛔ **Rifiutata** dal fornitore — …». Vale per ogni destinazione; la domanda si salva così segnata e non viene rimandata al modello nei turni successivi.
+- **Se il modello risponde senza testo** (dalla 1.16.2; succede per esempio con Qwen e il ragionamento acceso, che ragiona fino al limite dei token), la domanda resta in chat con «🧠 **Senza risposta** — il modello ha ragionato senza arrivare a una risposta: riprova con il ragionamento spento o una domanda più semplice», segnata come le altre e non rimandata al modello. Prima restava una risposta vuota.
 - Le risposte con **blocchi di codice** si possono copiare con l'icona in alto a destra del blocco.
 
 > ✅ **Novità v1.15.4**: i blocchi di codice restano interi anche dopo la fine dello streaming e nelle conversazioni ricaricate. Prima, un blocco con righe vuote (quasi tutto il codice Python) veniva spezzato e, copiandolo, negli appunti comparivano scritte «[object Object]».
@@ -1043,6 +1069,7 @@ Dalla prova dal vivo (06/11/2026, rizzo-pii vero e OpenAI):
 | Formati upload | pdf, txt, md, docx, png, jpg, jpeg, gif, webp | No |
 | Temperature | 0.7 (0.0–2.0) | Sì |
 | Max messaggi in contesto | 50 (10–100) | Sì |
+| Ragionamento del modello | Spento (Spento, Basso, Medio, Alto); solo Local e Remote host | Sì |
 | Chunk size RAG | 1000 caratteri (200–3000, passi di 100) | Sì |
 | Chunk overlap RAG | 200 caratteri (0–500, passi di 50) | Sì |
 | Chunk KB Chat | 1000 / overlap 200 | No |
@@ -1090,6 +1117,8 @@ Dalla prova dal vivo (06/11/2026, rizzo-pii vero e OpenAI):
 | «🛡️ Configurazione ibrida non valida, messaggio non inviato: …» | Sezione `hybrid:` scritta male (tipi, rientri, `on_service_down.cloud`) | Correggere il blocco come nel Cap. 21.3. Finché è sbagliato, verso fuori casa non parte niente (chat, bottoni socratici, nudge, mappa); in casa si lavora come sempre |
 | «⚠️ **Non inviata** — PIINotLocal…» / «configurazione non valida (AnnonaNotLocal)» | `url` di rizzo-pii o Annona non di loopback | Usare `http://127.0.0.1:…` (Cap. 21.1) |
 | «🧭 Annona non risponde o non ha una policy…» / «🧭 Annona ha trattenuto il passo (held)…» | Gateway acceso e Annona giù, senza policy, o passo trattenuto | Avviare Annona, controllare la policy, o tornare a `mode: "read"` |
+| Risposte lente (decine di secondi) da Ollama locale o dal Remote host | Il modello ragiona prima di rispondere (Qwen 3.6, Gemma 4, gpt-oss…) | «🧠 Ragionamento del modello» su Spento (Cap. 12.4) |
+| «🧠 **Senza risposta** — il modello ha ragionato senza arrivare a una risposta…» | Con il ragionamento acceso il modello ha finito i token prima di rispondere | Riprovare con il ragionamento Spento o una domanda più semplice (Cap. 12.4) |
 | «🧭 **Senza risposta** — …» | Gateway: il modello ha tentato uno strumento e Annona l'ha fermato (Annona 0.1.3) | Modello più capace nella policy di Annona, o strada senza gateway (Cap. 21.6) |
 | Con l'ambiente ibrido acceso aggiornando dalla 1.15.x non succede niente | La sezione `hybrid:` non c'è: l'updater preserva `security_settings.yaml` | Aggiungerla a mano (Cap. 4.1, 21.3) |
 | Su Windows l'installer si ferma al download di Python o di Ollama | Nella 1.16.0 la cartella `%USERPROFILE%\DeepAiUG` si creava dopo quei download (corretto nella 1.16.1, Cap. 3.3) | Usare l'installer della 1.16.1, o creare a mano la cartella e rilanciarlo |

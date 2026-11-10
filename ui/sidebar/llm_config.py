@@ -20,6 +20,7 @@ from config.settings import (
 from core import get_local_ollama_models
 from core.url_validator import is_blocked
 from core.egress import classify_destination, outside_label  # v1.16.0 P2
+from core.llm_client import REASONING_LEVELS, DEFAULT_REASONING_LEVEL  # v1.16.2
 
 
 def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, float, int]:
@@ -458,6 +459,8 @@ def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, flo
             10, 100, 50, 10,
         )
 
+        render_reasoning_level(connection_type)
+
     return (
         connection_type,
         provider,
@@ -468,6 +471,52 @@ def render_llm_config(container=None) -> Tuple[str, str, str, str, str, str, flo
         temperature,
         max_messages,
     )
+
+
+REASONING_HELP = (
+    "Spento: risposte veloci, adatto a domande sui documenti. "
+    "Acceso: il modello ragiona prima di rispondere, è più lento ma sbaglia meno sui calcoli. "
+    "Molti modelli (Qwen, Gemma) distinguono solo acceso e spento; i livelli contano "
+    "per i modelli che li supportano, come gpt-oss."
+)
+REASONING_CLOUD_NOTE = (
+    "🧠 Ragionamento del modello: vale solo per Local (Ollama) e Remote host. "
+    "Ai fornitori cloud non si manda niente in più."
+)
+
+
+def render_reasoning_level(connection_type: str) -> Optional[str]:
+    """🧠 v1.16.2 — l'interruttore «Ragionamento del modello».
+
+    Il livello scelto sta in st.session_state["reasoning_level"] (Spento
+    predefinito) e resta nella sessione anche passando al cloud e tornando.
+    Per il cloud l'interruttore non si mostra: solo una riga che lo spiega.
+
+    Returns:
+        Il livello scelto («Spento», «Basso», «Medio», «Alto»), o None per il cloud.
+    """
+    levels = list(REASONING_LEVELS)
+    saved = st.session_state.get("reasoning_level", DEFAULT_REASONING_LEVEL)
+    if saved not in levels:
+        saved = DEFAULT_REASONING_LEVEL
+    st.session_state["reasoning_level"] = saved
+
+    if connection_type == "Cloud provider":
+        st.caption(REASONING_CLOUD_NOTE)
+        return None
+
+    # il widget ha la sua chiave; il valore vero sta in "reasoning_level",
+    # che Streamlit non cancella quando il widget non si mostra (cloud)
+    if st.session_state.get("_reasoning_level_widget") not in levels:
+        st.session_state["_reasoning_level_widget"] = saved
+    level = st.selectbox(
+        "🧠 Ragionamento del modello",
+        levels,
+        key="_reasoning_level_widget",
+        help=REASONING_HELP,
+    )
+    st.session_state["reasoning_level"] = level
+    return level
 
 
 def render_socratic_mode_settings() -> str:

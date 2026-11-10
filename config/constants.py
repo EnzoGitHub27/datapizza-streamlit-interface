@@ -8,9 +8,9 @@ from pathlib import Path
 # VERSIONE
 # ============================================================================
 
-VERSION = "1.16.1"
+VERSION = "1.16.2"
 VERSION_STRING = f"v{VERSION}"
-VERSION_DESCRIPTION = "🛠️ Correzioni di sicurezza e dati: con la configurazione ibrida illeggibile verso fuori casa non parte niente, la KB non si svuota più se il modello degli embedding non si carica, le esclusioni dei vault valgono anche nell'indicizzazione."
+VERSION_DESCRIPTION = "🧠 Ragionamento del modello: nei Parametri scegli se il modello ragiona prima di rispondere. Spento è più veloce; vale per Ollama locale e Remote host."
 
 # ============================================================================
 # PATHS

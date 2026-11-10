@@ -9,6 +9,33 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 ## [Unreleased]
 
 ---
+## [1.16.2] — 2026-11-10
+
+Il ragionamento del modello (giro 10). Con `qwen3.6:35b-a3b` sull'Ollama della DGX le risposte tardavano 30–40 secondi perché il modello ragiona prima di rispondere, e l'Interface non aveva modo di spegnerlo.
+
+### Aggiunto
+- **L'interruttore «🧠 Ragionamento del modello»** nei ⚙️ Parametri della sidebar: **Spento** (predefinito), **Basso**, **Medio**, **Alto** (`ui/sidebar/llm_config.py`: `render_reasoning_level`). Per **Local (Ollama)** e **Remote host** ogni chiamata al modello porta `reasoning_effort` = `none`, `low`, `medium`, `high`: la chat, i bottoni socratici, il nudge, la generazione, la rigenerazione e l'aggiornamento progressivo della mappa, anche attraverso rizzo-pii (`core/llm_client.py`: `ReasoningOpenAILikeClient`, `reasoning_effort_for`; `create_client` lo passa anche alla factory del `GuardedClient`). Per il cloud (OpenAI, Anthropic, Gemini, «Custom») **nessun parametro in più**: l'interruttore non si mostra, al suo posto una riga che lo spiega. Il livello resta nella sessione, anche passando dal cloud e tornando. Test: `test_reasoning`
+- **Una risposta vuota non lascia la chat muta** (`app.py`, `ui/chat.py`). Se il modello risponde senza testo (succede con Qwen acceso, che può ragionare fino al limite dei token), la domanda resta in chat con «🧠 **Senza risposta** — il modello ha ragionato senza arrivare a una risposta: riprova con il ragionamento spento o una domanda più semplice», si salva così e non viene rimandata al modello. Prima restava una risposta vuota
+
+I modelli provati sull'Ollama della DGX (richieste dirette a `/v1/chat/completions`, 10/11/2026):
+
+| Modello | Spento / acceso | Livelli Basso, Medio, Alto |
+|---|---|---|
+| `gpt-oss:120b` | sì | **sì** (442 / 616 / 1.893 token di ragionamento) |
+| `qwen3.6:35b-a3b` | sì | no: solo acceso o spento |
+| Gemma 4 | sì | no: solo acceso o spento |
+| `llama3.2` (non ragiona) | `none` accettato, nessun errore | — |
+
+Ollama accetta solo `reasoning_effort`: `think: false` nella richiesta OpenAI, `/no_think` nel testo e `PARAMETER think` nel Modelfile non funzionano.
+
+### Cambiato
+- Versione 1.16.2 (`config/constants.py`, `pyproject.toml`); il banner «✨ Novità» presenta l'interruttore
+- Con l'interruttore su Spento (il predefinito) a Ollama locale e al Remote host si manda `reasoning_effort: "none"`: i modelli che ragionano rispondono subito. Per riavere il comportamento della 1.16.1 su un modello che ragiona, scegli Alto
+
+### Documentazione
+- Manuale (intestazione, Cap. 1, 11.1, 12.2, 12.4, 13.2, Appendice A e B) e README: l'interruttore, la tabella dei modelli provati, «🧠 Senza risposta»
+
+---
 ## [1.16.1] — 2026-11-08
 
 Correzioni di sicurezza e dati: le sette voci scelte fra i possibili difetti trovati rileggendo il manuale contro il codice della 1.16.0 (giro 8). Niente funzioni nuove; con l'ibrido spento l'app si comporta come la 1.16.0, con questi difetti in meno.
