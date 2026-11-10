@@ -334,3 +334,26 @@ def test_app_progressive_map_sends_chosen_level(app):
     at = start("Basso", messages=_msgs(), n_domande_sessione=3, session_map_mode="progressive")
     _send(at, "Ultima domanda")
     assert ("stream", "low") in state["efforts"] and ("invoke", "low") in state["efforts"]
+
+
+def test_level_survives_cloud_and_back():
+    """Il valore resta nella sessione anche quando l'interruttore non si mostra."""
+    def script():
+        import streamlit as st
+
+        from ui.sidebar.llm_config import render_reasoning_level
+
+        render_reasoning_level(st.session_state["ct"])
+
+    at = AppTest.from_function(script, default_timeout=30)
+    at.session_state["ct"] = "Remote host"
+    at.run()
+    at.selectbox[0].set_value("Medio").run()
+    at.session_state["ct"] = "Cloud provider"
+    at.run()
+    assert not at.selectbox and at.session_state["reasoning_level"] == "Medio"
+    at.run()  # un altro giro nel cloud: il widget non c'è più
+    at.session_state["ct"] = "Remote host"
+    at.run()
+    assert not at.exception, at.exception
+    assert at.selectbox[0].value == "Medio"
